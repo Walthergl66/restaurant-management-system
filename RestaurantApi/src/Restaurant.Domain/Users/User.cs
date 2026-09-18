@@ -40,7 +40,7 @@ public sealed class User : AuditableEntity
 
         return new User
         {
-            Username = username.Trim(),
+            Username = username.Trim().ToLowerInvariant(),
             Email = email.Trim().ToLowerInvariant(),
             PasswordHash = passwordHash,
             IsActive = isActive,
