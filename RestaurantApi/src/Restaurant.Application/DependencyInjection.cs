@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Restaurant.Application.Additions;
 using Restaurant.Application.Auth;
+using Restaurant.Application.Billing;
 using Restaurant.Application.Cancellations;
 using Restaurant.Application.Catalog;
 using Restaurant.Application.Orders;
@@ -31,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<IPrintJobService, PrintJobService>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<ISaleService, SaleService>();
+        services.AddSingleton<IElectronicInvoiceProvider, NullElectronicInvoiceProvider>();
+        services.AddScoped<IBillingService, BillingService>();
 
         return services;
     }
