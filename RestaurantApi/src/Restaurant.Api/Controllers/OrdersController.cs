@@ -40,6 +40,19 @@ public sealed class OrdersController(IOrderService orderService) : ControllerBas
             : BadRequest(new { error = result.Error });
     }
 
+    [HttpPost("customer")]
+    [Authorize(Policy = Permissions.OrdersCreate)]
+    [ProducesResponseType<OrderResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateCustomerOrder([FromBody] CreateCustomerOrderRequest request, CancellationToken cancellationToken)
+    {
+        var result = await orderService.CreateCustomerOrderAsync(request, CurrentUserId, cancellationToken);
+
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value)
+            : BadRequest(new { error = result.Error });
+    }
+
     [HttpPost("{id:guid}/items")]
     [Authorize(Policy = Permissions.OrdersCreate)]
     [ProducesResponseType<OrderResponse>(StatusCodes.Status200OK)]
@@ -113,6 +126,39 @@ public sealed class OrdersController(IOrderService orderService) : ControllerBas
     public async Task<IActionResult> MarkReady(Guid id, CancellationToken cancellationToken)
     {
         var result = await orderService.MarkReadyAsync(id, cancellationToken);
+
+        return result.IsSuccess ? NoContent() : BadRequest(new { error = result.Error });
+    }
+
+    [HttpPost("{id:guid}/in-route")]
+    [Authorize(Policy = Permissions.OrdersConfirm)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> MarkInRoute(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await orderService.MarkInRouteAsync(id, cancellationToken);
+
+        return result.IsSuccess ? NoContent() : BadRequest(new { error = result.Error });
+    }
+
+    [HttpPost("{id:guid}/delivered")]
+    [Authorize(Policy = Permissions.OrdersConfirm)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> MarkDelivered(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await orderService.MarkDeliveredAsync(id, cancellationToken);
+
+        return result.IsSuccess ? NoContent() : BadRequest(new { error = result.Error });
+    }
+
+    [HttpPost("{id:guid}/complete")]
+    [Authorize(Policy = Permissions.OrdersConfirm)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Complete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await orderService.CompleteAsync(id, cancellationToken);
 
         return result.IsSuccess ? NoContent() : BadRequest(new { error = result.Error });
     }

@@ -26,6 +26,8 @@ public sealed record OrderResponse(
     string Status,
     string Modality,
     Guid? AccountId,
+    Guid? CustomerId,
+    Guid? DeliveryAddressId,
     Guid CreatedByUserId,
     decimal Subtotal,
     decimal Discount,
@@ -38,6 +40,13 @@ public sealed record CreateOrderRequest(
     string OrderNumber,
     Guid? AccountId,
     string Modality,
+    IReadOnlyCollection<CreateOrderItemRequest> Items);
+
+public sealed record CreateCustomerOrderRequest(
+    string OrderNumber,
+    Guid CustomerId,
+    string Modality,
+    Guid? DeliveryAddressId,
     IReadOnlyCollection<CreateOrderItemRequest> Items);
 
 public sealed record CreateOrderItemRequest(
@@ -67,6 +76,8 @@ public interface IOrderService
 
     Task<Result<OrderResponse>> CreateAsync(CreateOrderRequest request, Guid userId, CancellationToken cancellationToken);
 
+    Task<Result<OrderResponse>> CreateCustomerOrderAsync(CreateCustomerOrderRequest request, Guid userId, CancellationToken cancellationToken);
+
     Task<Result<OrderResponse>> AddItemAsync(Guid orderId, CreateOrderItemRequest request, CancellationToken cancellationToken);
 
     Task<Result<OrderResponse>> UpdateItemAsync(Guid orderId, Guid itemId, UpdateOrderItemRequest request, CancellationToken cancellationToken);
@@ -80,4 +91,10 @@ public interface IOrderService
     Task<Result> AssignStationAsync(Guid orderId, Guid stationUserId, CancellationToken cancellationToken);
 
     Task<Result> MarkReadyAsync(Guid orderId, CancellationToken cancellationToken);
+
+    Task<Result> MarkInRouteAsync(Guid orderId, CancellationToken cancellationToken);
+
+    Task<Result> MarkDeliveredAsync(Guid orderId, CancellationToken cancellationToken);
+
+    Task<Result> CompleteAsync(Guid orderId, CancellationToken cancellationToken);
 }

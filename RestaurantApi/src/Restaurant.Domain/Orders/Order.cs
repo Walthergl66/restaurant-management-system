@@ -15,6 +15,10 @@ public sealed class Order : AggregateRoot
 
     public Guid? AccountId { get; private set; }
 
+    public Guid? CustomerId { get; private set; }
+
+    public Guid? DeliveryAddressId { get; private set; }
+
     public Guid CreatedByUserId { get; private set; }
 
     public Guid? StationUserId { get; private set; }
@@ -53,6 +57,40 @@ public sealed class Order : AggregateRoot
         };
     }
 
+    public static Order CreateForCustomer(
+        string orderNumber,
+        Guid createdByUserId,
+        OrderModality modality,
+        Guid customerId,
+        Guid? deliveryAddressId = null)
+    {
+        if (string.IsNullOrWhiteSpace(orderNumber))
+        {
+            throw new DomainException("El número de pedido es obligatorio.");
+        }
+
+        if (modality != OrderModality.PICKUP && modality != OrderModality.DELIVERY)
+        {
+            throw new DomainException("Un pedido de cliente debe ser de retiro o a domicilio.");
+        }
+
+        if (modality == OrderModality.DELIVERY && deliveryAddressId is null)
+        {
+            throw new DomainException("Un pedido a domicilio requiere una dirección de entrega.");
+        }
+
+        return new Order
+        {
+            OrderNumber = orderNumber.Trim(),
+            CreatedByUserId = createdByUserId,
+            Modality = modality,
+            CustomerId = customerId,
+            DeliveryAddressId = deliveryAddressId,
+            Status = OrderStatus.RECEIVED,
+            CreatedBy = createdByUserId,
+        };
+    }
+
     public void AddItem(
         Guid productId,
         string productName,
@@ -62,7 +100,7 @@ public sealed class Order : AggregateRoot
         IEnumerable<(Guid ExtraId, string Name, decimal Price, int Quantity)>? extras = null,
         IEnumerable<string>? removedIngredients = null)
     {
-        EnsureDraft();
+        EnsureEditable();
 
         if (string.IsNullOrWhiteSpace(productName))
         {
@@ -96,7 +134,7 @@ public sealed class Order : AggregateRoot
 
     public void UpdateItemQuantity(Guid itemId, int quantity)
     {
-        EnsureDraft();
+        EnsureEditable();
 
         if (quantity <= 0)
         {
@@ -112,7 +150,7 @@ public sealed class Order : AggregateRoot
 
     public void RemoveItem(Guid itemId)
     {
-        EnsureDraft();
+        EnsureEditable();
 
         var item = _items.FirstOrDefault(i => i.Id == itemId)
             ?? throw new DomainException("El item no pertenece a este pedido.");
@@ -159,11 +197,26 @@ public sealed class Order : AggregateRoot
         Status = OrderStatus.READY;
     }
 
+    public void MarkInRoute()
+    {
+        if (Modality != OrderModality.DELIVERY)
+        {
+            throw new DomainException("Solo un pedido a domicilio puede marcarse en ruta.");
+        }
+
+        if (Status != OrderStatus.READY)
+        {
+            throw new DomainException("El pedido debe estar listo para salir en ruta.");
+        }
+
+        Status = OrderStatus.IN_ROUTE;
+    }
+
     public void MarkDelivered()
     {
-        if (Status != OrderStatus.READY && Status != OrderStatus.DELIVERED)
+        if (Status != OrderStatus.READY && Status != OrderStatus.IN_ROUTE && Status != OrderStatus.DELIVERED)
         {
-            throw new DomainException("El pedido debe estar listo para marcarse como entregado.");
+            throw new DomainException("El pedido debe estar listo o en ruta para marcarse como entregado.");
         }
 
         Status = OrderStatus.DELIVERED;
@@ -230,9 +283,17 @@ public sealed class Order : AggregateRoot
         }
     }
 
+    private void EnsureEditable()
+    {
+        if (Status != OrderStatus.DRAFT && Status != OrderStatus.RECEIVED)
+        {
+            throw new DomainException("El pedido ya no es editable.");
+        }
+    }
+
     private void EnsureConfirmedOrInPreparation()
     {
-        if (Status != OrderStatus.CONFIRMED && Status != OrderStatus.IN_PREPARATION)
+        if (Status != OrderStatus.RECEIVED && Status != OrderStatus.CONFIRMED && Status != OrderStatus.IN_PREPARATION)
         {
             throw new DomainException("El pedido no está en preparación.");
         }

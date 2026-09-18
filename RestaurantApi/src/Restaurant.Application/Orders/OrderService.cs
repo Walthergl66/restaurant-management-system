@@ -11,6 +11,7 @@ public sealed class OrderService(
     IOrderRepository orderRepository,
     IProductRepository productRepository,
     ITableAccountRepository accountRepository,
+    ICustomerProfileRepository customerRepository,
     IPreparationOrderService preparationOrderService,
     IRealtimeNotifier notifier) : IOrderService
 {
@@ -75,6 +76,79 @@ public sealed class OrderService(
 
             await orderRepository.AddAsync(order, cancellationToken);
             await orderRepository.SaveChangesAsync(cancellationToken);
+
+            return ToResponse(order);
+        }
+        catch (DomainException exception)
+        {
+            return Result<OrderResponse>.ValidationFailure("order.invalid", exception.Message);
+        }
+    }
+
+    public async Task<Result<OrderResponse>> CreateCustomerOrderAsync(CreateCustomerOrderRequest request, Guid userId, CancellationToken cancellationToken)
+    {
+        if (!Enum.TryParse<OrderModality>(request.Modality, true, out var modality) ||
+            (modality != OrderModality.PICKUP && modality != OrderModality.DELIVERY))
+        {
+            return Result<OrderResponse>.ValidationFailure("order.invalid_modality", "La modalidad debe ser PICKUP o DELIVERY.");
+        }
+
+        var customer = await customerRepository.GetWithAddressesAsync(request.CustomerId, cancellationToken);
+        if (customer is null)
+        {
+            return Result<OrderResponse>.NotFound("customer.not_found", "El cliente no existe.");
+        }
+
+        if (modality == OrderModality.DELIVERY)
+        {
+            if (request.DeliveryAddressId is null)
+            {
+                return Result<OrderResponse>.ValidationFailure("order.address_required", "Un pedido a domicilio requiere una dirección.");
+            }
+
+            if (customer.Addresses.All(a => a.Id != request.DeliveryAddressId.Value))
+            {
+                return Result<OrderResponse>.ValidationFailure("order.address_not_found", "La dirección no pertenece al cliente.");
+            }
+        }
+
+        try
+        {
+            var order = Order.CreateForCustomer(request.OrderNumber, userId, modality, request.CustomerId, request.DeliveryAddressId);
+
+            if (request.Items is not null)
+            {
+                foreach (var item in request.Items)
+                {
+                    var product = await LoadProductSnapshotAsync(item.ProductId, cancellationToken);
+                    if (product is null)
+                    {
+                        throw new DomainException($"El producto {item.ProductId} no existe.");
+                    }
+
+                    if (!product.IsAvailable)
+                    {
+                        throw new DomainException($"El producto '{product.Name}' no está disponible.");
+                    }
+
+                    order.AddItem(
+                        product.Id,
+                        product.Name,
+                        product.PreparationAreaId,
+                        product.Price,
+                        item.Quantity,
+                        BuildExtras(product, item.Extras),
+                        item.RemovedIngredients);
+                }
+            }
+
+            order.Recalculate();
+            await orderRepository.AddAsync(order, cancellationToken);
+            await orderRepository.SaveChangesAsync(cancellationToken);
+
+            await preparationOrderService.GenerateAsync(order, cancellationToken);
+            await notifier.NotifyOrderCreatedAsync(order.Id, cancellationToken);
+            await notifier.NotifyOrderStatusChangedAsync(order.Id, order.Status.ToString(), cancellationToken);
 
             return ToResponse(order);
         }
@@ -276,6 +350,72 @@ public sealed class OrderService(
         }
     }
 
+    public async Task<Result> MarkInRouteAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+        if (order is null)
+        {
+            return Result.NotFound("order.not_found", "El pedido no existe.");
+        }
+
+        try
+        {
+            order.MarkInRoute();
+            await orderRepository.SaveChangesAsync(cancellationToken);
+            await notifier.NotifyOrderStatusChangedAsync(order.Id, order.Status.ToString(), cancellationToken);
+
+            return Result.Success();
+        }
+        catch (DomainException exception)
+        {
+            return Result.BusinessRuleFailure("order.invalid", exception.Message);
+        }
+    }
+
+    public async Task<Result> MarkDeliveredAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+        if (order is null)
+        {
+            return Result.NotFound("order.not_found", "El pedido no existe.");
+        }
+
+        try
+        {
+            order.MarkDelivered();
+            await orderRepository.SaveChangesAsync(cancellationToken);
+            await notifier.NotifyOrderStatusChangedAsync(order.Id, order.Status.ToString(), cancellationToken);
+
+            return Result.Success();
+        }
+        catch (DomainException exception)
+        {
+            return Result.BusinessRuleFailure("order.invalid", exception.Message);
+        }
+    }
+
+    public async Task<Result> CompleteAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken);
+        if (order is null)
+        {
+            return Result.NotFound("order.not_found", "El pedido no existe.");
+        }
+
+        try
+        {
+            order.Complete();
+            await orderRepository.SaveChangesAsync(cancellationToken);
+            await notifier.NotifyOrderStatusChangedAsync(order.Id, order.Status.ToString(), cancellationToken);
+
+            return Result.Success();
+        }
+        catch (DomainException exception)
+        {
+            return Result.BusinessRuleFailure("order.invalid", exception.Message);
+        }
+    }
+
     private async Task<OrderProductSnapshot?> LoadProductSnapshotAsync(Guid productId, CancellationToken cancellationToken)
     {
         var product = await productRepository.GetWithDetailsAsync(productId, cancellationToken);
@@ -327,6 +467,8 @@ public sealed class OrderService(
         order.Status.ToString(),
         order.Modality.ToString(),
         order.AccountId,
+        order.CustomerId,
+        order.DeliveryAddressId,
         order.CreatedByUserId,
         order.Subtotal,
         order.Discount,

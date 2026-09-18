@@ -6,6 +6,7 @@ using Restaurant.Application.Cancellations;
 using Restaurant.Application.Cash;
 using Restaurant.Application.Finance;
 using Restaurant.Application.Catalog;
+using Restaurant.Application.Customers;
 using Restaurant.Application.Orders;
 using Restaurant.Application.Payments;
 using Restaurant.Application.Preparation;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IBillingService, BillingService>();
         services.AddScoped<ICashService, CashService>();
         services.AddScoped<IFinanceService, FinanceService>();
+        services.AddScoped<ICustomerService, CustomerService>();
 
         return services;
     }

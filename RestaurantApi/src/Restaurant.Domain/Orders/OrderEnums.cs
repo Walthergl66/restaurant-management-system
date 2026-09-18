@@ -3,9 +3,11 @@ namespace Restaurant.Domain.Orders;
 public enum OrderStatus
 {
     DRAFT,
+    RECEIVED,
     CONFIRMED,
     IN_PREPARATION,
     READY,
+    IN_ROUTE,
     DELIVERED,
     COMPLETED,
     CANCEL_REQUESTED,
