@@ -5,6 +5,8 @@ public static class Permissions
     public const string OrdersCreate = "orders:create";
     public const string OrdersConfirm = "orders:confirm";
     public const string OrdersCancel = "orders:cancel";
+    public const string CatalogView = "catalog:view";
+    public const string CatalogManage = "catalog:manage";
     public const string AdditionsCreate = "additions:create";
     public const string CancellationsRequest = "cancellations:request";
     public const string CancellationsApprove = "cancellations:approve";
@@ -26,6 +28,8 @@ public static class Permissions
         OrdersCreate,
         OrdersConfirm,
         OrdersCancel,
+        CatalogView,
+        CatalogManage,
         AdditionsCreate,
         CancellationsRequest,
         CancellationsApprove,

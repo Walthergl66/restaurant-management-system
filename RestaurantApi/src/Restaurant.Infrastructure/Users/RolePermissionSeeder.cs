@@ -86,12 +86,14 @@ public sealed class RolePermissionSeeder(
         RoleName.CLIENT => new[]
         {
             Permissions.OrdersCreate,
+            Permissions.CatalogView,
         },
         RoleName.WAITER => new[]
         {
             Permissions.OrdersCreate,
             Permissions.OrdersConfirm,
             Permissions.OrdersCancel,
+            Permissions.CatalogView,
             Permissions.AdditionsCreate,
             Permissions.CancellationsRequest,
             Permissions.TableAccountsManage,
@@ -102,6 +104,7 @@ public sealed class RolePermissionSeeder(
             Permissions.OrdersCreate,
             Permissions.OrdersConfirm,
             Permissions.OrdersCancel,
+            Permissions.CatalogView,
             Permissions.AdditionsCreate,
             Permissions.CancellationsRequest,
             Permissions.CancellationsApprove,

@@ -5,6 +5,7 @@ using Restaurant.Application.Common.Abstractions;
 using Restaurant.Infrastructure.Authentication;
 using Restaurant.Infrastructure.Authorization;
 using Restaurant.Infrastructure.Persistence;
+using Restaurant.Infrastructure.Repositories;
 using Restaurant.Infrastructure.Users;
 
 namespace Restaurant.Infrastructure;
@@ -17,6 +18,12 @@ public static class DependencyInjection
         services.AddAuthenticationServices();
         services.AddRestaurantAuthorization();
         services.AddScoped<IRolePermissionSeeder, RolePermissionSeeder>();
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IPreparationAreaRepository, PreparationAreaRepository>();
+        services.AddScoped<IExtraRepository, ExtraRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
 
         return services;
     }

@@ -62,3 +62,6 @@ dotnet_naming_rule.types_should_match_file_name.style = file_name_style
 dotnet_naming_symbols.types.applicable_kinds = class,struct,interface,enum,delegate
 dotnet_naming_style.file_name_style.capitalization = pascal_case
 dotnet_naming_style.file_name_style.required_suffix = .cs
+
+[**/Migrations/*.cs]
+dotnet_diagnostic.CA1861.severity = none
