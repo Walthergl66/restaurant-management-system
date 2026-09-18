@@ -4,11 +4,22 @@ public abstract class ValueObject : IEquatable<ValueObject>
 {
     protected abstract IEnumerable<object?> GetEqualityComponents();
 
-    public bool Equals(ValueObject? other) => other is not null && Equals(other);
+    public bool Equals(ValueObject? other) => other is not null && Equals((object?)other);
 
-    public override bool Equals(object? obj) => obj is ValueObject other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        if (obj is not ValueObject other)
+        {
+            return false;
+        }
 
-    private bool Equals(ValueObject other) => GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return GetType() == other.GetType() && GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
+    }
 
     public override int GetHashCode() => GetEqualityComponents()
         .Aggregate(17, (hash, component) => hash * 31 + (component?.GetHashCode() ?? 0));
