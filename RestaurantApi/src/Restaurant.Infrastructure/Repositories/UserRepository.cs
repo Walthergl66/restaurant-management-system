@@ -30,6 +30,11 @@ public sealed class UserRepository(ApplicationDbContext dbContext) : IUserReposi
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
+    public async Task AddAsync(User user, CancellationToken cancellationToken = default)
+    {
+        await dbContext.Set<User>().AddAsync(user, cancellationToken);
+    }
+
     public async Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         return await dbContext.Set<RefreshToken>()

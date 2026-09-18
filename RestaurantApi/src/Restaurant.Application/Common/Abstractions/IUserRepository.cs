@@ -8,6 +8,8 @@ public interface IUserRepository
 
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task AddAsync(User user, CancellationToken cancellationToken = default);
+
     Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default);
 
     Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default);

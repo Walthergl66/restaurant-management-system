@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Restaurant.Application.Additions;
+using Restaurant.Application.Administration;
 using Restaurant.Application.Auth;
 using Restaurant.Application.Billing;
 using Restaurant.Application.Cancellations;
@@ -40,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<ICashService, CashService>();
         services.AddScoped<IFinanceService, FinanceService>();
         services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IRoleAdminService, RoleAdminService>();
 
         return services;
     }
