@@ -4,6 +4,7 @@ using Restaurant.Application.Auth;
 using Restaurant.Application.Cancellations;
 using Restaurant.Application.Catalog;
 using Restaurant.Application.Orders;
+using Restaurant.Application.Preparation;
 using Restaurant.Application.Services;
 using Restaurant.Application.Tables;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IAdditionService, AdditionService>();
         services.AddScoped<ICancellationService, CancellationService>();
+        services.AddScoped<IPreparationOrderService, PreparationOrderService>();
 
         return services;
     }
