@@ -29,3 +29,9 @@ project.fragment.lock.json
 # Misc
 *.log
 .DS_Store
+
+# Contexto de agentes y planes (nunca se commitean)
+AGENTS.md
+PLAN_BACKEND_RESTAURANT.md
+backend/AGENTS.md
+backend/PLAN_BACKEND_RESTAURANT.md
