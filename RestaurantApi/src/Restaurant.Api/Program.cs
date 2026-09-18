@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Restaurant.Application;
+using Restaurant.Application.Common.Abstractions;
 using Restaurant.Infrastructure;
 using Restaurant.Infrastructure.Authentication;
 
@@ -33,13 +34,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<IRolePermissionSeeder>();
+    await seeder.SeedAsync();
 }
 
 app.UseHttpsRedirection();
