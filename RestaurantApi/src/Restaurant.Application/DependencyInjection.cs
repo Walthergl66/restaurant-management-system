@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Restaurant.Application.Additions;
 using Restaurant.Application.Auth;
+using Restaurant.Application.Cancellations;
 using Restaurant.Application.Catalog;
 using Restaurant.Application.Orders;
+using Restaurant.Application.Services;
 using Restaurant.Application.Tables;
 
 namespace Restaurant.Application;
@@ -20,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ITableAccountService, TableAccountService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IAdditionService, AdditionService>();
+        services.AddScoped<ICancellationService, CancellationService>();
 
         return services;
     }
