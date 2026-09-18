@@ -1,12 +1,15 @@
 using Restaurant.Application.Common;
 using Restaurant.Application.Common.Abstractions;
+using Restaurant.Application.Realtime;
 using Restaurant.Domain.Common;
 using Restaurant.Domain.Orders;
 using Restaurant.Domain.Preparation;
 
 namespace Restaurant.Application.Preparation;
 
-public sealed class PreparationOrderService(IPreparationOrderRepository repository) : IPreparationOrderService
+public sealed class PreparationOrderService(
+    IPreparationOrderRepository repository,
+    IRealtimeNotifier notifier) : IPreparationOrderService
 {
     public async Task<Result<IReadOnlyCollection<PreparationOrderResponse>>> GetByStatusAsync(int status, CancellationToken cancellationToken)
     {
@@ -77,6 +80,11 @@ public sealed class PreparationOrderService(IPreparationOrderRepository reposito
             await repository.AddRangeAsync(orders, cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);
 
+            foreach (var preparationOrder in orders)
+            {
+                await notifier.NotifyPreparationOrderCreatedAsync(preparationOrder.Id, cancellationToken);
+            }
+
             return orders.Select(ToResponse).ToList();
         }
         catch (DomainException exception)
@@ -98,6 +106,8 @@ public sealed class PreparationOrderService(IPreparationOrderRepository reposito
             order.StartPreparation();
             await repository.SaveChangesAsync(cancellationToken);
 
+            await notifier.NotifyPreparationStartedAsync(order.Id, cancellationToken);
+
             return Result.Success();
         }
         catch (DomainException exception)
@@ -116,6 +126,8 @@ public sealed class PreparationOrderService(IPreparationOrderRepository reposito
 
         order.MarkReady();
         await repository.SaveChangesAsync(cancellationToken);
+
+        await notifier.NotifyOrderReadyAsync(order.SourceOrderId, cancellationToken);
 
         return Result.Success();
     }

@@ -1,6 +1,7 @@
 using Restaurant.Application.Cancellations;
 using Restaurant.Application.Common;
 using Restaurant.Application.Common.Abstractions;
+using Restaurant.Application.Realtime;
 using Restaurant.Domain.Cancellations;
 using Restaurant.Domain.Common;
 
@@ -9,7 +10,8 @@ namespace Restaurant.Application.Services;
 public sealed class CancellationService(
     ICancellationRequestRepository repository,
     IOrderRepository orderRepository,
-    ITableAccountRepository accountRepository) : ICancellationService
+    ITableAccountRepository accountRepository,
+    IRealtimeNotifier notifier) : ICancellationService
 {
     public async Task<Result<IReadOnlyCollection<CancellationRequestResponse>>> GetPendingAsync(CancellationToken cancellationToken)
     {
@@ -86,6 +88,8 @@ public sealed class CancellationService(
             cancellation.Approve(reviewerUserId, request.Note);
             await ApplyOrderAdjustmentAsync(cancellation, cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);
+
+            await notifier.NotifyCancellationApprovedAsync(cancellation.Id, cancellationToken);
 
             return ToResponse(cancellation);
         }

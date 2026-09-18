@@ -1,6 +1,7 @@
 using Restaurant.Application.Common;
 using Restaurant.Application.Common.Abstractions;
 using Restaurant.Application.Preparation;
+using Restaurant.Application.Realtime;
 using Restaurant.Domain.Common;
 using Restaurant.Domain.Orders;
 
@@ -10,7 +11,8 @@ public sealed class OrderService(
     IOrderRepository orderRepository,
     IProductRepository productRepository,
     ITableAccountRepository accountRepository,
-    IPreparationOrderService preparationOrderService) : IOrderService
+    IPreparationOrderService preparationOrderService,
+    IRealtimeNotifier notifier) : IOrderService
 {
     public async Task<Result<OrderResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -200,6 +202,8 @@ public sealed class OrderService(
             await orderRepository.SaveChangesAsync(cancellationToken);
 
             await preparationOrderService.GenerateAsync(order, cancellationToken);
+            await notifier.NotifyOrderConfirmedAsync(order.Id, cancellationToken);
+            await notifier.NotifyOrderStatusChangedAsync(order.Id, order.Status.ToString(), cancellationToken);
 
             return ToResponse(order);
         }
