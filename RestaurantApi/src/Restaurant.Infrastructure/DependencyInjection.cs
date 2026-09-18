@@ -30,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<IAdditionRepository, AdditionRepository>();
         services.AddScoped<ICancellationRequestRepository, CancellationRequestRepository>();
         services.AddScoped<IPreparationOrderRepository, PreparationOrderRepository>();
+        services.AddScoped<IPrinterRepository, PrinterRepository>();
+        services.AddScoped<IPrintJobRepository, PrintJobRepository>();
 
         return services;
     }

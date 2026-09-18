@@ -1,5 +1,6 @@
 using Restaurant.Application.Common;
 using Restaurant.Application.Common.Abstractions;
+using Restaurant.Application.Preparation;
 using Restaurant.Domain.Common;
 using Restaurant.Domain.Orders;
 
@@ -8,7 +9,8 @@ namespace Restaurant.Application.Orders;
 public sealed class OrderService(
     IOrderRepository orderRepository,
     IProductRepository productRepository,
-    ITableAccountRepository accountRepository) : IOrderService
+    ITableAccountRepository accountRepository,
+    IPreparationOrderService preparationOrderService) : IOrderService
 {
     public async Task<Result<OrderResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -196,6 +198,8 @@ public sealed class OrderService(
             order.Recalculate();
             order.Confirm();
             await orderRepository.SaveChangesAsync(cancellationToken);
+
+            await preparationOrderService.GenerateAsync(order, cancellationToken);
 
             return ToResponse(order);
         }
