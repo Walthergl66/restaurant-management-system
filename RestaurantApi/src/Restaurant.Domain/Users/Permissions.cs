@@ -16,6 +16,7 @@ public static class Permissions
     public const string CashClose = "cash:close";
     public const string ReportsView = "reports:view";
     public const string FinanceView = "finance:view";
+    public const string FinanceManage = "finance:manage";
     public const string ProductsManage = "products:manage";
     public const string UsersManage = "users:manage";
     public const string RolesManage = "roles:manage";
@@ -39,6 +40,7 @@ public static class Permissions
         CashClose,
         ReportsView,
         FinanceView,
+        FinanceManage,
         ProductsManage,
         UsersManage,
         RolesManage,

@@ -113,6 +113,7 @@ public sealed class RolePermissionSeeder(
             Permissions.CashOpen,
             Permissions.CashClose,
             Permissions.ReportsView,
+            Permissions.FinanceView,
         },
         RoleName.ADMIN => Permissions.All,
         _ => [],

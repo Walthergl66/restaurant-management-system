@@ -4,6 +4,7 @@ using Restaurant.Application.Auth;
 using Restaurant.Application.Billing;
 using Restaurant.Application.Cancellations;
 using Restaurant.Application.Cash;
+using Restaurant.Application.Finance;
 using Restaurant.Application.Catalog;
 using Restaurant.Application.Orders;
 using Restaurant.Application.Payments;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddSingleton<IElectronicInvoiceProvider, NullElectronicInvoiceProvider>();
         services.AddScoped<IBillingService, BillingService>();
         services.AddScoped<ICashService, CashService>();
+        services.AddScoped<IFinanceService, FinanceService>();
 
         return services;
     }

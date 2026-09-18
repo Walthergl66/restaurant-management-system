@@ -1,5 +1,6 @@
 using Restaurant.Application.Common;
 using Restaurant.Application.Common.Abstractions;
+using Restaurant.Application.Finance;
 using Restaurant.Application.Payments;
 using Restaurant.Domain.Common;
 using Restaurant.Domain.Payments;
@@ -10,7 +11,8 @@ namespace Restaurant.Application.Services;
 public sealed class PaymentService(
     IPaymentRepository paymentRepository,
     ITableAccountRepository accountRepository,
-    ISaleRepository saleRepository) : IPaymentService
+    ISaleRepository saleRepository,
+    IFinanceService financeService) : IPaymentService
 {
     public async Task<Result<PaymentResponse>> CreateForAccountAsync(
         Guid accountId,
@@ -37,6 +39,14 @@ public sealed class PaymentService(
             payment.MarkPaid(userId);
             await paymentRepository.AddAsync(payment, cancellationToken);
             await paymentRepository.SaveChangesAsync(cancellationToken);
+
+            await financeService.RecordIncomeAsync(
+                request.Amount,
+                "PAYMENT",
+                accountId,
+                $"Pago de cuenta {account.AccountNumber}",
+                userId,
+                cancellationToken);
 
             return ToPaymentResponse(payment);
         }
@@ -72,6 +82,14 @@ public sealed class PaymentService(
             payment.MarkPaid(userId);
             await paymentRepository.AddAsync(payment, cancellationToken);
             await paymentRepository.SaveChangesAsync(cancellationToken);
+
+            await financeService.RecordIncomeAsync(
+                request.Amount,
+                "SALE",
+                saleId,
+                $"Pago de venta {sale.SaleNumber}",
+                userId,
+                cancellationToken);
 
             return ToPaymentResponse(payment);
         }
