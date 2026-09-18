@@ -6,7 +6,7 @@
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
-    <NoWarn>$(NoWarn);CA1000;CA1711;CA1716</NoWarn>
+    <NoWarn>$(NoWarn);CA1000;CA1711;CA1716;CA1707</NoWarn>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 </Project>
