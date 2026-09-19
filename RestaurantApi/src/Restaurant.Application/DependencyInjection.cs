@@ -13,6 +13,7 @@ using Restaurant.Application.Payments;
 using Restaurant.Application.Preparation;
 using Restaurant.Application.Printing;
 using Restaurant.Application.Services;
+using Restaurant.Application.Settings;
 using Restaurant.Application.Tables;
 
 namespace Restaurant.Application;
@@ -43,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IEmployeeService, EmployeeService>();
         services.AddScoped<IRoleAdminService, RoleAdminService>();
+        services.AddScoped<ISettingsService, SettingsService>();
 
         return services;
     }
