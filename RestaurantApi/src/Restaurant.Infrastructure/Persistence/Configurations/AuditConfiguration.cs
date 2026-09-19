@@ -1,6 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using Restaurant.Domain.Audit;
+
 namespace Restaurant.Infrastructure.Persistence.Configurations;
 
-public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
+public sealed class AuditConfiguration : IEntityTypeConfiguration<AuditLog>
 {
     public void Configure(EntityTypeBuilder<AuditLog> builder)
     {

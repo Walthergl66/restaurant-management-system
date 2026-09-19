@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Restaurant.Application.Audit;
+using Restaurant.Application.Common.Abstractions;
 using Restaurant.Domain.Audit;
 using Restaurant.Infrastructure.Persistence;
 
@@ -29,7 +30,7 @@ public sealed class AuditRepository(ApplicationDbContext dbContext) : IAuditRepo
             .ToListAsync(cancellationToken);
     }
 
-    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return dbContext.SaveChangesAsync(cancellationToken);
     }
