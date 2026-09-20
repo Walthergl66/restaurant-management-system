@@ -7,3 +7,8 @@ spring:
     show-sql: false
   flyway:
     clean-disabled: false
+
+# Secreto propio del entorno de pruebas (el real va en variables de entorno).
+app:
+  jwt:
+    secret: teste2jgqm8n0h2c65xv8fo02j4kb8tq8wqx2c65zgr8d6a3k5z65w08kj9f4o2j4kb8tq8w0000teste2a3k5z65

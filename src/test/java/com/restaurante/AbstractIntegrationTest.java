@@ -11,7 +11,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Testcontainers y migraciones de Flyway aplicadas en cada ejecución.
  */
 @Testcontainers(disabledWithoutDocker = true)
-@SpringBootTest
+@SpringBootTest(properties = "spring.profiles.active=test")
 public abstract class AbstractIntegrationTest {
 
     @Container
