@@ -1,5 +1,8 @@
 package com.restaurante.catalogo.application;
 
+import com.restaurante.catalogo.Catalogo;
+import com.restaurante.catalogo.ExtraParaPedido;
+import com.restaurante.catalogo.ProductoParaPedido;
 import com.restaurante.catalogo.domain.Area;
 import com.restaurante.catalogo.domain.Categoria;
 import com.restaurante.catalogo.domain.Extra;
@@ -19,14 +22,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
- * Administración de productos del catálogo.
+ * Administración de productos del catálogo. También implementa {@link Catalogo},
+ * la API pública que consumen otros módulos.
  */
 @Service
 @Transactional
-public class ProductoService {
+public class ProductoService implements Catalogo {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
@@ -85,6 +90,25 @@ public class ProductoService {
         producto.cambiarArea(cargarArea(request.areaId()));
         producto.reemplazarExtras(cargarExtras(request.extraIds()));
         producto.reemplazarIngredientes(request.ingredientes());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ProductoParaPedido> productoParaPedido(Long productoId) {
+        return productoRepository.findById(productoId)
+                .map(p -> new ProductoParaPedido(
+                        p.getId(),
+                        p.getNombre(),
+                        p.getPrecio(),
+                        p.isActivo(),
+                        p.getArea() == null ? null : p.getArea().getNombre()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ExtraParaPedido> extraParaPedido(Long extraId) {
+        return extraRepository.findById(extraId)
+                .map(e -> new ExtraParaPedido(e.getId(), e.getNombre(), e.getPrecio(), e.isActivo()));
     }
 
     private Categoria cargarCategoria(Long id) {
