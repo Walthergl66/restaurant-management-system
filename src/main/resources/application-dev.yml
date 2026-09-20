@@ -13,6 +13,8 @@ spring:
 app:
   jwt:
     secret: a44586945d3c863a71399eb31891e33fb2c1bc0b5bd90bd6131a6e7f702c0a0214ec3b32d17ba57afe9c52eed8fc2009
+  inicial:
+    admin-password: ${ADMIN_INITIAL_PASSWORD:admin123}
 
 logging:
   level:
