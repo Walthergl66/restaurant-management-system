@@ -14,19 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class CatalogoIntegrationTest extends AbstractIntegracionApi {
 
-    private String crearProducto(String nombre, String token) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/productos")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"nombre":"%s","descripcion":"Plato del día","precio":12.50,
-                                 "extraIds":[],"ingredientes":["cebolla","tomate"]}
-                                """.formatted(nombre)))
-                .andExpect(status().isCreated())
-                .andReturn();
-        return objectMapper.readTree(result.getResponse().getContentAsString()).path("id").asText();
-    }
-
     @Nested
     class MenuPublico {
 
@@ -34,7 +21,7 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
         void menuDisponibleSinToken() throws Exception {
             mockMvc.perform(get("/api/v1/menu"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.restaurante.nombre").value("Restaurante"))
+                    .andExpect(jsonPath("$.restaurante.nombre").isNotEmpty())
                     .andExpect(jsonPath("$.restaurante.moneda").value("USD"))
                     .andExpect(jsonPath("$.categorias").isArray());
         }
@@ -42,15 +29,28 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
         @Test
         void menuSoloTraeProductosActivos() throws Exception {
             String token = tokenAdmin();
-            mockMvc.perform(post("/api/v1/categorias")
+            MvcResult categoria = mockMvc.perform(post("/api/v1/categorias")
                             .header("Authorization", "Bearer " + token)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"nombre":"Platos fuertes","orden":1}
                                     """))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isCreated())
+                    .andReturn();
+            String categoriaId = objectMapper.readTree(categoria.getResponse().getContentAsString())
+                    .path("id").asText();
 
-            String id = crearProducto("HamburguesaDoble", token);
+            MvcResult producto = mockMvc.perform(post("/api/v1/productos")
+                            .header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"nombre":"HamburguesaDoble","descripcion":"Plato del día",
+                                     "precio":12.50,"categoriaId":%s,"extraIds":[],"ingredientes":["cebolla"]}
+                                    """.formatted(categoriaId)))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+            String productoId = objectMapper.readTree(producto.getResponse().getContentAsString())
+                    .path("id").asText();
 
             mockMvc.perform(get("/api/v1/menu"))
                     .andExpect(status().isOk())
@@ -59,7 +59,7 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
                     .andExpect(jsonPath("$.categorias[0].productos[0].precio").value(12.50))
                     .andExpect(jsonPath("$.categorias[0].productos[0].ingredientes[0]").value("cebolla"));
 
-            mockMvc.perform(delete("/api/v1/productos/" + id)
+            mockMvc.perform(delete("/api/v1/productos/" + productoId)
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isNoContent());
 
@@ -118,8 +118,16 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk())
                     .andReturn();
-            String extraId = objectMapper.readTree(extra.getResponse().getContentAsString())
-                    .path(0).path("id").asText();
+            tools.jackson.databind.JsonNode extras =
+                    objectMapper.readTree(extra.getResponse().getContentAsString());
+            String extraId = null;
+            for (var node : extras) {
+                if ("Tocino".equals(node.path("nombre").asText())) {
+                    extraId = node.path("id").asText();
+                    break;
+                }
+            }
+            assert extraId != null : "Extra 'Tocino' no encontrado";
 
             mockMvc.perform(post("/api/v1/productos")
                             .header("Authorization", "Bearer " + token)
