@@ -1,5 +1,7 @@
 package com.restaurante.mesas.application;
 
+import com.restaurante.mesas.Mesas;
+import com.restaurante.mesas.MesaResumen;
 import com.restaurante.mesas.domain.EstadoMesa;
 import com.restaurante.mesas.domain.Mesa;
 import com.restaurante.mesas.infrastructure.MesaRepository;
@@ -13,15 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Administración de mesas y sus estados. El flujo de pedidos (Fase 3)
- * ocupará y liberará mesas a través de {@link Mesa#ocupar()} y
- * {@link Mesa#liberar()}.
+ * Administración de mesas y sus estados. También implementa {@link Mesas},
+ * la API pública que usa el flujo de pedidos para ocupar y liberar mesas.
  */
 @Service
 @Transactional
-public class MesaService {
+public class MesaService implements Mesas {
 
     private final MesaRepository mesaRepository;
 
@@ -72,6 +74,28 @@ public class MesaService {
         Mesa mesa = mesaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mesa no encontrada"));
         mesa.desactivar();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<MesaResumen> mesa(Long mesaId) {
+        return mesaRepository.findById(mesaId)
+                .map(m -> new MesaResumen(m.getId(), m.getNumero(), m.getEstado(), m.isActivo()));
+    }
+
+    @Override
+    public void ocuparMesa(Long mesaId) {
+        cargar(mesaId).ocupar();
+    }
+
+    @Override
+    public void liberarMesa(Long mesaId) {
+        cargar(mesaId).liberar();
+    }
+
+    private Mesa cargar(Long id) {
+        return mesaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Mesa no encontrada"));
     }
 
     private void aplicarEstado(Mesa mesa, EstadoMesa estado) {
