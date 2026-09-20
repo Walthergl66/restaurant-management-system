@@ -46,7 +46,8 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
     }
 
     /**
-     * Crea un usuario mesero vía API (el seed solo trae admin) y devuelve su token.
+     * Crea (si no existe) un usuario mesero vía API y devuelve su token.
+     * Idempotente: el contenedor compartido persiste entre clases de test.
      */
     protected String tokenMesero() {
         try {
@@ -56,9 +57,14 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
                             .content("""
                                     {"username":"mesero_test","nombre":"Mesero Test","password":"clave123","rolCodigo":"MESERO"}
                                     """))
-                    .andExpect(status().isCreated());
+                    .andExpect(result -> {
+                        int status = result.getResponse().getStatus();
+                        if (status != 201 && status != 409) {
+                            throw new AssertionError("Esperaba 201 o 409 al crear el mesero, fue " + status);
+                        }
+                    });
         } catch (Exception e) {
-            throw new IllegalStateException("No se pudo crear el usuario mesero", e);
+            throw new IllegalStateException("No se pudo asegurar el usuario mesero", e);
         }
         return loginToken("mesero_test", "clave123");
     }

@@ -1,20 +1,30 @@
 package com.restaurante;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * Base de las pruebas de integración del sistema: PostgreSQL real vía
- * Testcontainers y migraciones de Flyway aplicadas en cada ejecución.
+ * Base de las pruebas de integración del sistema: PostgreSQL real en un único
+ * contenedor compartido por toda la JVM. Compartirlo y no dejarlo en manos de
+ * la extensión de JUnit evita que el contexto de Spring se reutilice con un
+ * contenedor ya detenido entre clases de test.
  */
-@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(properties = "spring.profiles.active=test")
 public abstract class AbstractIntegrationTest {
 
-    @Container
-    @ServiceConnection
-    protected static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    private static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:16-alpine");
+
+    static {
+        POSTGRES.start();
+    }
+
+    @DynamicPropertySource
+    static void datasourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+    }
 }
