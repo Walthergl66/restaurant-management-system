@@ -1,12 +1,23 @@
-# Visual Studio
-.vs/
-.idea/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
+# --- Java / Maven ---
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
 
-# Build results
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
+.settings/
+.classpath
+.project
+
+# --- Entorno / secretos ---
+.env
+.env.*
+!.env.example
+docker/secrets/
+
+# --- Build results (legado .NET) ---
 [Bb]in/
 [Oo]bj/
 [Dd]ebug/
@@ -23,13 +34,14 @@ project.lock.json
 project.fragment.lock.json
 
 # Test results
-[Tt]est[Rr]esult*/
+[Ee][Ii][Xx][Ww]*/
 *.trx
+*.log
 
 # Misc
-*.log
 .DS_Store
 
 # Contexto de agentes y planes (nunca se commitean)
 AGENTS.md
 PLAN_BACKEND_RESTAURANT.md
+*plan-backend-restaurante*.md
