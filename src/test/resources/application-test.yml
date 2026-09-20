@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/restaurante_test
+    username: restaurante
+    password: restaurante
+  jpa:
+    show-sql: false
+  flyway:
+    clean-disabled: false
