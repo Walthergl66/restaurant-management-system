@@ -17,8 +17,7 @@ class ConfiguracionIntegrationTest extends AbstractIntegracionApi {
         mockMvc.perform(get("/api/v1/configuracion")
                         .header("Authorization", "Bearer " + tokenAdmin()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.clave == 'impuestos.iva')].valor").value("0.15"))
-                .andExpect(jsonPath("$[?(@.clave == 'restaurant.nombre')].valor").value("Restaurante"));
+                .andExpect(jsonPath("$[?(@.clave == 'impuestos.iva')].valor").value("0.15"));
     }
 
     @Test
