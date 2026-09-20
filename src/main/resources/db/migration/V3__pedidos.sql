@@ -37,7 +37,7 @@ CREATE TABLE pedido_linea_extras (
     id          BIGSERIAL PRIMARY KEY,
     linea_id    BIGINT       NOT NULL REFERENCES pedido_lineas (id) ON DELETE CASCADE,
     extra_id    BIGINT       NOT NULL,
-    nombre_extra VARCHAR(80),
+    nombre_extra VARCHAR(80) NOT NULL,
     precio      NUMERIC(12,2) NOT NULL CHECK (precio >= 0),
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );

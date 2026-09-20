@@ -2,6 +2,16 @@ package com.restaurante.pedidos.domain;
 
 import com.restaurante.shared.domain.AuditableEntity;
 import com.restaurante.shared.domain.Money;
+import com.restaurante.shared.infrastructure.MoneyConverter;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,22 +21,34 @@ import java.util.Optional;
  * Línea de pedido. Congela el nombre y precio del producto y sus extras en el
  * momento en que se confirma el pedido (RF-09, regla de precios congelados).
  */
+@Entity
+@Table(name = "pedido_lineas")
 public class PedidoLinea extends AuditableEntity {
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
+    @Column(name = "producto_id", nullable = false)
     private Long productoId;
 
+    @Column(name = "nombre_producto", nullable = false, length = 120)
     private String nombreProducto;
 
+    @Convert(converter = MoneyConverter.class)
+    @Column(name = "precio_unitario", nullable = false)
     private Money precioUnitario;
 
+    @Column(nullable = false)
     private int cantidad;
 
+    @Column(length = 500)
     private String observaciones;
 
+    @OneToMany(mappedBy = "linea", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExtraLinea> extras = new ArrayList<>();
 
+    @OneToMany(mappedBy = "linea", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<IngredienteRemovido> ingredientesRemovidos = new ArrayList<>();
 
     protected PedidoLinea() {

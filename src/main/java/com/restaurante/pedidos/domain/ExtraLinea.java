@@ -1,19 +1,35 @@
 package com.restaurante.pedidos.domain;
 
-import com.restaurante.shared.domain.AuditableEntity;
+import com.restaurante.shared.domain.BaseEntity;
 import com.restaurante.shared.domain.Money;
+import com.restaurante.shared.infrastructure.MoneyConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 /**
  * Extra congelado en una línea de pedido (nombre y precio de catálogo).
  */
-public class ExtraLinea extends AuditableEntity {
+@Entity
+@Table(name = "pedido_linea_extras")
+public class ExtraLinea extends BaseEntity {
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "linea_id", nullable = false)
     private PedidoLinea linea;
 
+    @Column(name = "extra_id", nullable = false)
     private Long extraId;
 
+    @Column(name = "nombre_extra", nullable = false, length = 80)
     private String nombre;
 
+    @Convert(converter = MoneyConverter.class)
+    @Column(nullable = false)
     private Money precio;
 
     protected ExtraLinea() {
