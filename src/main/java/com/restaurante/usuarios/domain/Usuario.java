@@ -50,6 +50,10 @@ public class Usuario extends AuditableEntity {
         return username;
     }
 
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
     public String getNombre() {
         return nombre;
     }
