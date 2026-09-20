@@ -21,8 +21,6 @@ spring:
     locations: classpath:db/migration
   jackson:
     default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
   mvc:
     problemdetails:
       enabled: true
