@@ -11,6 +11,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
@@ -23,6 +24,12 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private static final Logger log = LoggerFactory.getLogger(RestAuthenticationEntryPoint.class);
 
+    private final ObjectMapper objectMapper;
+
+    public RestAuthenticationEntryPoint(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
@@ -34,20 +41,6 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-        writeJson(response, problem);
-    }
-
-    static void writeJson(HttpServletResponse response, Object body) throws IOException {
-        response.getWriter().write(toJson(body));
-    }
-
-    private static String toJson(Object value) {
-        try {
-            var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            return mapper.writeValueAsString(value);
-        } catch (Exception e) {
-            log.error("No se pudo serializar ProblemDetail", e);
-            return "{}";
-        }
+        response.getWriter().write(objectMapper.writeValueAsString(problem));
     }
 }
