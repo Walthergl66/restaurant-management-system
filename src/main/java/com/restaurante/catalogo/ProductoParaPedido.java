@@ -9,6 +9,7 @@ public record ProductoParaPedido(
         Long id,
         String nombre,
         Money precio,
-        boolean activo,
-        String areaNombre) {
+        Long areaId,
+        String areaNombre,
+        boolean activo) {
 }

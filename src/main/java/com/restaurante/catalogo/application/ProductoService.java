@@ -100,8 +100,9 @@ public class ProductoService implements Catalogo {
                         p.getId(),
                         p.getNombre(),
                         p.getPrecio(),
-                        p.isActivo(),
-                        p.getArea() == null ? null : p.getArea().getNombre()));
+                        p.getArea() == null ? null : p.getArea().getId(),
+                        p.getArea() == null ? null : p.getArea().getNombre(),
+                        p.isActivo()));
     }
 
     @Override
