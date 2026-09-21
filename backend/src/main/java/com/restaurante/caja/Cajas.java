@@ -1,6 +1,8 @@
 package com.restaurante.caja;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -17,4 +19,13 @@ public interface Cajas {
      */
     void registrarIngreso(Long cajaId, String concepto, BigDecimal monto,
                           String metodo, Long pagoId);
+
+    /**
+     * Movimientos (ingresos y egresos) entre dos instantes, para finanzas.
+     */
+    List<MovimientoRegistro> movimientosEnPeriodo(Instant desde, Instant hasta);
+
+    record MovimientoRegistro(String tipo, String metodo, BigDecimal monto,
+                              Long pagoId, Instant fecha) {
+    }
 }

@@ -2,6 +2,7 @@ package com.restaurante.caja.application;
 
 import com.restaurante.caja.CajaResumen;
 import com.restaurante.caja.Cajas;
+import com.restaurante.caja.Cajas.MovimientoRegistro;
 import com.restaurante.caja.domain.Caja;
 import com.restaurante.caja.domain.EstadoCaja;
 import com.restaurante.caja.domain.MovimientoCaja;
@@ -17,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,6 +90,17 @@ public class CajaService implements Cajas {
     public void registrarIngreso(Long cajaId, String concepto, Money monto, String metodo, Long pagoId) {
         cargarAbierta(cajaId);
         movimientoRepository.save(new MovimientoCaja(cajaId, "INGRESO", concepto, monto, metodo, pagoId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MovimientoRegistro> movimientosEnPeriodo(Instant desde, Instant hasta) {
+        return movimientoRepository.findAll().stream()
+                .filter(m -> !m.getCreatedAt().isBefore(desde)
+                        && !m.getCreatedAt().isAfter(hasta))
+                .map(m -> new MovimientoRegistro(m.getTipo(), m.getMetodo(),
+                        m.getMonto().getAmount(), m.getPagoId(), m.getCreatedAt()))
+                .toList();
     }
 
     @Override
