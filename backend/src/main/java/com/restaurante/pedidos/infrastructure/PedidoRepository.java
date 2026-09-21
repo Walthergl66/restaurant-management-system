@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +33,15 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
      */
     @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
     List<Pedido> findByMesaIdAndEstadoNot(Long mesaId, EstadoPedido estado);
+
+    /**
+     * Pedidos vendibles del período (sin borradores ni anulados), con sus
+     * líneas, para el reporte de ventas por producto (RF-51). El filtro va en
+     * la base de datos, no en memoria.
+     */
+    @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
+    List<Pedido> findByCreatedAtBetweenAndEstadoNotIn(Instant desde, Instant hasta,
+                                                      Collection<EstadoPedido> excluidos);
 
     /**
      * True si la mesa tiene otro pedido no anulado distinto del indicado.

@@ -21,6 +21,7 @@ import com.restaurante.pedidos.web.dto.ActualizarLineaRequest;
 import com.restaurante.pedidos.web.dto.AgregarLineaRequest;
 import com.restaurante.pedidos.web.dto.CrearPedidoRequest;
 import com.restaurante.pedidos.web.dto.PedidoResponse;
+import com.restaurante.shared.domain.Money;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
@@ -217,28 +218,31 @@ public class PedidoService implements Pedidos {
     @Transactional(readOnly = true)
     public List<VentaProducto> ventasPorProducto(Instant desde, Instant hasta) {
         Map<String, VentaProducto> acumuladas = new LinkedHashMap<>();
-        for (Pedido pedido : pedidoRepository.findAll()) {
-            if (pedido.getEstado() == EstadoPedido.BORRADOR
-                    || pedido.getEstado() == EstadoPedido.ANULADO) {
-                continue;
-            }
-            Instant creado = pedido.getCreatedAt();
-            if (creado == null || creado.isBefore(desde) || creado.isAfter(hasta)) {
-                continue;
-            }
+        List<Pedido> pedidos = pedidoRepository.findByCreatedAtBetweenAndEstadoNotIn(
+                desde, hasta, List.of(EstadoPedido.BORRADOR, EstadoPedido.ANULADO));
+        for (Pedido pedido : pedidos) {
             for (PedidoLinea linea : pedido.getLineas()) {
-                String clave = linea.getProductoId() + "|" + linea.getNombreProducto();
+                String clave = claveProducto(linea.getProductoId(), linea.getNombreProducto());
                 VentaProducto actual = acumuladas.get(clave);
-                VentaProducto suma = new VentaProducto(
+                Money monto = actual == null
+                        ? linea.subtotal()
+                        : linea.subtotal().add(Money.of(actual.monto()));
+                acumuladas.put(clave, new VentaProducto(
                         String.valueOf(linea.getProductoId()),
                         linea.getNombreProducto(),
                         linea.getCantidad() + (actual == null ? 0 : actual.cantidad()),
-                        linea.subtotal().getAmount()
-                                .add(actual == null ? java.math.BigDecimal.ZERO : actual.monto()));
-                acumuladas.put(clave, suma);
+                        monto.getAmount()));
             }
         }
         return acumuladas.values().stream().toList();
+    }
+
+    /**
+     * Clave de agrupación con separador de control no imprimible: el nombre
+     * congelado puede contener cualquier carácter visible, incluido "|".
+     */
+    private String claveProducto(Long productoId, String nombreProducto) {
+        return productoId + "" + nombreProducto;
     }
 
     private PedidoResumen aResumen(Pedido pedido) {

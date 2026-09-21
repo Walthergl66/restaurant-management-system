@@ -53,8 +53,9 @@ public interface Pedidos {
     /**
      * Suma vendida por producto (cantidad y monto congelados) de los pedidos
      * confirmados o más avanzados —sin borradores ni anulados— creados en el
-     * período. No descuenta anulaciones: eso lo concilia reportes con la API
-     * de anulaciones.
+     * período. El monto de cada línea es su subtotal congelado, es decir,
+     * incluye sus extras. No descuenta anulaciones: eso lo concilia reportes
+     * con la API de anulaciones.
      */
     List<VentaProducto> ventasPorProducto(Instant desde, Instant hasta);
 
