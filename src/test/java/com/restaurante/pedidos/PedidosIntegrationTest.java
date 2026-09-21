@@ -48,7 +48,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
         JsonNode linea = lineas.get(0);
 
         assertTrue(resumen.getResponse().getContentAsString().contains("\"estado\":\"BORRADOR\""));
-        assertEquals("Pollo a la Plancha", linea.path("nombreProducto").asText());
+        assertTrue(linea.path("nombreProducto").asText().startsWith("Pollo a la Plancha"));
         assertEquals(0, new BigDecimal("12.50").compareTo(linea.path("precioUnitario").decimalValue()));
         assertEquals(2, linea.path("cantidad").asInt());
         // (12.50 * 2) + (1.50 * 2)

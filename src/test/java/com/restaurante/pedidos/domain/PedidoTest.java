@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,8 +23,8 @@ class PedidoTest {
         Pedido pedido = new Pedido("C-001", 1L, null);
         pedido.agregarLinea(
                 10L, "Encebollado", Money.of("5.00"), 2,
-                List.of(new ExtraLinea(9L, "Tocino", Money.of("1.00"))),
-                List.of(new IngredienteRemovido("cebolla")),
+                Set.of(new ExtraLinea(9L, "Tocino", Money.of("1.00"))),
+                Set.of(new IngredienteRemovido("cebolla")),
                 null);
 
         PedidoLinea linea = pedido.getLineas().get(0);
@@ -39,17 +40,17 @@ class PedidoTest {
     void confirmarBloqueaElBorrador() {
         Pedido pedido = new Pedido("C-002", 1L, null);
         PedidoLinea linea = pedido.agregarLinea(
-                10L, "Producto", Money.of("5.00"), 1, List.of(), List.of(), null);
+                10L, "Producto", Money.of("5.00"), 1, Set.of(), Set.of(), null);
         ReflectionTestUtils.setField(linea, "id", 1L);
 
         pedido.confirmar();
 
         assertEquals(EstadoPedido.CONFIRMADO, pedido.getEstado());
         assertThrows(BusinessRuleException.class,
-                () -> pedido.agregarLinea(11L, "Otro", Money.of("2.00"), 1, List.of(), List.of(), null));
+                () -> pedido.agregarLinea(11L, "Otro", Money.of("2.00"), 1, Set.of(), Set.of(), null));
         assertThrows(BusinessRuleException.class, () -> pedido.quitarLinea(1L));
         assertThrows(BusinessRuleException.class,
-                () -> pedido.actualizarLinea(1L, 3, List.of(), List.of(), null));
+                () -> pedido.actualizarLinea(1L, 3, Set.of(), Set.of(), null));
     }
 
     @Test
@@ -61,7 +62,7 @@ class PedidoTest {
     @Test
     void transicionesValidasHastaEntregar() {
         Pedido pedido = new Pedido("C-004", 1L, null);
-        pedido.agregarLinea(10L, "Producto", Money.of("5.00"), 1, List.of(), List.of(), null);
+        pedido.agregarLinea(10L, "Producto", Money.of("5.00"), 1, Set.of(), Set.of(), null);
 
         pedido.confirmar();
         pedido.marcarEnPreparacion();
@@ -74,7 +75,7 @@ class PedidoTest {
     @Test
     void rechazaTransicionesFueraDeOrden() {
         Pedido pedido = new Pedido("C-005", 1L, null);
-        pedido.agregarLinea(10L, "Producto", Money.of("5.00"), 1, List.of(), List.of(), null);
+        pedido.agregarLinea(10L, "Producto", Money.of("5.00"), 1, Set.of(), Set.of(), null);
 
         assertThrows(BusinessRuleException.class, pedido::marcarListo);
         pedido.confirmar();
@@ -87,7 +88,7 @@ class PedidoTest {
     @Test
     void confirmaIdempotenteConSuClave() {
         Pedido pedido = new Pedido("C-006", 1L, null);
-        pedido.agregarLinea(10L, "Producto", Money.of("5.00"), 1, List.of(), List.of(), null);
+        pedido.agregarLinea(10L, "Producto", Money.of("5.00"), 1, Set.of(), Set.of(), null);
 
         pedido.confirmar();
         pedido.agregarConfirmacion("key-ABC");
