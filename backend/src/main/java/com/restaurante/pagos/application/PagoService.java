@@ -135,9 +135,7 @@ public class PagoService implements Pagos {
     @Override
     @Transactional(readOnly = true)
     public List<PagoRegistro> pagosEnPeriodo(Instant desde, Instant hasta) {
-        return pagoRepository.findAll().stream()
-                .filter(p -> !p.getCreatedAt().isBefore(desde)
-                        && !p.getCreatedAt().isAfter(hasta))
+        return pagoRepository.findByCreatedAtBetween(desde, hasta).stream()
                 .map(p -> new PagoRegistro(p.getCuentaId(), p.getMetodo().name(),
                         p.getMonto().getAmount(), p.getCreatedAt()))
                 .toList();
