@@ -82,12 +82,12 @@ public class GeneradorComandas {
         int orden = 1;
         for (LineaAcumulada acumulada : agrupadas.values()) {
             comanda.agregarLinea(new ComandaLinea(
-                    acumulada.productoId(),
-                    acumulada.nombreProducto(),
-                    acumulada.cantidad(),
-                    acumulada.extras().isEmpty() ? null : acumulada.extras(),
-                    acumulada.ingredientes().isEmpty() ? null : acumulada.ingredientes(),
-                    String.join("; ", acumulada.observaciones()),
+                    acumulada.productoId,
+                    acumulada.nombreProducto,
+                    acumulada.cantidad,
+                    acumulada.extras.isEmpty() ? null : acumulada.extras,
+                    acumulada.ingredientes.isEmpty() ? null : acumulada.ingredientes,
+                    String.join("; ", acumulada.observaciones),
                     orden++));
         }
     }
