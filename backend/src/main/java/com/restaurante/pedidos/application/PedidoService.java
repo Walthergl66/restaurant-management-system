@@ -16,6 +16,7 @@ import com.restaurante.pedidos.PedidoCreado;
 import com.restaurante.pedidos.PedidoResumen;
 import com.restaurante.pedidos.Pedidos;
 import com.restaurante.pedidos.LineaResumen;
+import com.restaurante.pedidos.Pedidos.VentaProducto;
 import com.restaurante.pedidos.web.dto.ActualizarLineaRequest;
 import com.restaurante.pedidos.web.dto.AgregarLineaRequest;
 import com.restaurante.pedidos.web.dto.CrearPedidoRequest;
@@ -27,8 +28,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -207,6 +211,34 @@ public class PedidoService implements Pedidos {
     @Override
     public boolean hayOtroPedidoEnMesa(Long mesaId, String pedidoCodigo) {
         return pedidoRepository.existeOtroPedidoEnMesa(mesaId, pedidoCodigo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VentaProducto> ventasPorProducto(Instant desde, Instant hasta) {
+        Map<String, VentaProducto> acumuladas = new LinkedHashMap<>();
+        for (Pedido pedido : pedidoRepository.findAll()) {
+            if (pedido.getEstado() == EstadoPedido.BORRADOR
+                    || pedido.getEstado() == EstadoPedido.ANULADO) {
+                continue;
+            }
+            Instant creado = pedido.getCreatedAt();
+            if (creado == null || creado.isBefore(desde) || creado.isAfter(hasta)) {
+                continue;
+            }
+            for (PedidoLinea linea : pedido.getLineas()) {
+                String clave = linea.getProductoId() + "|" + linea.getNombreProducto();
+                VentaProducto actual = acumuladas.get(clave);
+                VentaProducto suma = new VentaProducto(
+                        String.valueOf(linea.getProductoId()),
+                        linea.getNombreProducto(),
+                        linea.getCantidad() + (actual == null ? 0 : actual.cantidad()),
+                        linea.subtotal().getAmount()
+                                .add(actual == null ? java.math.BigDecimal.ZERO : actual.monto()));
+                acumuladas.put(clave, suma);
+            }
+        }
+        return acumuladas.values().stream().toList();
     }
 
     private PedidoResumen aResumen(Pedido pedido) {
