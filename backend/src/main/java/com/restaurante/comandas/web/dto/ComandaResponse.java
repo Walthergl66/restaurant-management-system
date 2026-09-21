@@ -11,6 +11,7 @@ public record ComandaResponse(
         int numeroComanda,
         Long areaId,
         String areaNombre,
+        String tipo,
         String estado,
         List<ComandaLineaResponse> lineas) {
 
@@ -42,6 +43,7 @@ public record ComandaResponse(
                 comanda.getNumeroComanda(),
                 comanda.getAreaId(),
                 comanda.getAreaNombre(),
+                comanda.getTipo().name(),
                 comanda.getEstado().name(),
                 comanda.getLineas().stream().map(ComandaLineaResponse::from).toList());
     }

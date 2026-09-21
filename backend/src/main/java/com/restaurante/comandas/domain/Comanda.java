@@ -37,6 +37,13 @@ public class Comanda extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    private TipoComanda tipo = TipoComanda.ORDEN;
+
+    @Column(name = "anulacion_id")
+    private Long anulacionId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private ComandaEstado estado = ComandaEstado.PENDIENTE;
 
     @OneToMany(mappedBy = "comanda", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -47,10 +54,17 @@ public class Comanda extends AuditableEntity {
     }
 
     public Comanda(String pedidoCodigo, int numeroComanda, Long areaId, String areaNombre) {
+        this(pedidoCodigo, numeroComanda, areaId, areaNombre, TipoComanda.ORDEN, null);
+    }
+
+    public Comanda(String pedidoCodigo, int numeroComanda, Long areaId, String areaNombre,
+                   TipoComanda tipo, Long anulacionId) {
         this.pedidoCodigo = pedidoCodigo;
         this.numeroComanda = numeroComanda;
         this.areaId = areaId;
         this.areaNombre = areaNombre;
+        this.tipo = tipo;
+        this.anulacionId = anulacionId;
     }
 
     public void agregarLinea(ComandaLinea linea) {
@@ -92,6 +106,14 @@ public class Comanda extends AuditableEntity {
 
     public ComandaEstado getEstado() {
         return estado;
+    }
+
+    public TipoComanda getTipo() {
+        return tipo;
+    }
+
+    public Long getAnulacionId() {
+        return anulacionId;
     }
 
     public List<ComandaLinea> getLineas() {
