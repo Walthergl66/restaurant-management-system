@@ -25,4 +25,17 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     boolean existsByCodigo(String codigo);
 
     List<Pedido> findByMesaIdAndEstado(Long mesaId, EstadoPedido estado);
+
+    /**
+     * Pedidos no anulados de una mesa, con sus líneas, para totalizar la cuenta.
+     */
+    @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
+    List<Pedido> findByMesaIdAndEstadoNot(Long mesaId, EstadoPedido estado);
+
+    /**
+     * True si la mesa tiene otro pedido no anulado distinto del indicado.
+     */
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN TRUE ELSE FALSE END FROM Pedido p "
+            + "WHERE p.mesaId = :mesaId AND p.codigo <> :codigo AND p.estado <> com.restaurante.pedidos.domain.EstadoPedido.ANULADO")
+    boolean existeOtroPedidoEnMesa(@Param("mesaId") Long mesaId, @Param("codigo") String codigo);
 }

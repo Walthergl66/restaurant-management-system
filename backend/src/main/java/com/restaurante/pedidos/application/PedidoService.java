@@ -10,8 +10,12 @@ import com.restaurante.pedidos.domain.IngredienteRemovido;
 import com.restaurante.pedidos.domain.Pedido;
 import com.restaurante.pedidos.domain.PedidoLinea;
 import com.restaurante.pedidos.infrastructure.PedidoRepository;
+import com.restaurante.pedidos.PedidoCancelado;
 import com.restaurante.pedidos.PedidoConfirmado;
+import com.restaurante.pedidos.PedidoCreado;
+import com.restaurante.pedidos.PedidoResumen;
 import com.restaurante.pedidos.Pedidos;
+import com.restaurante.pedidos.LineaResumen;
 import com.restaurante.pedidos.web.dto.ActualizarLineaRequest;
 import com.restaurante.pedidos.web.dto.AgregarLineaRequest;
 import com.restaurante.pedidos.web.dto.CrearPedidoRequest;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,7 +63,9 @@ public class PedidoService implements Pedidos {
         }
         mesas.ocuparMesa(request.mesaId());
         Pedido pedido = new Pedido(request.codigo(), request.mesaId(), request.notas());
-        return PedidoResponse.from(pedidoRepository.save(pedido));
+        pedidoRepository.save(pedido);
+        eventPublisher.publishEvent(new PedidoCreado(request.codigo(), request.mesaId()));
+        return PedidoResponse.from(pedido);
     }
 
     @Transactional(readOnly = true)
@@ -166,6 +173,50 @@ public class PedidoService implements Pedidos {
         eventPublisher.publishEvent(new PedidoConfirmado(pedido.getCodigo(), lineas));
     }
 
+    /**
+     * Adición: un pedido nuevo ligado a la misma cuenta (RF-17 a RF-19).
+     * La mesa ya está ocupada, así que {@code ocuparMesa} es idempotente.
+     */
+    @Override
+    public String crearAdicion(Long mesaId, String codigo, String notas) {
+        return crear(new CrearPedidoRequest(codigo, mesaId, notas)).codigo();
+    }
+
+    @Override
+    public Optional<PedidoResumen> pedidoConfirmado(String pedidoCodigo) {
+        return pedidoRepository.findByCodigoConRelaciones(pedidoCodigo)
+                .filter(p -> p.getEstado() != EstadoPedido.BORRADOR && p.getEstado() != EstadoPedido.ANULADO)
+                .map(this::aResumen);
+    }
+
+    @Override
+    public List<PedidoResumen> pedidosDeMesa(Long mesaId) {
+        return pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO).stream()
+                .map(this::aResumen)
+                .toList();
+    }
+
+    @Override
+    public boolean hayOtroPedidoEnMesa(Long mesaId, String pedidoCodigo) {
+        return pedidoRepository.existeOtroPedidoEnMesa(mesaId, pedidoCodigo);
+    }
+
+    private PedidoResumen aResumen(Pedido pedido) {
+        List<LineaResumen> lineas = pedido.getLineas().stream().map(l -> {
+            ProductoParaPedido producto = catalogo.productoParaPedido(l.getProductoId()).orElse(null);
+            return new LineaResumen(
+                    l.getId(),
+                    l.getProductoId(),
+                    l.getNombreProducto(),
+                    l.getCantidad(),
+                    l.getPrecioUnitario().getAmount(),
+                    l.subtotal().getAmount(),
+                    producto == null ? null : producto.areaId(),
+                    producto == null ? null : producto.areaNombre());
+        }).toList();
+        return new PedidoResumen(pedido.getCodigo(), pedido.getMesaId(), pedido.getEstado(), lineas);
+    }
+
     @Override
     public void marcarEnPreparacion(String pedidoCodigo) {
         Pedido pedido = cargarConLineas(pedidoCodigo);
@@ -179,15 +230,20 @@ public class PedidoService implements Pedidos {
     }
 
     /**
-     * Cancela un borrador liberando la mesa. Solo aplica antes de confirmar.
+     * Cancela un borrador. Una adición no libera la mesa si la cuenta todavía
+     * tiene otro pedido; solo cuando es el último pedido de la mesa se libera
+     * (RF-17 a RF-19).
      */
     public void cancelarBorrador(String codigo) {
         Pedido pedido = cargarConLineas(codigo);
         if (pedido.getEstado() != EstadoPedido.BORRADOR) {
             throw new BusinessRuleException("Solo un pedido en borrador puede cancelarse");
         }
-        mesas.liberarMesa(pedido.getMesaId());
+        if (!pedidoRepository.existeOtroPedidoEnMesa(pedido.getMesaId(), codigo)) {
+            mesas.liberarMesa(pedido.getMesaId());
+        }
         pedidoRepository.delete(pedido);
+        eventPublisher.publishEvent(new PedidoCancelado(codigo, pedido.getMesaId()));
     }
 
     private void revalidarCatalogo(Pedido pedido) {
