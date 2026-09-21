@@ -197,6 +197,14 @@ public class PedidoService implements Pedidos {
     }
 
     @Override
+    public List<PedidoResumen> pedidosConfirmadosDeMesa(Long mesaId) {
+        return pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO).stream()
+                .filter(p -> p.getEstado() != EstadoPedido.BORRADOR)
+                .map(this::aResumen)
+                .toList();
+    }
+
+    @Override
     public boolean hayOtroPedidoEnMesa(Long mesaId, String pedidoCodigo) {
         return pedidoRepository.existeOtroPedidoEnMesa(mesaId, pedidoCodigo);
     }
@@ -214,7 +222,7 @@ public class PedidoService implements Pedidos {
                     producto == null ? null : producto.areaId(),
                     producto == null ? null : producto.areaNombre());
         }).toList();
-        return new PedidoResumen(pedido.getCodigo(), pedido.getMesaId(), pedido.getEstado(), lineas);
+        return new PedidoResumen(pedido.getCodigo(), pedido.getMesaId(), pedido.getEstado().name(), lineas);
     }
 
     @Override

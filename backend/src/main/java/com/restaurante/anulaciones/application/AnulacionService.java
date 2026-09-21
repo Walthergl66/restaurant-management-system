@@ -124,7 +124,7 @@ public class AnulacionService implements Anulaciones {
                         a.getMotivo(),
                         a.getAreaId(),
                         a.getAreaNombre(),
-                        a.getEstado()))
+                        a.getEstado().name()))
                 .toList();
     }
 

@@ -31,6 +31,12 @@ public interface Pedidos {
     List<PedidoResumen> pedidosDeMesa(Long mesaId);
 
     /**
+     * Pedidos de la mesa que ya cuentan para la cuenta (confirmados o más
+     * avanzados; se excluyen borradores y anulados).
+     */
+    List<PedidoResumen> pedidosConfirmadosDeMesa(Long mesaId);
+
+    /**
      * True si la mesa tiene otro pedido no anulado distinto del indicado.
      */
     boolean hayOtroPedidoEnMesa(Long mesaId, String pedidoCodigo);

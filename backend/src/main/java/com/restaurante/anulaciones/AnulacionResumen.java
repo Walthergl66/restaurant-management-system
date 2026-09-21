@@ -1,12 +1,11 @@
 package com.restaurante.anulaciones;
 
-import com.restaurante.anulaciones.domain.EstadoAnulacion;
-
 import java.math.BigDecimal;
 
 /**
  * Vista de una anulación para otros módulos (cuentas calculan el descuento
- * con las aprobadas, siempre desde los registros — RNF-16).
+ * con las aprobadas, siempre desde los registros — RNF-16). El estado viaja
+ * como String para no exponer el sub-paquete de dominio a otros módulos.
  */
 public record AnulacionResumen(
         Long id,
@@ -19,5 +18,5 @@ public record AnulacionResumen(
         String motivo,
         Long areaId,
         String areaNombre,
-        EstadoAnulacion estado) {
+        String estado) {
 }
