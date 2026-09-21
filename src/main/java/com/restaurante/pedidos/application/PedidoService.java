@@ -10,6 +10,8 @@ import com.restaurante.pedidos.domain.IngredienteRemovido;
 import com.restaurante.pedidos.domain.Pedido;
 import com.restaurante.pedidos.domain.PedidoLinea;
 import com.restaurante.pedidos.infrastructure.PedidoRepository;
+import com.restaurante.pedidos.PedidoConfirmado;
+import com.restaurante.pedidos.Pedidos;
 import com.restaurante.pedidos.web.dto.ActualizarLineaRequest;
 import com.restaurante.pedidos.web.dto.AgregarLineaRequest;
 import com.restaurante.pedidos.web.dto.CrearPedidoRequest;
@@ -17,6 +19,7 @@ import com.restaurante.pedidos.web.dto.PedidoResponse;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,18 +35,21 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional
-public class PedidoService {
+public class PedidoService implements Pedidos {
 
     private static final int MAX_IDEMPOTENCY_KEY = 100;
 
     private final PedidoRepository pedidoRepository;
     private final Catalogo catalogo;
     private final Mesas mesas;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public PedidoService(PedidoRepository pedidoRepository, Catalogo catalogo, Mesas mesas) {
+    public PedidoService(PedidoRepository pedidoRepository, Catalogo catalogo, Mesas mesas,
+                         ApplicationEventPublisher eventPublisher) {
         this.pedidoRepository = pedidoRepository;
         this.catalogo = catalogo;
         this.mesas = mesas;
+        this.eventPublisher = eventPublisher;
     }
 
     public PedidoResponse crear(CrearPedidoRequest request) {
@@ -130,7 +136,43 @@ public class PedidoService {
         pedido.confirmar();
         pedido.agregarConfirmacion(clave);
         pedidoRepository.save(pedido);
+        publicarConfirmado(pedido);
         return PedidoResponse.from(pedido);
+    }
+
+    /**
+     * Publica el evento en la MISMA transacción: las comandas y el outbox se
+     * guardan junto con la confirmación (RNF-17, defensa 3).
+     */
+    private void publicarConfirmado(Pedido pedido) {
+        List<PedidoConfirmado.LineaConfirmada> lineas = pedido.getLineas().stream()
+                .map(l -> {
+                    ProductoParaPedido producto =
+                            catalogo.productoParaPedido(l.getProductoId()).orElse(null);
+                    return new PedidoConfirmado.LineaConfirmada(
+                            l.getProductoId(),
+                            l.getNombreProducto(),
+                            l.getCantidad(),
+                            l.getExtras().stream().map(e -> e.getNombre()).toList(),
+                            l.getIngredientesRemovidos().stream().map(i -> i.getNombre()).toList(),
+                            l.getObservaciones().orElse(null),
+                            producto == null ? null : producto.areaId(),
+                            producto == null ? null : producto.areaNombre());
+                })
+                .toList();
+        eventPublisher.publishEvent(new PedidoConfirmado(pedido.getCodigo(), lineas));
+    }
+
+    @Override
+    public void marcarEnPreparacion(String pedidoCodigo) {
+        Pedido pedido = cargarConLineas(pedidoCodigo);
+        pedido.marcarEnPreparacion();
+    }
+
+    @Override
+    public void marcarListo(String pedidoCodigo) {
+        Pedido pedido = cargarConLineas(pedidoCodigo);
+        pedido.marcarListo();
     }
 
     /**
