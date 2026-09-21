@@ -2,6 +2,8 @@ package com.restaurante.cuentas.application;
 
 import com.restaurante.anulaciones.Anulaciones;
 import com.restaurante.anulaciones.AnulacionResumen;
+import com.restaurante.cuentas.Cuentas;
+import com.restaurante.cuentas.CuentaResumen;
 import com.restaurante.cuentas.domain.CalculadoraCuenta;
 import com.restaurante.cuentas.domain.Cuenta;
 import com.restaurante.cuentas.domain.EstadoCuenta;
@@ -30,7 +32,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class CuentaService {
+public class CuentaService implements Cuentas {
 
     private final CuentaRepository cuentaRepository;
     private final Pedidos pedidos;
@@ -101,6 +103,15 @@ public class CuentaService {
      * pendientes sin confirmar (la cuenta solo totaliza confirmados).
      */
     public CuentaResponse cerrar(Long id) {
+        return aRespuesta(cerrarValidando(id));
+    }
+
+    @Override
+    public void cerrarParaCobro(Long cuentaId) {
+        cerrarValidando(cuentaId);
+    }
+
+    private Cuenta cerrarValidando(Long id) {
         Cuenta cuenta = cargar(id);
         boolean hayBorradores = pedidos.pedidosDeMesa(cuenta.getMesaId()).stream()
                 .anyMatch(p -> "BORRADOR".equals(p.estado()));
@@ -110,7 +121,7 @@ public class CuentaService {
         }
         cuenta.cerrar();
         mesas.liberarMesa(cuenta.getMesaId());
-        return aRespuesta(cuenta);
+        return cuenta;
     }
 
     /**
@@ -123,6 +134,17 @@ public class CuentaService {
         }
         String codigo = pedidos.crearAdicion(cuenta.getMesaId(), request.codigo(), request.notas());
         return new AdicionResponse(codigo, cuenta.getId());
+    }
+
+    @Override
+    public CuentaResumen resumen(Long cuentaId) {
+        CuentaResponse detalle = detalle(cuentaId);
+        return new CuentaResumen(
+                detalle.id(),
+                detalle.mesaId(),
+                detalle.numeroMesa(),
+                detalle.estado().name(),
+                detalle.total());
     }
 
     private CuentaResponse aRespuesta(Cuenta cuenta) {
