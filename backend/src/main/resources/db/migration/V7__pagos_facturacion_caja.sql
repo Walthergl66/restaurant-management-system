@@ -55,7 +55,9 @@ CREATE TABLE caja_movimientos (
     metodo     VARCHAR(20) CHECK (metodo IN ('EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO')),
     pago_id    BIGINT      REFERENCES pagos (id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    created_by VARCHAR(50)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by VARCHAR(50),
+    updated_by VARCHAR(50)
 );
 CREATE INDEX idx_caja_movimientos_caja ON caja_movimientos (caja_id);
 
@@ -74,7 +76,9 @@ CREATE TABLE comprobantes (
     total                 NUMERIC(12,2) NOT NULL,
     emitido_por           VARCHAR(50),
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    created_by            VARCHAR(50)
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    created_by            VARCHAR(50),
+    updated_by            VARCHAR(50)
 );
 CREATE INDEX idx_comprobantes_cuenta ON comprobantes (cuenta_id);
 CREATE INDEX idx_comprobantes_fecha ON comprobantes (fecha);
