@@ -8,6 +8,8 @@ import com.restaurante.facturacion.ComprobanteResumen;
 import com.restaurante.facturacion.EmisionComprobantes;
 import com.restaurante.facturacion.EmitirComprobante;
 import com.restaurante.pagos.CuentaCobrada;
+import com.restaurante.pagos.Pagos;
+import com.restaurante.pagos.Pagos.PagoRegistro;
 import com.restaurante.pagos.domain.MetodoPago;
 import com.restaurante.pagos.domain.Pago;
 import com.restaurante.pagos.infrastructure.PagoRepository;
@@ -24,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +38,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class PagoService {
+public class PagoService implements Pagos {
 
     private final PagoRepository pagoRepository;
     private final Cuentas cuentas;
@@ -127,6 +130,17 @@ public class PagoService {
         Pago pago = pagoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pago " + id + " no encontrado"));
         return new CobroItemResponse(pago.getId(), pago.getMetodo().name(), pago.getMonto().getAmount());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PagoRegistro> pagosEnPeriodo(Instant desde, Instant hasta) {
+        return pagoRepository.findAll().stream()
+                .filter(p -> !p.getCreatedAt().isBefore(desde)
+                        && !p.getCreatedAt().isAfter(hasta))
+                .map(p -> new PagoRegistro(p.getCuentaId(), p.getMetodo().name(),
+                        p.getMonto().getAmount(), p.getCreatedAt()))
+                .toList();
     }
 
     private String usuarioActual() {
