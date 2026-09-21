@@ -14,8 +14,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Línea de pedido. Congela el nombre y precio del producto y sus extras en el
@@ -46,10 +48,10 @@ public class PedidoLinea extends AuditableEntity {
     private String observaciones;
 
     @OneToMany(mappedBy = "linea", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExtraLinea> extras = new ArrayList<>();
+    private Set<ExtraLinea> extras = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "linea", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<IngredienteRemovido> ingredientesRemovidos = new ArrayList<>();
+    private Set<IngredienteRemovido> ingredientesRemovidos = new LinkedHashSet<>();
 
     protected PedidoLinea() {
     }
@@ -73,26 +75,26 @@ public class PedidoLinea extends AuditableEntity {
     public void congelarCatalogo(
             String nombreProducto,
             Money precioUnitario,
-            List<ExtraLinea> extras) {
+            Set<ExtraLinea> extras) {
         this.nombreProducto = nombreProducto;
         this.precioUnitario = precioUnitario;
         this.extras.clear();
         if (extras != null) {
-            this.extras = new ArrayList<>(extras);
+            this.extras = new LinkedHashSet<>(extras);
             this.extras.forEach(e -> e.agregarALinea(this));
         }
     }
 
-    public void actualizar(int cantidad, List<ExtraLinea> extras, List<IngredienteRemovido> ingredientes, String observaciones) {
+    public void actualizar(int cantidad, Set<ExtraLinea> extras, Set<IngredienteRemovido> ingredientes, String observaciones) {
         this.cantidad = validarCantidad(cantidad);
         this.extras.clear();
         if (extras != null) {
-            this.extras = new ArrayList<>(extras);
+            this.extras = new LinkedHashSet<>(extras);
             this.extras.forEach(e -> e.agregarALinea(this));
         }
         this.ingredientesRemovidos.clear();
         if (ingredientes != null) {
-            this.ingredientesRemovidos = new ArrayList<>(ingredientes);
+            this.ingredientesRemovidos = new LinkedHashSet<>(ingredientes);
             this.ingredientesRemovidos.forEach(i -> i.agregarALinea(this));
         }
         this.observaciones = observaciones;

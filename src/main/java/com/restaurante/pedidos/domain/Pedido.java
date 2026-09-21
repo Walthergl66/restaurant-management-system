@@ -13,9 +13,10 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Pedido. Agregado que concentra, en una sola clase, TODAS las transiciones de
@@ -48,10 +49,10 @@ public class Pedido extends AuditableEntity {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id")
-    private List<PedidoLinea> lineas = new ArrayList<>();
+    private Set<PedidoLinea> lineas = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Confirmacion> confirmaciones = new ArrayList<>();
+    private Set<Confirmacion> confirmaciones = new LinkedHashSet<>();
 
     protected Pedido() {
     }
@@ -70,8 +71,8 @@ public class Pedido extends AuditableEntity {
             String nombreProducto,
             Money precioUnitario,
             int cantidad,
-            List<ExtraLinea> extras,
-            List<IngredienteRemovido> ingredientes,
+            Set<ExtraLinea> extras,
+            Set<IngredienteRemovido> ingredientes,
             String observaciones) {
         requiereBorrador();
         PedidoLinea linea = new PedidoLinea(productoId, nombreProducto, precioUnitario, cantidad);
@@ -84,8 +85,8 @@ public class Pedido extends AuditableEntity {
     public void actualizarLinea(
             Long lineaId,
             int cantidad,
-            List<ExtraLinea> extras,
-            List<IngredienteRemovido> ingredientes,
+            Set<ExtraLinea> extras,
+            Set<IngredienteRemovido> ingredientes,
             String observaciones) {
         requiereBorrador();
         PedidoLinea linea = buscarLinea(lineaId);
