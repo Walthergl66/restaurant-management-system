@@ -34,10 +34,11 @@ public class AuditoriaService {
 
     @Transactional(readOnly = true)
     public List<AuditoriaResumen> listar(Instant desde, Instant hasta, String entidad) {
-        return repository.findByFechaBetweenOrderByFechaDesc(
-                        desde, hasta == null ? Instant.now().plusSeconds(60) : hasta)
-                .stream()
-                .filter(e -> entidad == null || entidad.equals(e.getEntidad()))
+        Instant fin = hasta == null ? Instant.now() : hasta;
+        List<EventoAuditoria> eventos = entidad == null
+                ? repository.findByFechaBetweenOrderByFechaDesc(desde, fin)
+                : repository.findByFechaBetweenAndEntidadOrderByFechaDesc(desde, fin, entidad);
+        return eventos.stream()
                 .map(e -> new AuditoriaResumen(
                         e.getId(), e.getUsuario(), e.getTipo(), e.getEntidad(),
                         e.getEntidadId(), e.getDetalle(), e.getFecha()))
