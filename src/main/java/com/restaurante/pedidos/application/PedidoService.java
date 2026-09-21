@@ -125,7 +125,10 @@ public class PedidoService implements Pedidos {
         String clave = validarClaveIdempotencia(idempotencyKey);
         Pedido pedido = cargarConLineas(codigo);
 
-        if (pedido.getEstado() == EstadoPedido.CONFIRMADO) {
+        // Reintento idempotente: si el pedido ya salió de BORRADOR (confirma­do,
+        // en preparación, listo...), la misma llave debe devolver el pedido 200
+        // y cualquier otra llave es un conflicto (RNF-17).
+        if (pedido.getEstado() != EstadoPedido.BORRADOR) {
             if (pedido.getConfirmaciones().stream().anyMatch(c -> c.tieneLaMismaClave(clave))) {
                 return PedidoResponse.from(pedido);
             }
