@@ -45,6 +45,15 @@ public class CajaController {
         return cajaService.listar();
     }
 
+    @GetMapping("/abierta")
+    @PreAuthorize("hasAnyAuthority('" + PermisoCodigo.CAJA_CIERRE + "', '" + PermisoCodigo.CAJA_MOVIMIENTOS + "')")
+    @Operation(summary = "Caja abierta actual (404 si no hay turno abierto)")
+    public CajaResponse abierta() {
+        return cajaService.cajaAbierta()
+                .map(CajaResponse::from)
+                .orElseThrow(() -> new com.restaurante.shared.domain.exception.NotFoundException("No hay caja abierta"));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('" + PermisoCodigo.CAJA_CIERRE + "', '" + PermisoCodigo.FINANZAS_VER + "')")
     @Operation(summary = "Detalle de una caja")

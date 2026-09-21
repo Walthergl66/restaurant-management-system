@@ -3,7 +3,9 @@ package com.restaurante.caja.domain;
 import com.restaurante.shared.domain.AuditableEntity;
 import com.restaurante.shared.domain.Money;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
+import com.restaurante.shared.infrastructure.MoneyConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,15 +32,19 @@ public class Caja extends AuditableEntity {
     @Column(nullable = false, length = 20)
     private EstadoCaja estado = EstadoCaja.ABIERTA;
 
+    @Convert(converter = MoneyConverter.class)
     @Column(name = "apertura_inicial", nullable = false)
     private Money aperturaInicial = Money.ZERO;
 
+    @Convert(converter = MoneyConverter.class)
     @Column(name = "cierre_esperado")
     private Money cierreEsperado;
 
+    @Convert(converter = MoneyConverter.class)
     @Column(name = "cierre_real")
     private Money cierreReal;
 
+    @Convert(converter = MoneyConverter.class)
     @Column
     private Money diferencia;
 

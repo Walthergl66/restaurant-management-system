@@ -2,7 +2,9 @@ package com.restaurante.caja.domain;
 
 import com.restaurante.shared.domain.AuditableEntity;
 import com.restaurante.shared.domain.Money;
+import com.restaurante.shared.infrastructure.MoneyConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -23,6 +25,7 @@ public class MovimientoCaja extends AuditableEntity {
     @Column(nullable = false, length = 120)
     private String concepto;
 
+    @Convert(converter = MoneyConverter.class)
     @Column(nullable = false)
     private Money monto;
 
