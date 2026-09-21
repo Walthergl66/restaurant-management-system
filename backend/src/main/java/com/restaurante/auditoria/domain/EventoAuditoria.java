@@ -3,6 +3,8 @@ package com.restaurante.auditoria.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -31,6 +33,7 @@ public class EventoAuditoria {
     private String entidadId;
 
     @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String detalle;
 
     @Column(nullable = false)
