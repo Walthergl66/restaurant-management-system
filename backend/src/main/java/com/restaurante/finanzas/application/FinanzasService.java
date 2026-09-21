@@ -4,11 +4,11 @@ import com.restaurante.caja.Cajas;
 import com.restaurante.caja.Cajas.MovimientoRegistro;
 import com.restaurante.pagos.Pagos;
 import com.restaurante.pagos.Pagos.PagoRegistro;
+import com.restaurante.shared.domain.Money;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 
 /**
@@ -42,13 +42,10 @@ public class FinanzasService {
             }
         }
 
-        BigDecimal redondeados = redondear(ingresos);
-        BigDecimal redondeadosEgreso = redondear(egresos);
-        return new Resumen(redondeados, redondeadosEgreso, redondear(redondeados.subtract(redondeadosEgreso)));
-    }
-
-    private BigDecimal redondear(BigDecimal monto) {
-        return monto.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal redondeados = Money.round(ingresos);
+        BigDecimal redondeadosEgreso = Money.round(egresos);
+        return new Resumen(redondeados, redondeadosEgreso,
+                Money.round(redondeados.subtract(redondeadosEgreso)));
     }
 
     public record Resumen(BigDecimal ingresos, BigDecimal egresos, BigDecimal resultado) {
