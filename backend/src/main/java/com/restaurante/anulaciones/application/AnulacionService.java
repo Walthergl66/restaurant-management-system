@@ -137,26 +137,31 @@ public class AnulacionService implements Anulaciones {
     @Transactional(readOnly = true)
     public List<DescuentoProducto> aprobadasPorProducto(Instant desde, Instant hasta) {
         Map<String, DescuentoProducto> acumuladas = new LinkedHashMap<>();
-        for (Anulacion anulacion : anulacionRepository.findAll()) {
-            if (anulacion.getEstado() != EstadoAnulacion.APROBADA) {
-                continue;
-            }
-            Instant creado = anulacion.getCreatedAt();
-            if (creado == null || creado.isBefore(desde) || creado.isAfter(hasta)) {
-                continue;
-            }
-            String clave = anulacion.getProductoId() + "|" + anulacion.getNombreProducto();
+        List<Anulacion> aprobadas = anulacionRepository
+                .findByCreatedAtBetweenAndEstado(desde, hasta, EstadoAnulacion.APROBADA);
+        for (Anulacion anulacion : aprobadas) {
+            String clave = claveProducto(anulacion.getProductoId(), anulacion.getNombreProducto());
             DescuentoProducto actual = acumuladas.get(clave);
-            BigDecimal monto = anulacion.getPrecioUnitario().getAmount()
+            Money monto = anulacion.getPrecioUnitario()
                     .multiply(BigDecimal.valueOf(anulacion.getCantidad()));
-            DescuentoProducto suma = new DescuentoProducto(
+            if (actual != null) {
+                monto = monto.add(Money.of(actual.monto()));
+            }
+            acumuladas.put(clave, new DescuentoProducto(
                     String.valueOf(anulacion.getProductoId()),
                     anulacion.getNombreProducto(),
                     anulacion.getCantidad() + (actual == null ? 0 : actual.cantidad()),
-                    monto.add(actual == null ? BigDecimal.ZERO : actual.monto()));
-            acumuladas.put(clave, suma);
+                    monto.getAmount()));
         }
         return acumuladas.values().stream().toList();
+    }
+
+    /**
+     * Clave de agrupación con separador de control no imprimible: el nombre
+     * congelado puede contener cualquier carácter visible, incluido "|".
+     */
+    private String claveProducto(Long productoId, String nombreProducto) {
+        return productoId + "" + nombreProducto;
     }
 
     private Anulacion cargar(Long id) {
