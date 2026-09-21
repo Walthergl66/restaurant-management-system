@@ -6,11 +6,11 @@ import com.restaurante.pagos.Pagos;
 import com.restaurante.pagos.Pagos.PagoRegistro;
 import com.restaurante.pedidos.Pedidos;
 import com.restaurante.pedidos.Pedidos.VentaProducto;
+import com.restaurante.shared.domain.Money;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,17 +76,14 @@ public class ReportesService {
         porDia.forEach((dia, monto) -> dias.add(new VentaDia(dia, monto)));
 
         return new ReporteVentas(
-                redondear(total),
+                Money.round(total),
                 cuentas.size(),
-                metodos.stream().map(m -> new MetodoVenta(m.metodo(), redondear(m.total()))).toList(),
-                dias.stream().map(d -> new VentaDia(d.fecha(), redondear(d.total()))).toList(),
+                metodos.stream().map(m -> new MetodoVenta(m.metodo(), Money.round(m.total()))).toList(),
+                dias.stream().map(d -> new VentaDia(d.fecha(), Money.round(d.total()))).toList(),
                 productos.values().stream()
-                        .map(p -> new ProductoVenta(p.productoId(), p.nombre(), p.cantidad(), redondear(p.monto())))
+                        .map(p -> new ProductoVenta(p.productoId(), p.nombre(), p.cantidad(),
+                                Money.round(p.monto())))
                         .toList());
-    }
-
-    private BigDecimal redondear(BigDecimal monto) {
-        return monto.setScale(2, RoundingMode.HALF_UP);
     }
 
     public record ReporteVentas(
