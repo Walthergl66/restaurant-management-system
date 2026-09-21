@@ -67,6 +67,13 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         assertTrue(pendientes.toString().contains("comanda.impresion"));
         assertTrue(pendientes.toString().contains("Barra"));
         assertTrue(pendientes.path(0).path("numeroComanda").isNumber());
+
+        // El agente confirma la impresión: esa orden deja de entregarse
+        long primera = pendientes.path(0).path("id").asLong();
+        mockMvc.perform(post("/api/v1/comandas/impresion/" + primera + "/enviado")
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk());
+        assertEquals(1, buscarPendientes(codigo).size(), "la orden confirmada ya no es pendiente");
     }
 
     @Test
