@@ -1,45 +1,33 @@
-# --- Java / Maven ---
-target/
-!.mvn/wrapper/maven-wrapper.jar
-*.class
-
-# --- IDE ---
+# --- IDE / OS ---
 .idea/
 .vscode/
 *.iml
 .settings/
 .classpath
 .project
+.DS_Store
 
 # --- Entorno / secretos ---
 .env
 .env.*
 !.env.example
 docker/secrets/
+*.p12
+*.jks
 
-# --- Build results (legado .NET) ---
-[Bb]in/
-[Oo]bj/
-[Dd]ebug/
-[Rr]elease/
-x64/
-x86/
-*.dll
-*.pdb
-
-# NuGet
-packages/
-*.nupkg
-project.lock.json
-project.fragment.lock.json
-
-# Test results
-[Ee][Ii][Xx][Ww]*/
-*.trx
+# --- Logs ---
 *.log
 
-# Misc
-.DS_Store
+# --- Módulos de app (cada uno con su propio .gitignore) ---
+# Java/Maven (backend/): target/, *.class — ver backend/.gitignore
+# Node/Frontend (cuando exista): node_modules/, dist/
+# Mobile (cuando exista): build/, .dart_tool/
+node_modules/
+dist/
+build/
+
+# --- Test results ---
+*.trx
 
 # Contexto de agentes y planes (nunca se commitean)
 AGENTS.md
