@@ -83,6 +83,16 @@ public class ComandaService {
     }
 
     /**
+     * El agente confirma que imprimió la orden; deja de entregarse (al menos
+     * una vez: si no confirma, vuelve a aparecer en pendientes).
+     */
+    public void marcarEnviadaImpresion(Long id) {
+        EventoOutbox evento = outboxRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Orden de impresión " + id + " no encontrada"));
+        evento.marcarEnviado();
+    }
+
+    /**
      * Marca la orden como fallida para reintentarla; el agente reporta el error.
      */
     public void marcarErrorImpresion(Long id, String motivo) {

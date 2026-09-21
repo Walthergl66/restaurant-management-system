@@ -77,6 +77,13 @@ public class ComandaController {
         return comandaService.imprimirPendientes();
     }
 
+    @PostMapping("/impresion/{id}/enviado")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.COMANDAS_VER + "')")
+    @Operation(summary = "El agente confirma que imprimió la orden")
+    public void enviadaImpresion(@PathVariable Long id) {
+        comandaService.marcarEnviadaImpresion(id);
+    }
+
     @PostMapping("/impresion/{id}/error")
     @PreAuthorize("hasAuthority('" + PermisoCodigo.COMANDAS_VER + "')")
     @Operation(summary = "El agente reporta que no pudo imprimir una orden")
