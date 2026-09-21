@@ -80,8 +80,8 @@ public class PedidoLinea extends AuditableEntity {
         this.precioUnitario = precioUnitario;
         this.extras.clear();
         if (extras != null) {
-            this.extras = new LinkedHashSet<>(extras);
-            this.extras.forEach(e -> e.agregarALinea(this));
+            extras.forEach(e -> e.agregarALinea(this));
+            this.extras.addAll(extras);
         }
     }
 
@@ -89,13 +89,13 @@ public class PedidoLinea extends AuditableEntity {
         this.cantidad = validarCantidad(cantidad);
         this.extras.clear();
         if (extras != null) {
-            this.extras = new LinkedHashSet<>(extras);
-            this.extras.forEach(e -> e.agregarALinea(this));
+            extras.forEach(e -> e.agregarALinea(this));
+            this.extras.addAll(extras);
         }
         this.ingredientesRemovidos.clear();
         if (ingredientes != null) {
-            this.ingredientesRemovidos = new LinkedHashSet<>(ingredientes);
-            this.ingredientesRemovidos.forEach(i -> i.agregarALinea(this));
+            ingredientes.forEach(i -> i.agregarALinea(this));
+            this.ingredientesRemovidos.addAll(ingredientes);
         }
         this.observaciones = observaciones;
     }
