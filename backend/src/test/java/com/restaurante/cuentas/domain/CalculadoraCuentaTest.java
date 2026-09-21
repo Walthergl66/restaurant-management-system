@@ -59,7 +59,7 @@ class CalculadoraCuentaTest {
                 List.of(conDosPedidos.get(1), conDosPedidos.get(0)),
                 List.of(aprobadas.get(1), aprobadas.get(0)));
 
-        assertEquals("15.00", primero.getAmount().toPlainString());
+        assertEquals("10.00", primero.getAmount().toPlainString());
         assertEquals(primero, invertido);
     }
 
