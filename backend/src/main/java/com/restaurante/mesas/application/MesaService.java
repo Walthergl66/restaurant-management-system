@@ -85,7 +85,12 @@ public class MesaService implements Mesas {
 
     @Override
     public void ocuparMesa(Long mesaId) {
-        cargar(mesaId).ocupar();
+        Mesa mesa = cargar(mesaId);
+        // Idempotente: las adiciones abren un segundo pedido en una mesa que ya
+        // está ocupada por la cuenta abierta (RF-17 a RF-19).
+        if (mesa.getEstado() != EstadoMesa.OCUPADA) {
+            mesa.ocupar();
+        }
     }
 
     @Override
