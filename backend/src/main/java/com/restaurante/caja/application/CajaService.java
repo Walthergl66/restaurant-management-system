@@ -95,9 +95,7 @@ public class CajaService implements Cajas {
     @Override
     @Transactional(readOnly = true)
     public List<MovimientoRegistro> movimientosEnPeriodo(Instant desde, Instant hasta) {
-        return movimientoRepository.findAll().stream()
-                .filter(m -> !m.getCreatedAt().isBefore(desde)
-                        && !m.getCreatedAt().isAfter(hasta))
+        return movimientoRepository.findByCreatedAtBetween(desde, hasta).stream()
                 .map(m -> new MovimientoRegistro(m.getTipo(), m.getMetodo(),
                         m.getMonto().getAmount(), m.getPagoId(), m.getCreatedAt()))
                 .toList();
