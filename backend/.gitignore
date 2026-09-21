@@ -1,0 +1,25 @@
+<!-- Java / Maven -->
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+<!-- Logs -->
+*.log
+logs/
+tmp/
+
+<!-- IDE -->
+.idea/
+.vscode/
+*.iml
+.settings/
+.classpath
+.project
+
+<!-- Entorno / secretos -->
+.env
+.env.*
+!.env.example
+*.p12
+*.jks
