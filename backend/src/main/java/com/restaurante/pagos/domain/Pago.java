@@ -2,7 +2,9 @@ package com.restaurante.pagos.domain;
 
 import com.restaurante.shared.domain.AuditableEntity;
 import com.restaurante.shared.domain.Money;
+import com.restaurante.shared.infrastructure.MoneyConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,6 +28,7 @@ public class Pago extends AuditableEntity {
     @Column(nullable = false, length = 20)
     private MetodoPago metodo;
 
+    @Convert(converter = MoneyConverter.class)
     @Column(nullable = false)
     private Money monto;
 
