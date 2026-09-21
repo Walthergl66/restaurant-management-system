@@ -1,6 +1,7 @@
 package com.restaurante.anulaciones.application;
 
 import com.restaurante.anulaciones.Anulaciones;
+import com.restaurante.anulaciones.Anulaciones.DescuentoProducto;
 import com.restaurante.anulaciones.AnulacionAprobada;
 import com.restaurante.anulaciones.AnulacionResumen;
 import com.restaurante.anulaciones.domain.Anulacion;
@@ -20,7 +21,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Anulaciones de líneas (RF-20 a RF-23). La anulación es un registro aparte:
@@ -126,6 +131,32 @@ public class AnulacionService implements Anulaciones {
                         a.getAreaNombre(),
                         a.getEstado().name()))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DescuentoProducto> aprobadasPorProducto(Instant desde, Instant hasta) {
+        Map<String, DescuentoProducto> acumuladas = new LinkedHashMap<>();
+        for (Anulacion anulacion : anulacionRepository.findAll()) {
+            if (anulacion.getEstado() != EstadoAnulacion.APROBADA) {
+                continue;
+            }
+            Instant creado = anulacion.getCreatedAt();
+            if (creado == null || creado.isBefore(desde) || creado.isAfter(hasta)) {
+                continue;
+            }
+            String clave = anulacion.getProductoId() + "|" + anulacion.getNombreProducto();
+            DescuentoProducto actual = acumuladas.get(clave);
+            BigDecimal monto = anulacion.getPrecioUnitario().getAmount()
+                    .multiply(BigDecimal.valueOf(anulacion.getCantidad()));
+            DescuentoProducto suma = new DescuentoProducto(
+                    String.valueOf(anulacion.getProductoId()),
+                    anulacion.getNombreProducto(),
+                    anulacion.getCantidad() + (actual == null ? 0 : actual.cantidad()),
+                    monto.add(actual == null ? BigDecimal.ZERO : actual.monto()));
+            acumuladas.put(clave, suma);
+        }
+        return acumuladas.values().stream().toList();
     }
 
     private Anulacion cargar(Long id) {
