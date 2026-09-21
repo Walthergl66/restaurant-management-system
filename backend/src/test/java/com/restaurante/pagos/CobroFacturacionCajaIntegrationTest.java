@@ -1,6 +1,7 @@
 package com.restaurante.pagos;
 
 import com.restaurante.AbstractIntegracionApi;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,7 @@ import tools.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.junit.jupiter.api.Assertions.assertTrue;import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -103,11 +103,15 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.total").value(20.00))
                 .andExpect(jsonPath("$.pagos.length()").value(2))
-                .andExpect(jsonPath("$.comprobanteCorrelativo").value("R-000001"))
+                // El correlativo es secuencial global (secuencia de BD): no se
+                // hardcodea el valor porque la BD se comparte entre clases de
+                // test y el orden de ejecución lo desplaza.
+                .andExpect(jsonPath("$.comprobanteCorrelativo").value(Matchers.matchesPattern("R-\\d{6}")))
                 .andReturn();
 
         JsonNode body = objectMapper.readTree(cobro.getResponse().getContentAsString());
         assertEquals(2, body.path("pagos").size());
+        String correlativo = body.path("comprobanteCorrelativo").asText();
 
         // Cuenta cerrada y mesa libre
         mockMvc.perform(get("/api/v1/cuentas/" + cuentaId)
@@ -120,7 +124,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
                         .header("Authorization", "Bearer " + cajeroToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        assertTrue(comprobantes.contains("R-000001"));
+        assertTrue(comprobantes.contains(correlativo));
         assertTrue(comprobantes.contains("Juan Pérez"));
         assertTrue(comprobantes.contains("FACTURA"));
 
