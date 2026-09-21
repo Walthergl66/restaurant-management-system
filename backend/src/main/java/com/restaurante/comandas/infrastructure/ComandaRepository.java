@@ -37,4 +37,9 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     Optional<Comanda> findByIdConLineas(Long id);
 
     boolean existsByPedidoCodigoAndAreaId(String pedidoCodigo, Long areaId);
+
+    /**
+     * Idempotencia de la comanda de cancelación: una sola por anulación aprobada.
+     */
+    boolean existsByAnulacionId(Long anulacionId);
 }
