@@ -20,8 +20,10 @@ import com.restaurante.shared.domain.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Ciclo de vida del pedido: borrador, personalización, resumen y confirmación
@@ -71,10 +73,11 @@ public class PedidoService {
     public PedidoResponse agregarLinea(String codigo, AgregarLineaRequest request) {
         Pedido pedido = cargarConLineas(codigo);
         ProductoParaPedido producto = productoDisponible(request.productoId());
-        List<ExtraLinea> extras = congelarExtras(request.extraIds());
-        List<IngredienteRemovido> removidos = request.ingredientesRemovidos() == null
-                ? List.of()
-                : request.ingredientesRemovidos().stream().map(IngredienteRemovido::new).toList();
+        Set<ExtraLinea> extras = congelarExtras(request.extraIds());
+        Set<IngredienteRemovido> removidos = request.ingredientesRemovidos() == null
+                ? new LinkedHashSet<>()
+                : request.ingredientesRemovidos().stream().map(IngredienteRemovido::new)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
         pedido.agregarLinea(
                 producto.id(),
                 producto.nombre(),
@@ -94,8 +97,9 @@ public class PedidoService {
                 request.cantidad(),
                 congelarExtras(request.extraIds()),
                 request.ingredientesRemovidos() == null
-                        ? List.of()
-                        : request.ingredientesRemovidos().stream().map(IngredienteRemovido::new).toList(),
+                        ? new LinkedHashSet<>()
+                        : request.ingredientesRemovidos().stream().map(IngredienteRemovido::new)
+                                .collect(Collectors.toCollection(LinkedHashSet::new)),
                 request.observaciones());
         pedidoRepository.save(pedido);
         return PedidoResponse.from(pedido);
@@ -144,7 +148,7 @@ public class PedidoService {
     private void revalidarCatalogo(Pedido pedido) {
         for (PedidoLinea linea : pedido.getLineas()) {
             ProductoParaPedido producto = productoDisponible(linea.getProductoId());
-            List<ExtraLinea> extras = linea.getExtras().stream()
+            Set<ExtraLinea> extras = linea.getExtras().stream()
                     .map(e -> {
                         ExtraParaPedido extra = catalogo.extraParaPedido(e.getExtraId())
                                 .filter(ExtraParaPedido::activo)
@@ -152,7 +156,7 @@ public class PedidoService {
                                         "El extra '" + e.getNombre() + "' ya no está disponible"));
                         return new ExtraLinea(extra.id(), extra.nombre(), extra.precio());
                     })
-                    .toList();
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             linea.congelarCatalogo(producto.nombre(), producto.precio(), extras);
         }
     }
@@ -163,11 +167,11 @@ public class PedidoService {
                 .orElseThrow(() -> new BusinessRuleException("El producto indicado no está disponible"));
     }
 
-    private List<ExtraLinea> congelarExtras(List<Long> extraIds) {
+    private Set<ExtraLinea> congelarExtras(List<Long> extraIds) {
         if (extraIds == null || extraIds.isEmpty()) {
-            return List.of();
+            return new LinkedHashSet<>();
         }
-        List<ExtraLinea> extras = new ArrayList<>();
+        Set<ExtraLinea> extras = new LinkedHashSet<>();
         for (Long extraId : extraIds) {
             ExtraParaPedido extra = catalogo.extraParaPedido(extraId)
                     .filter(ExtraParaPedido::activo)
@@ -188,7 +192,7 @@ public class PedidoService {
     }
 
     private Pedido cargarConLineas(String codigo) {
-        return pedidoRepository.findByCodigoConLineas(codigo)
+        return pedidoRepository.findByCodigoConRelaciones(codigo)
                 .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
     }
 }
