@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/restaurante
-    username: restaurante
-    password: restaurante
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/restaurante}
+    username: ${DB_USERNAME:restaurante}
+    password: ${DB_PASSWORD:restaurante}
   jpa:
     show-sql: true
     properties:
