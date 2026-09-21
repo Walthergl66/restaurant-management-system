@@ -199,6 +199,60 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
     }
 
     @Test
+    void reintentoIdempotenteTrasAvanzarElEstado() throws Exception {
+        long mesaId = crearMesa();
+        long areaId = crearArea();
+        String bodyProducto = mockMvc.perform(post("/api/v1/productos")
+                        .header("Authorization", "Bearer " + administradorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"Trucha Frita-%d","precio":8.50,"areaId":%d,"extraIds":[],"ingredientes":[]}
+                                """.formatted(System.nanoTime() % 100000, areaId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        long productoId = objectMapper.readTree(bodyProducto).path("id").asLong();
+        String codigo = crearBorrador(mesaId);
+        postItem(codigo, productoId, 1, null, null, null);
+
+        mockMvc.perform(post("/api/v1/pedidos/" + codigo + "/confirmar")
+                        .header("Authorization", "Bearer " + meseroToken)
+                        .header("Idempotency-Key", "clave-avance"))
+                .andExpect(status().isOk());
+
+        // La cocina avanza el pedido; el reintento con la MISMA llave sigue
+        // siendo idempotente (RNF-17) y una llave distinta es conflicto.
+        String cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
+        String body = mockMvc.perform(get("/api/v1/comandas")
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode comandas = objectMapper.readTree(body);
+        long comandaId = 0;
+        for (JsonNode c : comandas) {
+            if (codigo.equals(c.path("pedidoCodigo").asText())) {
+                comandaId = c.path("id").asLong();
+                break;
+            }
+        }
+        assertTrue(comandaId != 0, "debe existir la comanda del pedido");
+
+        mockMvc.perform(post("/api/v1/comandas/" + comandaId + "/en-preparacion")
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/pedidos/" + codigo + "/confirmar")
+                        .header("Authorization", "Bearer " + meseroToken)
+                        .header("Idempotency-Key", "clave-avance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("EN_PREPARACION"));
+
+        mockMvc.perform(post("/api/v1/pedidos/" + codigo + "/confirmar")
+                        .header("Authorization", "Bearer " + meseroToken)
+                        .header("Idempotency-Key", "clave-avance-2"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void noSeConfirmaPedidoVacio() throws Exception {
         long mesaId = crearMesa();
         String codigo = crearBorrador(mesaId);
@@ -260,6 +314,18 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                         .header("Authorization", "Bearer " + meseroToken))
                 .andExpect(status().isOk())
                 .andReturn();
+    }
+
+    private long crearArea() throws Exception {
+        String body = mockMvc.perform(post("/api/v1/areas")
+                        .header("Authorization", "Bearer " + administradorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"Cocina-%d","descripcion":"área"}
+                                """.formatted(System.nanoTime() % 100000)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(body).path("id").asLong();
     }
 
     private long crearMesa() throws Exception {
