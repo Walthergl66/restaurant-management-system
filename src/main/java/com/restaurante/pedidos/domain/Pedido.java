@@ -112,14 +112,14 @@ public class Pedido extends AuditableEntity {
     }
 
     public void marcarEnPreparacion() {
-        if (estado != EstadoPedido.CONFIRMADO) {
+        if (estado != EstadoPedido.CONFIRMADO && estado != EstadoPedido.EN_PREPARACION) {
             throw new BusinessRuleException("Solo un pedido confirmado puede pasar a preparación (estado actual: " + estado + ")");
         }
         this.estado = EstadoPedido.EN_PREPARACION;
     }
 
     public void marcarListo() {
-        if (estado != EstadoPedido.EN_PREPARACION) {
+        if (estado != EstadoPedido.EN_PREPARACION && estado != EstadoPedido.LISTO) {
             throw new BusinessRuleException("Solo un pedido en preparación puede marcarse como listo (estado actual: " + estado + ")");
         }
         this.estado = EstadoPedido.LISTO;
