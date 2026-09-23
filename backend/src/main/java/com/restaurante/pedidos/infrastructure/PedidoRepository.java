@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +33,12 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
     List<Pedido> findByEstadoNot(EstadoPedido estado);
+
+    @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
+    Page<Pedido> findByEstadoNot(EstadoPedido estado, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
+    Page<Pedido> findByMesaIdAndEstadoNot(Long mesaId, EstadoPedido estado, Pageable pageable);
 
     /**
      * Pedidos no anulados de una mesa, con sus líneas, para totalizar la cuenta.

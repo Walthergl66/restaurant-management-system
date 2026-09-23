@@ -29,6 +29,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -82,6 +85,14 @@ public class PedidoService implements Pedidos {
             pedidos = pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO);
         }
         return pedidos.stream().map(PedidoResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PedidoResponse> listar(Pageable pageable, Long mesaId) {
+        if (mesaId == null) {
+            return pedidoRepository.findByEstadoNot(EstadoPedido.ANULADO, pageable).map(PedidoResponse::from);
+        }
+        return pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO, pageable).map(PedidoResponse::from);
     }
 
     @Transactional(readOnly = true)

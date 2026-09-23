@@ -23,6 +23,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+
 import java.util.List;
 
 /**
@@ -52,6 +56,14 @@ public class PedidoController {
     @Operation(summary = "Lista pedidos (por mesa opcionalmente)")
     public List<PedidoResponse> listar(@RequestParam(required = false) Long mesaId) {
         return pedidoService.listar(mesaId);
+    }
+
+    @GetMapping("/page")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.PEDIDOS_VER + "')")
+    @Operation(summary = "Lista pedidos paginada (por mesa opcionalmente)")
+    public Page<PedidoResponse> listarPaginado(@PageableDefault(size = 20, sort = "id") Pageable pageable,
+                                               @RequestParam(required = false) Long mesaId) {
+        return pedidoService.listar(pageable, mesaId);
     }
 
     @GetMapping("/{codigo}")
