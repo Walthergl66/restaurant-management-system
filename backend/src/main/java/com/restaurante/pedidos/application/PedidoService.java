@@ -75,12 +75,13 @@ public class PedidoService implements Pedidos {
 
     @Transactional(readOnly = true)
     public List<PedidoResponse> listar(Long mesaId) {
-        List<Pedido> todos = pedidoRepository.findAll();
-        return todos.stream()
-                .filter(p -> p.getEstado() != EstadoPedido.ANULADO)
-                .filter(p -> mesaId == null || p.getMesaId().equals(mesaId))
-                .map(PedidoResponse::from)
-                .toList();
+        List<Pedido> pedidos;
+        if (mesaId == null) {
+            pedidos = pedidoRepository.findByEstadoNot(EstadoPedido.ANULADO);
+        } else {
+            pedidos = pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO);
+        }
+        return pedidos.stream().map(PedidoResponse::from).toList();
     }
 
     @Transactional(readOnly = true)
