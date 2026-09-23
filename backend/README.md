@@ -10,7 +10,7 @@ posteriores, cuenta, anulaciones, cobro, facturación, caja y reportes.
 - **Java 25 (LTS)** + **Spring Boot 4.1.x**
 - **Spring Modulith 2.x**: monolito modular, fronteras verificadas en pruebas
 - **PostgreSQL 16** + **Flyway** (migraciones versionadas)
-- **Spring Security + JWT** (HS512, permisos por rol y método)
+- **Spring Security + JWT** (HS256, permisos por rol y método)
 - **springdoc-openapi** (Swagger UI `/swagger-ui.html`)
 - Errores con **ProblemDetail (RFC 7807)**
 - **JUnit 5 + Testcontainers** (pruebas contra PostgreSQL real)
@@ -54,7 +54,7 @@ La aplicación queda en `http://localhost:8080` (health real:
 | `DB_USERNAME` | `restaurante` | Usuario de BD |
 | `DB_PASSWORD` | `restaurante` | Contraseña de BD |
 | `SERVER_PORT` | `8080` | Puerto HTTP |
-| `JWT_SECRET` | *(vacío)* | Secreto HS512 (obligatorio en prod) |
+| `JWT_SECRET` | *(vacío)* | Secreto HS256 32+ chars (obligatorio en prod) |
 | `JWT_EXPIRATION_MS` | `86400000` | Expiración del access token |
 | `JWT_REFRESH_EXPIRATION_MS` | `604800000` | Expiración del refresh token |
 | `IVA_RATE` | `0.15` | Tasa de IVA (15 %, incluido en precios) |

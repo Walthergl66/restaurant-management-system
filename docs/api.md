@@ -4,7 +4,7 @@ Base URL: `http://localhost:8080/api/v1` (prod) o `http://localhost:8080` (dev, 
 
 ## Autenticación
 
-- `POST /api/v1/auth/login` → `{accessToken, refreshToken, usuario}` (JWT HS512, 24h)
+- `POST /api/v1/auth/login` → `{accessToken, refreshToken, usuario}` (JWT HS256 32+ chars, 24h)
 - `POST /api/v1/auth/refresh` → renueva `accessToken` con `refreshToken`
 - `POST /api/v1/auth/logout` → revoca `refreshToken`
 - `GET /api/v1/auth/me` → usuario actual
