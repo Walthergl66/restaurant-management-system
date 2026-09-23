@@ -1,9 +1,10 @@
 package com.restaurante.clientes.web;
 
-import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.CarritoClienteSPI;
+import com.restaurante.clientes.Clientes;
+import com.restaurante.clientes.DireccionClienteSPI;
 import com.restaurante.clientes.PedidoClienteSPI;
-import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -38,9 +39,7 @@ public class ClientesController {
         return clientes.menu();
     }
 
-    /** RF-41: confirmar idempotente. Misma clave = 200, clave distinta = 409,
-     *  reintento = 200 (RF-24/25 idempotencia RNF-17). Se congelan precios
-     *  Money del cat&aacute;logo (RF-41 RF-09/41 regla Money). */
+    /** RF-41: crear pedido (carrito -> BORRADOR) idempotente. */
     @PostMapping("/pedidos")
     @PreAuthorize("hasAuthority('clientes:pedido-crear')")
     public PedidoClienteSPI crearPedido(@RequestBody CrearPedidoClienteRequest req) {
@@ -58,14 +57,14 @@ public class ClientesController {
 
     /** RF-44: tablet del mesero RF-15/24 tablet RF-22 marca EN_PREPARACION. */
     @PostMapping("/pedidos/{codigo}/en-preparacion")
-    @PreAuthorize("hasAnyAuthority('pedidos:estado-preparacion', 'clientes:pedido-gestionar')")
+    @PreAuthorize("hasAnyAuthority('pedidos:estado-preparacion', 'clientes:gestionar', 'clientes:pedido-gestionar')")
     public PedidoClienteSPI enPreparacion(@PathVariable String codigo) {
         return clientes.marcarEnPreparacion(codigo);
     }
 
     /** RF-24/tablet RF-25: tablet del mesero marca LISTO (RF-44). */
     @PostMapping("/pedidos/{codigo}/listo")
-    @PreAuthorize("hasAnyAuthority('pedidos:estado-listo', 'clientes:pedido-gestionar')")
+    @PreAuthorize("hasAnyAuthority('pedidos:estado-listo', 'clientes:gestionar', 'clientes:pedido-gestionar')")
     public PedidoClienteSPI listo(@PathVariable String codigo) {
         return clientes.marcarListo(codigo);
     }
@@ -73,7 +72,7 @@ public class ClientesController {
     /** RF-43: el cliente se suscribe y recibe el estado en tiempo real. */
     @SubscribeMapping("/topic/pedido/{codigo}")
     public PedidoClienteSPI estadoEnVivo(@DestinationVariable String codigo) {
-        return clientes.pedidoPorCodigo(codigo);
+        return clientes.pedidoSPIporCodigo(codigo);
     }
 
     /** RF-45: historial del cliente. RF-43 RF-44: solo lectura. */
@@ -85,13 +84,17 @@ public class ClientesController {
 
     /** Tabla RF-14 agrega direcci&oacute;n RF-42 (Domicilio RF-42/43). */
     @PostMapping("/direcciones")
-    @PreAuthorize("hasAuthority('clientes:direccion-gestionar')")
+    @PreAuthorize("hasAnyAuthority('clientes:carrito-gestionar', 'clientes:cuenta-nueva', 'clientes:gestionar')")
     public DireccionClienteSPI nuevaDireccion(@RequestBody NuevaDireccionClienteRequest req) {
         return clientes.nuevaDireccion(clienteIdActual(), req);
     }
 
     private Long clienteIdActual() {
-        return ClienteContextoId.clienteIdDe(org.springframework.security.core.context.SecurityContextHolder
-                .getContext().getAuthentication());
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            throw new IllegalStateException("No autenticado (RF-40)");
+        }
+        return clientes.resolverClienteId(auth.getName());
     }
 }
