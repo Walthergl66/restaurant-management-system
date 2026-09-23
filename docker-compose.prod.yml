@@ -1,34 +1,16 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: restaurante-postgres-prod
-    environment:
-      POSTGRES_DB: ${DB_NAME:-restaurante}
-      POSTGRES_USER: ${DB_USERNAME:-restaurante}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-restaurante}
-    volumes:
-      - restaurante-pgdata-prod:/var/lib/postgresql/data
-      - ./database/backups:/backups
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-restaurante} -d ${DB_NAME:-restaurante}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    restart: unless-stopped
-
   app:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: restaurante-app
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-restaurante}
-      DB_USERNAME: ${DB_USERNAME:-restaurante}
-      DB_PASSWORD: ${DB_PASSWORD:-restaurante}
+      DB_HOST: ${DB_HOST:?DB_HOST obligatorio}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:?DB_NAME obligatorio}
+      DB_USER: ${DB_USER:?DB_USER obligatorio}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD obligatorio}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET debe tener al menos 32 caracteres}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:?ADMIN_INITIAL_PASSWORD obligatorio en prod}
@@ -43,6 +25,3 @@ services:
       retries: 10
       start_period: 40s
     restart: unless-stopped
-
-volumes:
-  restaurante-pgdata-prod:

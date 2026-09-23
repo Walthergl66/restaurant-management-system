@@ -48,11 +48,26 @@ La aplicación queda en `http://localhost:8080` (health real:
 
 ### Configuración por variables de entorno
 
+La aplicación arma la URL JDBC con `DB_HOST`, `DB_PORT` y `DB_NAME`. Para
+cargar las variables del archivo `.env` al iniciar desde una terminal Bash:
+
+```bash
+set -a
+. ./.env
+set +a
+./backend/mvnw -f backend/pom.xml spring-boot:run
+```
+
+El archivo `.env` local está ignorado por Git. No subas credenciales al
+repositorio.
+
 | Variable | Default | Descripción |
 | --- | --- | --- |
-| `DB_URL` | `jdbc:postgresql://localhost:5432/restaurante` | URL de la base |
-| `DB_USERNAME` | `restaurante` | Usuario de BD |
-| `DB_PASSWORD` | `restaurante` | Contraseña de BD |
+| `DB_HOST` | `localhost` | Host PostgreSQL |
+| `DB_PORT` | `5432` | Puerto PostgreSQL |
+| `DB_NAME` | `restaurante` | Base de datos |
+| `DB_USER` | `restaurante` | Usuario de BD |
+| `DB_PASSWORD` | *(obligatoria en el entorno)* | Contraseña de BD |
 | `SERVER_PORT` | `8080` | Puerto HTTP |
 | `JWT_SECRET` | *(vacío)* | Secreto HS256 32+ chars (obligatorio en prod) |
 | `JWT_EXPIRATION_MS` | `86400000` | Expiración del access token |
@@ -89,7 +104,11 @@ Imagen multi-stage (build con Maven Wrapper + runtime temurin JRE):
 cd backend
 docker build -t restaurant-backend .
 docker run --rm -p 8080:8080 \
-  -e DB_URL=jdbc:postgresql://host.docker.internal:5432/restaurante \
+  -e DB_HOST=host.docker.internal \
+  -e DB_PORT=5432 \
+  -e DB_NAME=restaurante \
+  -e DB_USER=restaurante \
+  -e DB_PASSWORD="$DB_PASSWORD" \
   -e JWT_SECRET="<secreto-512-bits>" \
   restaurant-backend
 ```
@@ -100,6 +119,10 @@ docker run --rm -p 8080:8080 \
 # Requiere JWT_SECRET ≥32 chars y ADMIN_INITIAL_PASSWORD en prod
 export JWT_SECRET="cambia-esto-por-un-secreto-512-bits-min-32"
 export ADMIN_INITIAL_PASSWORD="cambia-admin-prod"
+export DB_HOST="192.168.1.230"
+export DB_PORT="5432"
+export DB_NAME="manage_restauran"
+export DB_USER="elpajarowtf"
 export DB_PASSWORD="cambia-db-prod"
 docker compose -f ../docker-compose.prod.yml up --build -d
 curl http://localhost:8080/actuator/health  # {"status":"UP"}
@@ -107,9 +130,9 @@ curl http://localhost:8080/v3/api-docs | jq .info.title
 open http://localhost:8080/swagger-ui.html
 ```
 
-`docker-compose.prod.yml` levanta `postgres:16` + `app` (build `backend/Dockerfile` multi-stage JDK25→JRE, usuario no root, healthcheck `/actuator/health`, Flyway migrate al arrancar, `SPRING_PROFILES_ACTIVE=prod`).
+`docker-compose.prod.yml` levanta la app (build `backend/Dockerfile` multi-stage JDK25→JRE, usuario no root, healthcheck `/actuator/health`, Flyway migrate al arrancar, `SPRING_PROFILES_ACTIVE=prod`) y conecta a PostgreSQL externo configurado por `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` y `DB_PASSWORD`.
 
-`application-prod.yml` usa `DB_URL`/`JWT_SECRET`/`ADMIN_INITIAL_PASSWORD` vía env, pool Hikari 20/5, `validate` y `health.probes.enabled`.
+`application-prod.yml` arma la URL JDBC desde las variables de conexión y usa `JWT_SECRET`/`ADMIN_INITIAL_PASSWORD` vía entorno, pool Hikari 20/5, `validate` y `health.probes.enabled`.
 
 ## Respaldos (RNF-05)
 
