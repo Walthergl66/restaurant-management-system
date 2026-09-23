@@ -29,6 +29,9 @@ build/
 # --- Test results ---
 *.trx
 
+# Backups locales (no se versionan)
+database/backups/
+
 # Contexto de agentes y planes (nunca se commitean)
 AGENTS.md
 PLAN_BACKEND_RESTAURANT.md
