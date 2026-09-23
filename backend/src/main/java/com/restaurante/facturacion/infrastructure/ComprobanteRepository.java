@@ -16,6 +16,8 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> 
 
     List<Comprobante> findByCuentaId(Long cuentaId);
 
+    List<Comprobante> findTop100ByOrderByIdDesc();
+
     @Query("select c from Comprobante c order by c.secuencial desc limit 1")
     List<Comprobante> ultimos(int limite);
 }

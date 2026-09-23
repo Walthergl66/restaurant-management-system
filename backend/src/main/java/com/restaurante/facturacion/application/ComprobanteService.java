@@ -64,7 +64,7 @@ public class ComprobanteService implements EmisionComprobantes {
                     desde == null ? Instant.EPOCH : desde,
                     hasta == null ? Instant.now() : hasta);
         } else {
-            comprobantes = comprobanteRepository.findAll();
+            comprobantes = comprobanteRepository.findTop100ByOrderByIdDesc();
         }
         return comprobantes.stream().map(this::resumen).toList();
     }
