@@ -1,7 +1,10 @@
 package com.restaurante.clientes;
 
+import com.restaurante.catalogo.ProductoParaPedido;
 import com.restaurante.clientes.domain.PedidoClienteTablet;
-import com.restaurante.shared.domain.Money;
+import com.restaurante.clientes.web.ConfirmarPedidoClienteRequest;
+import com.restaurante.clientes.web.CrearPedidoClienteRequest;
+import com.restaurante.clientes.web.NuevaDireccionClienteRequest;
 
 import java.util.List;
 
@@ -18,13 +21,40 @@ import java.util.List;
  */
 public interface Clientes {
 
+    /** RF-40: carrito del cliente (BORRADOR). */
+    CarritoClienteSPI carrito(Long clienteId);
+
+    /** RF-40: menú visible desde la app (catálogo SPI). */
+    List<ProductoParaPedido> menu();
+
+    /** RF-41: crear pedido (carrito -> BORRADOR) con idempotencia. */
+    PedidoClienteSPI crearPedido(Long clienteId, CrearPedidoClienteRequest request);
+
+    /** RF-41: confirmar con Money congelado, idempotente 200 / 409. */
+    PedidoClienteSPI confirmar(String codigo, ConfirmarPedidoClienteRequest request);
+
+    /** RF-41 legacy: confirmar con clave suelta (tablet). */
+    PedidoClienteTablet confirmar(String codigo, Object idempotencyKey);
+
     /** RF-40/41: pedir por c&oacute;digo (men&uacute; RF-43/cat&aacute;logo SPI
      *  RF-09/41/42). */
     PedidoClienteTablet pedidoPorCodigo(String codigo);
 
-    /** RF-44/45: confirmar un pedido del carrito congelando el total
-     *  ({@code Money}). Reintento con la MISMA clave idempotente = 200 por
-     *  RF-24/25/RF-26/27 RF-44; clave DISTINTA sobre pedido ya confirmado =
-     *  409 RF-41/RF-24/25/26/27 RF-44. NUNCA dinero {@code double} (RF-09/41). */
-    PedidoClienteTablet confirmar(String codigo, Object idempotencyKey);
+    /** RF-41 SPI para el controlador (estado en vivo). */
+    PedidoClienteSPI pedidoSPIporCodigo(String codigo);
+
+    /** RF-44: tablet marca EN_PREPARACION (RF-24). */
+    PedidoClienteSPI marcarEnPreparacion(String codigo);
+
+    /** RF-44: tablet marca LISTO (RF-25). */
+    PedidoClienteSPI marcarListo(String codigo);
+
+    /** RF-45: historial del cliente. */
+    List<PedidoClienteSPI> historial(Long clienteId);
+
+    /** RF-42: nueva dirección para domicilio. */
+    DireccionClienteSPI nuevaDireccion(Long clienteId, NuevaDireccionClienteRequest request);
+
+    /** Resuelve el clienteId real (BD) a partir del username del JWT. */
+    Long resolverClienteId(String username);
 }
