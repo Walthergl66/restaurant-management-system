@@ -86,7 +86,7 @@ public class CuentaService implements Cuentas {
         } else if (estado != null) {
             cuentas = cuentaRepository.findByEstado(estado);
         } else {
-            cuentas = cuentaRepository.findAll();
+            cuentas = cuentaRepository.findTop100ByOrderByIdDesc();
         }
         return cuentas.stream()
                 .map(this::aRespuesta)

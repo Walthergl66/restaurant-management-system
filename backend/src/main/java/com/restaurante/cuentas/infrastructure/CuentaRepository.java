@@ -14,4 +14,6 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     List<Cuenta> findByMesaId(Long mesaId);
 
     List<Cuenta> findByEstado(EstadoCuenta estado);
+
+    List<Cuenta> findTop100ByOrderByIdDesc();
 }
