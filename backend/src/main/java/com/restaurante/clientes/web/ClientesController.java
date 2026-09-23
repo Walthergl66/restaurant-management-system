@@ -57,14 +57,14 @@ public class ClientesController {
 
     /** RF-44: tablet del mesero RF-15/24 tablet RF-22 marca EN_PREPARACION. */
     @PostMapping("/pedidos/{codigo}/en-preparacion")
-    @PreAuthorize("hasAnyAuthority('pedidos:estado-preparacion', 'clientes:gestionar', 'clientes:pedido-gestionar')")
+    @PreAuthorize("hasAnyAuthority('pedidos:estado-preparacion', 'clientes:gestionar')")
     public PedidoClienteSPI enPreparacion(@PathVariable String codigo) {
         return clientes.marcarEnPreparacion(codigo);
     }
 
     /** RF-24/tablet RF-25: tablet del mesero marca LISTO (RF-44). */
     @PostMapping("/pedidos/{codigo}/listo")
-    @PreAuthorize("hasAnyAuthority('pedidos:estado-listo', 'clientes:gestionar', 'clientes:pedido-gestionar')")
+    @PreAuthorize("hasAnyAuthority('pedidos:estado-listo', 'clientes:gestionar')")
     public PedidoClienteSPI listo(@PathVariable String codigo) {
         return clientes.marcarListo(codigo);
     }
