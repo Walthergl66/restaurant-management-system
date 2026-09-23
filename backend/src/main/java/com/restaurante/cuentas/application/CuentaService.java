@@ -20,6 +20,8 @@ import com.restaurante.shared.domain.Money;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,6 +93,16 @@ public class CuentaService implements Cuentas {
         return cuentas.stream()
                 .map(this::aRespuesta)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CuentaResponse> listar(Pageable pageable, Long mesaId, EstadoCuenta estado) {
+        if (mesaId != null) {
+            return cuentaRepository.findByMesaId(mesaId, pageable).map(this::aRespuesta);
+        } else if (estado != null) {
+            return cuentaRepository.findByEstado(estado, pageable).map(this::aRespuesta);
+        }
+        return cuentaRepository.findAll(pageable).map(this::aRespuesta);
     }
 
     @Transactional(readOnly = true)

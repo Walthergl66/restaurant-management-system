@@ -2,6 +2,8 @@ package com.restaurante.cuentas.infrastructure;
 
 import com.restaurante.cuentas.domain.Cuenta;
 import com.restaurante.cuentas.domain.EstadoCuenta;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -16,4 +18,8 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     List<Cuenta> findByEstado(EstadoCuenta estado);
 
     List<Cuenta> findTop100ByOrderByIdDesc();
+
+    Page<Cuenta> findByMesaId(Long mesaId, Pageable pageable);
+
+    Page<Cuenta> findByEstado(EstadoCuenta estado, Pageable pageable);
 }
