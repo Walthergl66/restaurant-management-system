@@ -15,8 +15,10 @@ spring:
     baseline-on-migrate: true
 
 app:
+  inicial:
+    admin-password: ${ADMIN_INITIAL_PASSWORD:?ADMIN_INITIAL_PASSWORD obligatorio en prod}
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:?JWT_SECRET obligatorio en prod (min 32 chars)}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
 
