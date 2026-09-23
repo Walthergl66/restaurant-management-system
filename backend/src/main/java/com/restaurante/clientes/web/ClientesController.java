@@ -4,6 +4,7 @@ import com.restaurante.clientes.CarritoClienteSPI;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
 import com.restaurante.clientes.PedidoClienteSPI;
+import jakarta.validation.Valid;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,7 +43,7 @@ public class ClientesController {
     /** RF-41: crear pedido (carrito -> BORRADOR) idempotente. */
     @PostMapping("/pedidos")
     @PreAuthorize("hasAuthority('clientes:pedido-crear')")
-    public PedidoClienteSPI crearPedido(@RequestBody CrearPedidoClienteRequest req) {
+    public PedidoClienteSPI crearPedido(@Valid @RequestBody CrearPedidoClienteRequest req) {
         return clientes.crearPedido(clienteIdActual(), req);
     }
 
@@ -51,7 +52,7 @@ public class ClientesController {
     @PostMapping("/pedidos/{codigo}/confirmar")
     @PreAuthorize("hasAuthority('clientes:pedido-confirmar')")
     public PedidoClienteSPI confirmar(@PathVariable String codigo,
-                                      @RequestBody ConfirmarPedidoClienteRequest req) {
+                                      @Valid @RequestBody ConfirmarPedidoClienteRequest req) {
         return clientes.confirmar(codigo, req);
     }
 
@@ -85,7 +86,7 @@ public class ClientesController {
     /** Tabla RF-14 agrega direcci&oacute;n RF-42 (Domicilio RF-42/43). */
     @PostMapping("/direcciones")
     @PreAuthorize("hasAnyAuthority('clientes:carrito-gestionar', 'clientes:cuenta-nueva', 'clientes:gestionar')")
-    public DireccionClienteSPI nuevaDireccion(@RequestBody NuevaDireccionClienteRequest req) {
+    public DireccionClienteSPI nuevaDireccion(@Valid @RequestBody NuevaDireccionClienteRequest req) {
         return clientes.nuevaDireccion(clienteIdActual(), req);
     }
 

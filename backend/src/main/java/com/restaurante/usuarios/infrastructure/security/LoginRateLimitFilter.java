@@ -43,10 +43,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
         if ("POST".equalsIgnoreCase(request.getMethod()) && "/api/v1/auth/login".equals(request.getRequestURI())) {
             String ip = request.getRemoteAddr();
             String key = ip != null ? ip : "unknown";
-            // También limitar por header X-Forwarded-For si existe (proxy)
-            String xff = request.getHeader("X-Forwarded-For");
-            if (xff != null && !xff.isBlank()) key = xff.split(",")[0].trim();
-
+            // X-Forwarded-For solo se confía tras ForwardedHeaderFilter con proxy confiable; por defecto se ignora para evitar spoof
             if (!rateLimiter.isAllowed(key)) {
                 ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
                         "Demasiados intentos de login, intente más tarde");
