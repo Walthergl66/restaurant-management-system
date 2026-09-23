@@ -3,7 +3,6 @@ package com.restaurante.clientes.domain;
 import com.restaurante.shared.domain.Money;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Objects;
 
 /** RF-41/RF-09/RF-22/RF-23/RF-41: &uacute;nica regla de dinero del m&oacute;dulo
@@ -15,19 +14,18 @@ import java.util.Objects;
  *  double; nunca BigDecimal suelto fuera de Money. */
 public record MoneyCliente(BigDecimal cantidad) implements Comparable<MoneyCliente> {
 
-    public static final MoneyCliente ZERO = new MoneyCliente(Money.ZERO.cantidad());
+    public static final MoneyCliente ZERO = new MoneyCliente(Money.ZERO.getAmount());
     public static final MoneyCliente TASA_IVA = new MoneyCliente(new BigDecimal("0.15")); // RF-11 IVA 15%
-
 
     public MoneyCliente {
         if (cantidad == null) {
             throw new IllegalArgumentException("Money nunca null (RF-09/41)");
         }
-        cantidad = Money.round(cantidad).cantidad();
+        cantidad = Money.round(cantidad);
     }
 
     public static MoneyCliente of(Money money) {
-        return new MoneyCliente(money.cantidad());
+        return new MoneyCliente(money.getAmount());
     }
 
     public static MoneyCliente of(BigDecimal cantidad) {
@@ -43,11 +41,11 @@ public record MoneyCliente(BigDecimal cantidad) implements Comparable<MoneyClien
     }
 
     public MoneyCliente add(MoneyCliente otro) {
-        return new MoneyCliente(Money.round(cantidad.add(otro.cantidad)).cantidad());
+        return new MoneyCliente(Money.round(cantidad.add(otro.cantidad)));
     }
 
     public MoneyCliente multiply(int veces) {
-        return new MoneyCliente(Money.round(cantidad.multiply(BigDecimal.valueOf(veces))).cantidad());
+        return new MoneyCliente(Money.round(cantidad.multiply(BigDecimal.valueOf(veces))));
     }
 
     public BigDecimal cuantos() {
