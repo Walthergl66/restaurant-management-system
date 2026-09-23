@@ -45,6 +45,17 @@ cd backend && ./mvnw -q clean package -DskipTests && java -jar target/*.jar
 La API queda en `http://localhost:8080` (health: `/actuator/health`,
 Swagger: `/swagger-ui.html`).
 
+## Producción (Fase 8)
+
+```bash
+export JWT_SECRET="secreto-512-bits-min-32"
+export ADMIN_INITIAL_PASSWORD="admin-prod-seguro"
+docker compose -f docker-compose.prod.yml up --build -d
+curl http://localhost:8080/actuator/health
+```
+
+Respaldos: `./database/backup.sh` y `./database/restore.sh ./database/backups/*.dump` (pg_dump custom, RNF-05). Docs: `docs/api.md` y `docs/carga.md`. Carga: `CargaConcurrenteTest` 50 hilos 0 duplicadas RNF-17.
+
 ## CI
 
 GitHub Actions compila y ejecuta las pruebas del backend (`.github/workflows/ci.yml`).

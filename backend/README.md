@@ -94,6 +94,43 @@ docker run --rm -p 8080:8080 \
   restaurant-backend
 ```
 
+## Despliegue producción (Fase 8)
+
+```bash
+# Requiere JWT_SECRET ≥32 chars y ADMIN_INITIAL_PASSWORD en prod
+export JWT_SECRET="cambia-esto-por-un-secreto-512-bits-min-32"
+export ADMIN_INITIAL_PASSWORD="cambia-admin-prod"
+export DB_PASSWORD="cambia-db-prod"
+docker compose -f ../docker-compose.prod.yml up --build -d
+curl http://localhost:8080/actuator/health  # {"status":"UP"}
+curl http://localhost:8080/v3/api-docs | jq .info.title
+open http://localhost:8080/swagger-ui.html
+```
+
+`docker-compose.prod.yml` levanta `postgres:16` + `app` (build `backend/Dockerfile` multi-stage JDK25→JRE, usuario no root, healthcheck `/actuator/health`, Flyway migrate al arrancar, `SPRING_PROFILES_ACTIVE=prod`).
+
+`application-prod.yml` usa `DB_URL`/`JWT_SECRET`/`ADMIN_INITIAL_PASSWORD` vía env, pool Hikari 20/5, `validate` y `health.probes.enabled`.
+
+## Respaldos (RNF-05)
+
+```bash
+./database/backup.sh                          # ./database/backups/restaurante_YYYYMMDD_HHMMSS.dump
+./database/backup.sh /tmp/manual.dump
+./database/restore.sh ./database/backups/restaurante_20260922_120000.dump  # DROP+CREATE+pg_restore --if-exists
+```
+
+El backup usa `pg_dump -F c` (custom) contra el contenedor `restaurante-postgres` o directo. Validación con `pg_restore --list`.
+
+## Pruebas de carga (RNF-04/RNF-17)
+
+`CargaConcurrenteTest` — 50 hilos `POST /clientes/pedidos/{codigo}/confirmar` con misma `Idempotency-Key`, verifica 0 duplicadas, `@Version` y `UNIQUE(cliente_id,idempotency_key)`:
+
+```bash
+./backend/mvnw -f backend/pom.xml test -Dtest=CargaConcurrenteTest
+```
+
+Ver `docs/carga.md` y `docs/api.md`. Rate limit login `5/min` por IP (429 `urn:problem:restaurante:rate-limit`, deshabilitado en `test`).
+
 ## CI
 
 GitHub Actions (`../.github/workflows/ci.yml`) compila y ejecuta toda la
