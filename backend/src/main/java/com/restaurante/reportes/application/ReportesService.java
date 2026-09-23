@@ -55,12 +55,12 @@ public class ReportesService {
 
         Map<String, ProductoVenta> productos = new LinkedHashMap<>();
         for (VentaProducto venta : pedidos.ventasPorProducto(desde, hasta)) {
-            String clave = venta.productoId() + "|" + venta.nombreProducto();
+            String clave = venta.productoId() + "\u001F" + venta.nombreProducto();
             productos.put(clave, new ProductoVenta(
                     venta.productoId(), venta.nombreProducto(), venta.cantidad(), venta.monto()));
         }
         for (DescuentoProducto descuento : anulaciones.aprobadasPorProducto(desde, hasta)) {
-            String clave = descuento.productoId() + "|" + descuento.nombreProducto();
+            String clave = descuento.productoId() + "\u001F" + descuento.nombreProducto();
             ProductoVenta venta = productos.get(clave);
             if (venta != null) {
                 BigDecimal restado = venta.monto().subtract(descuento.monto()).max(BigDecimal.ZERO);
