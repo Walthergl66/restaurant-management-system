@@ -13,6 +13,12 @@ public interface AnulacionRepository extends JpaRepository<Anulacion, Long> {
 
     List<Anulacion> findByPedidoCodigo(String pedidoCodigo);
 
+    List<Anulacion> findByPedidoCodigoAndEstado(String pedidoCodigo, EstadoAnulacion estado);
+
+    List<Anulacion> findByEstado(EstadoAnulacion estado);
+
+    List<Anulacion> findTop100ByOrderByIdDesc();
+
     List<Anulacion> findByPedidoCodigoIn(List<String> pedidoCodigos);
 
     /**

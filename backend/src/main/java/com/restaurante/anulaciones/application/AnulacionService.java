@@ -104,14 +104,17 @@ public class AnulacionService implements Anulaciones {
     public List<AnulacionResponse> listar(String pedidoCodigo, EstadoAnulacion estado) {
         List<Anulacion> anulaciones;
         if (pedidoCodigo != null) {
-            anulaciones = anulacionRepository.findByPedidoCodigo(pedidoCodigo);
+            if (estado != null) {
+                anulaciones = anulacionRepository.findByPedidoCodigoAndEstado(pedidoCodigo, estado);
+            } else {
+                anulaciones = anulacionRepository.findByPedidoCodigo(pedidoCodigo);
+            }
+        } else if (estado != null) {
+            anulaciones = anulacionRepository.findByEstado(estado);
         } else {
-            anulaciones = anulacionRepository.findAll();
+            anulaciones = anulacionRepository.findTop100ByOrderByIdDesc();
         }
-        return anulaciones.stream()
-                .filter(a -> estado == null || a.getEstado() == estado)
-                .map(AnulacionResponse::from)
-                .toList();
+        return anulaciones.stream().map(AnulacionResponse::from).toList();
     }
 
     @Override
