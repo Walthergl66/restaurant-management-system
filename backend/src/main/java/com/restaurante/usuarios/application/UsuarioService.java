@@ -3,6 +3,7 @@ package com.restaurante.usuarios.application;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
+import com.restaurante.usuarios.Usuarios;
 import com.restaurante.usuarios.domain.Rol;
 import com.restaurante.usuarios.domain.Usuario;
 import com.restaurante.usuarios.infrastructure.PermisoRepository;
@@ -20,13 +21,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Administración de usuarios, roles y contraseñas.
  */
 @Service
 @Transactional
-public class UsuarioService {
+public class UsuarioService implements Usuarios {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
@@ -109,5 +111,17 @@ public class UsuarioService {
                 .filter(Rol::isActivo)
                 .map(r -> new RolDto(r.getId(), r.getCodigo(), r.getDescripcion(), r.getPermisoCodigos()))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UsuarioResumen> porUsername(String username) {
+        return usuarioRepository.findByUsername(username)
+                .map(u -> new UsuarioResumen(
+                        u.getId(),
+                        u.getUsername(),
+                        u.getNombre(),
+                        u.getRol() != null ? u.getRol().getCodigo() : null,
+                        u.isActivo()));
     }
 }
