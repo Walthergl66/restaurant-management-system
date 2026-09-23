@@ -112,6 +112,20 @@ public class ProductoService implements Catalogo {
                 .map(e -> new ExtraParaPedido(e.getId(), e.getNombre(), e.getPrecio(), e.isActivo()));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductoParaPedido> productosActivos() {
+        return productoRepository.findByActivoTrue().stream()
+                .map(p -> new ProductoParaPedido(
+                        p.getId(),
+                        p.getNombre(),
+                        p.getPrecio(),
+                        p.getArea() == null ? null : p.getArea().getId(),
+                        p.getArea() == null ? null : p.getArea().getNombre(),
+                        p.isActivo()))
+                .toList();
+    }
+
     private Categoria cargarCategoria(Long id) {
         if (id == null) {
             return null;

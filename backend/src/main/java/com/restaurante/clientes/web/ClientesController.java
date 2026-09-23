@@ -4,6 +4,8 @@ import com.restaurante.clientes.CarritoClienteSPI;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
 import com.restaurante.clientes.PedidoClienteSPI;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
@@ -18,6 +20,7 @@ import java.util.List;
  *  marca EN_PREPARACION/LISTO (RF-22/23/24/25 RF-15/16 escal&oacute;n RF-06/07). */
 @RestController
 @RequestMapping("/api/v1/clientes")
+@Tag(name = "clientes", description = "Pedidos de la app del cliente (RF-40..45)")
 public class ClientesController {
 
     private final Clientes clientes;
@@ -29,6 +32,7 @@ public class ClientesController {
     /** RF-40: carrito del cliente logueado. RF-41 SPI Money men&uacute;. */
     @GetMapping("/carrito")
     @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @Operation(summary = "Carrito del cliente (BORRADOR)")
     public CarritoClienteSPI carrito() {
         return clientes.carrito(clienteIdActual());
     }
@@ -36,6 +40,7 @@ public class ClientesController {
     /** RF-40: ver men&uacute; desde la app (RF-41 SPI Catalogo/Money). */
     @GetMapping("/menu")
     @PreAuthorize("hasAuthority('clientes:menu-ver')")
+    @Operation(summary = "Menú para la app del cliente")
     public List<com.restaurante.catalogo.ProductoParaPedido> menu() {
         return clientes.menu();
     }
@@ -43,6 +48,7 @@ public class ClientesController {
     /** RF-41: crear pedido (carrito -> BORRADOR) idempotente. */
     @PostMapping("/pedidos")
     @PreAuthorize("hasAuthority('clientes:pedido-crear')")
+    @Operation(summary = "Crear pedido cliente (BORRADOR) idempotente")
     public PedidoClienteSPI crearPedido(@Valid @RequestBody CrearPedidoClienteRequest req) {
         return clientes.crearPedido(clienteIdActual(), req);
     }
@@ -51,6 +57,7 @@ public class ClientesController {
      *  idempotente 200; clave de otro pedido = 409 (RF-24/25 RF-41 RNF-17). */
     @PostMapping("/pedidos/{codigo}/confirmar")
     @PreAuthorize("hasAuthority('clientes:pedido-confirmar')")
+    @Operation(summary = "Confirmar pedido cliente idempotente")
     public PedidoClienteSPI confirmar(@PathVariable String codigo,
                                       @Valid @RequestBody ConfirmarPedidoClienteRequest req) {
         return clientes.confirmar(codigo, req);
@@ -59,6 +66,7 @@ public class ClientesController {
     /** RF-44: tablet del mesero RF-15/24 tablet RF-22 marca EN_PREPARACION. */
     @PostMapping("/pedidos/{codigo}/en-preparacion")
     @PreAuthorize("hasAnyAuthority('pedidos:estado-preparacion', 'clientes:gestionar')")
+    @Operation(summary = "Tablet marca EN_PREPARACION")
     public PedidoClienteSPI enPreparacion(@PathVariable String codigo) {
         return clientes.marcarEnPreparacion(codigo);
     }
@@ -66,6 +74,7 @@ public class ClientesController {
     /** RF-24/tablet RF-25: tablet del mesero marca LISTO (RF-44). */
     @PostMapping("/pedidos/{codigo}/listo")
     @PreAuthorize("hasAnyAuthority('pedidos:estado-listo', 'clientes:gestionar')")
+    @Operation(summary = "Tablet marca LISTO")
     public PedidoClienteSPI listo(@PathVariable String codigo) {
         return clientes.marcarListo(codigo);
     }
@@ -79,6 +88,7 @@ public class ClientesController {
     /** RF-45: historial del cliente. RF-43 RF-44: solo lectura. */
     @GetMapping("/historial")
     @PreAuthorize("hasAuthority('clientes:historial-ver')")
+    @Operation(summary = "Historial del cliente")
     public List<PedidoClienteSPI> historial() {
         return clientes.historial(clienteIdActual());
     }
@@ -86,6 +96,7 @@ public class ClientesController {
     /** Tabla RF-14 agrega direcci&oacute;n RF-42 (Domicilio RF-42/43). */
     @PostMapping("/direcciones")
     @PreAuthorize("hasAnyAuthority('clientes:carrito-gestionar', 'clientes:cuenta-nueva', 'clientes:gestionar')")
+    @Operation(summary = "Nueva dirección para domicilio")
     public DireccionClienteSPI nuevaDireccion(@Valid @RequestBody NuevaDireccionClienteRequest req) {
         return clientes.nuevaDireccion(clienteIdActual(), req);
     }

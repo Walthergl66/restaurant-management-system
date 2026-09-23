@@ -1,7 +1,6 @@
 package com.restaurante.catalogo;
 
-import com.restaurante.shared.domain.Money;
-
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -20,4 +19,9 @@ public interface Catalogo {
      * Información de un extra para congelarlo en una línea de pedido.
      */
     Optional<ExtraParaPedido> extraParaPedido(Long extraId);
+
+    /**
+     * Productos activos para menú (RF-40). Lista congelable con Money.
+     */
+    List<ProductoParaPedido> productosActivos();
 }

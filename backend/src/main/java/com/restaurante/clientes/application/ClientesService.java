@@ -69,12 +69,7 @@ public class ClientesService implements Clientes {
     @Override
     @Transactional(readOnly = true)
     public List<ProductoParaPedido> menu() {
-        // RF-40: menú público vía catálogo SPI. Si el SPI no expone listado, retornamos vacío;
-        // el smoke de Fase 2/3 ya cubre /api/v1/menu público. Para la app del cliente,
-        // este endpoint requiere auth pero entrega el mismo catálogo congelado Money.
-        // Intentamos listar vía catálogo si el SPI lo soporta; si no, vacío.
-        // Por ahora retornamos vacío para no acoplar; los tests de clientes verifican flujo de pedido, no menú.
-        return List.of();
+        return catalogo.productosActivos();
     }
 
     @Override
