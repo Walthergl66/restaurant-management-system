@@ -2,7 +2,6 @@ package com.restaurante.clientes.domain;
 
 import com.restaurante.shared.domain.Money;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,13 +50,14 @@ public class PedidoClienteTablet {
 
     /** RF-41 confirmar idempotente: misma idempotencyKey => reintento 200
      *  (RF-24/25); clave distinta => 409 (RF-41/RF-26). Congela el total
-     *  con Money SPI (RF-41 RF-09). */
+     *  con Money SPI (RF-41 RF-09). Aplica a CUALQUIER estado no-BORRADOR
+     *  como en Pedido confirmar (fix b20ace8), no solo CONFIRMADO. */
     public boolean confirmar(String claveReintento) {
-        if (estado == Estado.CONFIRMADO) {
-            if (!this.idempotencyKey.equals(claveReintento)) {
+        if (estado != Estado.BORRADOR) {
+            if (claveReintento == null || !this.idempotencyKey.equals(claveReintento)) {
                 throw new IllegalStateException("409 RF-41: clave idempotencia distinta (RF-24/25)");
             }
-            return false; // reintento idempotente con misma clave = 200
+            return false; // reintento idempotente con misma clave = 200 (cualquier estado avanzado)
         }
         exigir(Estado.BORRADOR, "RF-41 confirmar");
         if (lineas.isEmpty()) {
@@ -111,6 +111,7 @@ public class PedidoClienteTablet {
     public Long id() { return id; }
     public String codigo() { return codigo; }
     public Long clienteId() { return clienteId; }
+    public String idempotencyKey() { return idempotencyKey; }
     public List<LineaPedidoClienteTabletLinea> lineas() { return Collections.unmodifiableList(lineas); }
     public Money totalCongelado() { return totalCongelado; }
     public String estado() { return estado.name(); }
