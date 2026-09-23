@@ -68,6 +68,13 @@ public final class PermisoCodigo {
     public static final String REPORTES_VER = "reportes:ver";
     public static final String AUDITORIA_VER = "auditoria:ver";
     public static final String CLIENTES_GESTIONAR = "clientes:gestionar";
+    public static final String CLIENTES_MENU_VER = "clientes:menu-ver";
+    public static final String CLIENTES_CARRITO_GESTIONAR = "clientes:carrito-gestionar";
+    public static final String CLIENTES_PEDIDO_CREAR = "clientes:pedido-crear";
+    public static final String CLIENTES_PEDIDO_CONFIRMAR = "clientes:pedido-confirmar";
+    public static final String CLIENTES_PEDIDO_ESTADO_VER = "clientes:pedido-estado-ver";
+    public static final String CLIENTES_HISTORIAL_VER = "clientes:historial-ver";
+    public static final String CLIENTES_CUENTA_NUEVA = "clientes:cuenta-nueva";
     public static final String CONFIGURACION_GESTIONAR = "configuracion:gestionar";
 
     /**
