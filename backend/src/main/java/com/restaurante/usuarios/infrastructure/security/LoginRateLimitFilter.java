@@ -17,7 +17,9 @@ import java.net.URI;
 import java.util.Arrays;
 
 /**
- * Filtro que limita intentos de login por IP — RNF-07.
+ * Filtro que limita intentos de login y renovación de sesión por IP — RNF-07.
+ * A-07: aplica el mismo límite a refresh para no dejar una vía abierta de
+ * fuerza bruta junto al login.
  */
 @Component
 public class LoginRateLimitFilter extends OncePerRequestFilter {
@@ -40,7 +42,9 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if ("POST".equalsIgnoreCase(request.getMethod()) && "/api/v1/auth/login".equals(request.getRequestURI())) {
+        if ("POST".equalsIgnoreCase(request.getMethod())
+                && ("/api/v1/auth/login".equals(request.getRequestURI())
+                || "/api/v1/auth/refresh".equals(request.getRequestURI()))) {
             String ip = request.getRemoteAddr();
             String key = ip != null ? ip : "unknown";
             // X-Forwarded-For solo se confía tras ForwardedHeaderFilter con proxy confiable; por defecto se ignora para evitar spoof
