@@ -7,6 +7,7 @@ import com.restaurante.usuarios.Usuarios;
 import com.restaurante.usuarios.domain.Rol;
 import com.restaurante.usuarios.domain.Usuario;
 import com.restaurante.usuarios.infrastructure.PermisoRepository;
+import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
 import com.restaurante.usuarios.infrastructure.RolRepository;
 import com.restaurante.usuarios.infrastructure.UsuarioRepository;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
@@ -33,15 +34,18 @@ public class UsuarioService implements Usuarios {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PermisoRepository permisoRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           RolRepository rolRepository,
                           PermisoRepository permisoRepository,
+                          RefreshTokenRepository refreshTokenRepository,
                           PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.permisoRepository = permisoRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -77,10 +81,12 @@ public class UsuarioService implements Usuarios {
         Usuario usuario = usuarioRepository.findByIdWithRol(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
         usuario.cambiarNombre(request.nombre());
-        if (request.rolCodigo() != null) {
+        boolean credencialesCambiadas = false;
+        if (request.rolCodigo() != null && !usuario.getRol().getCodigo().equals(request.rolCodigo())) {
             Rol rol = rolRepository.findByCodigo(request.rolCodigo())
                     .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + request.rolCodigo()));
             usuario.asignarRol(rol);
+            credencialesCambiadas = true;
         }
         if (request.activo() != null) {
             if (request.activo()) {
@@ -88,6 +94,10 @@ public class UsuarioService implements Usuarios {
             } else {
                 usuario.desactivar();
             }
+            credencialesCambiadas = true;
+        }
+        if (credencialesCambiadas) {
+            invalidarSesiones(usuario);
         }
         return UsuarioAdminResponse.from(usuario);
     }
@@ -96,6 +106,7 @@ public class UsuarioService implements Usuarios {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
         usuario.cambiarPasswordHash(passwordEncoder.encode(request.nuevaPassword()));
+        invalidarSesiones(usuario);
     }
 
     public void eliminar(Long id) {
@@ -103,6 +114,7 @@ public class UsuarioService implements Usuarios {
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
         // Desactivación lógica: el historial y la auditoría exigen conservar el registro.
         usuario.desactivar();
+        invalidarSesiones(usuario);
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +123,14 @@ public class UsuarioService implements Usuarios {
                 .filter(Rol::isActivo)
                 .map(r -> new RolDto(r.getId(), r.getCodigo(), r.getDescripcion(), r.getPermisoCodigos()))
                 .toList();
+    }
+
+    /** A-04: tras un cambio de credenciales/rol/estado se invalidan todas las
+     *  sesiones: se incrementa la versión (revoca los JWT emitidos al instante
+     *  vía el filtro) y se revocan los refresh tokens activos. */
+    private void invalidarSesiones(Usuario usuario) {
+        usuario.incrementarSesionVersion();
+        refreshTokenRepository.revocarActivasDe(usuario.getId());
     }
 
     @Override

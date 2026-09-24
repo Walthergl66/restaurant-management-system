@@ -17,4 +17,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     @Query("select u from Usuario u left join fetch u.rol where u.id = :id")
     Optional<Usuario> findByIdWithRol(@Param("id") Long id);
+
+    /** A-04: versión de sesión vigente del usuario activo, para compararla
+     *  con la embebida en el JWT sin cargar la entidad completa. */
+    @Query("select u.sesionVersion from Usuario u where u.username = :username and u.activo = true")
+    Optional<Long> findSesionVersionActivo(@Param("username") String username);
 }

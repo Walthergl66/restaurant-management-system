@@ -24,6 +24,7 @@ public class JwtService {
 
     static final String CLAIM_AUTHORITIES = "autoridades";
     static final String CLAIM_ROL = "rol";
+    static final String CLAIM_SESION_VERSION = "sesion_version";
 
     private final JwtProperties properties;
     private SecretKey key;
@@ -42,11 +43,12 @@ public class JwtService {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generarAcceso(String username, String rol, Set<String> permisos) {
+    public String generarAcceso(String username, String rol, Set<String> permisos, long sesionVersion) {
         return Jwts.builder()
                 .subject(username)
                 .claim(CLAIM_ROL, rol)
                 .claim(CLAIM_AUTHORITIES, List.copyOf(permisos))
+                .claim(CLAIM_SESION_VERSION, sesionVersion)
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plus(properties.getExpiration())))
                 .signWith(key)

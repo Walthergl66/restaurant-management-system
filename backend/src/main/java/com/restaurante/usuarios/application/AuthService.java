@@ -110,7 +110,8 @@ public class AuthService {
 
     private AuthResponse emitirAcceso(Usuario usuario, String refreshToken) {
         String accessToken = jwtService.generarAcceso(
-                usuario.getUsername(), usuario.getRol().getCodigo(), usuario.getPermisoCodigos());
+                usuario.getUsername(), usuario.getRol().getCodigo(), usuario.getPermisoCodigos(),
+                usuario.getSesionVersion());
         long expiresInSeconds = jwtProperties.getExpiration().toSeconds();
         return AuthResponse.of(accessToken, refreshToken, expiresInSeconds, UsuarioInfo.from(usuario));
     }

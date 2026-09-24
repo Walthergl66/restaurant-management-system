@@ -21,8 +21,8 @@ app:
     admin-password: ${ADMIN_INITIAL_PASSWORD:?ADMIN_INITIAL_PASSWORD obligatorio en prod}
   jwt:
     secret: ${JWT_SECRET:?JWT_SECRET obligatorio en prod (min 32 chars HS256)}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
-    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hora (A-04)
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 días
 
 management:
   endpoints:

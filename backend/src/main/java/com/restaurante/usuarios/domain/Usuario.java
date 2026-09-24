@@ -32,6 +32,9 @@ public class Usuario extends AuditableEntity {
     @Column(nullable = false)
     private boolean activo = true;
 
+    @Column(name = "sesion_version", nullable = false)
+    private long sesionVersion = 0;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
@@ -74,6 +77,19 @@ public class Usuario extends AuditableEntity {
             return Collections.emptySet();
         }
         return rol.getPermisoCodigos();
+    }
+
+    public long getSesionVersion() {
+        return sesionVersion;
+    }
+
+    /**
+     * Incrementa la versión de sesión. A-04: invalida los JWT ya emitidos
+     * (el filtro compara esta versión con la embebida) tras un cambio de
+     * credenciales/rol/estado; los refresh tokens activos se revocan aparte.
+     */
+    public void incrementarSesionVersion() {
+        this.sesionVersion++;
     }
 
     public void cambiarNombre(String nombre) {
