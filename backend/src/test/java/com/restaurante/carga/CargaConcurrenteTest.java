@@ -112,15 +112,16 @@ class CargaConcurrenteTest extends AbstractIntegracionApi {
                 .andExpect(status().isOk())
                 .andReturn();
         JsonNode hist = objectMapper.readTree(finalRes.getResponse().getContentAsString());
+        JsonNode contenido = hist.path("content");
         JsonNode pedido = null;
-        for (JsonNode n : hist) if (codigo.equals(n.path("codigo").asText())) pedido = n;
+        for (JsonNode n : contenido) if (codigo.equals(n.path("codigo").asText())) pedido = n;
         assertNotNull(pedido, "Pedido debe aparecer en historial");
         assertEquals("CONFIRMADO", pedido.path("estado").asText());
         assertEquals(0, new BigDecimal("10.00").compareTo(pedido.path("total").decimalValue()));
 
         // Verificar no hay duplicados: solo un pedido con ese código en historial
         long count = 0;
-        for (JsonNode n : hist) if (codigo.equals(n.path("codigo").asText())) count++;
+        for (JsonNode n : contenido) if (codigo.equals(n.path("codigo").asText())) count++;
         assertEquals(1, count, "0 duplicadas: solo un pedido con ese código");
 
         // Clave distinta debe ser 409 (RNF-17)
