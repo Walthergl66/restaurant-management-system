@@ -4,17 +4,16 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-/** RF-41/RF-43/RF-44/RF-45: vista congelada del pedido del cliente. */
+/** RF-41/RF-43/RF-44/RF-45: vista congelada del pedido del cliente.
+ *  Respuesta p&uacute;blica (A-09): solo datos operativos m&iacute;nimos; jam&aacute;s
+ *  expone {@code idempotencyKey}, {@code clienteId} ni {@code direccionId}. */
 public record PedidoClienteSPI(
         String codigo,
-        Long clienteId,
         String estado,
         String metodoPago,
         String metodoEntrega,
-        Long direccionId,
         BigDecimal total,
         List<LineaSPI> lineas,
-        String idempotencyKey,
         Instant creadoAt,
         Instant actualizadoAt,
         long version) {

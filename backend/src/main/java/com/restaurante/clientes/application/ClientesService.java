@@ -63,7 +63,7 @@ public class ClientesService implements Clientes {
                 .map(PedidoClienteSPI::total)
                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
         int totalItems = spis.stream().mapToInt(s -> s.lineas().size()).sum();
-        return new CarritoClienteSPI(clienteId, spis, Money.round(total), totalItems);
+        return new CarritoClienteSPI(spis, Money.round(total), totalItems);
     }
 
     @Override
@@ -348,14 +348,11 @@ public class ClientesService implements Clientes {
 
         return new PedidoClienteSPI(
                 p.getCodigo(),
-                p.getClienteId(),
                 p.getEstado().name(),
                 p.getMetodoPago(),
                 p.getMetodoEntrega(),
-                p.getDireccionId(),
                 total,
                 lineasSPI,
-                p.getIdempotencyKey(),
                 p.getCreadoAt(),
                 p.getActualizadoAt(),
                 p.getVersion() == null ? 0 : p.getVersion());

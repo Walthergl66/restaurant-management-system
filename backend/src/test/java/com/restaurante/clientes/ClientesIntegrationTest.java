@@ -42,7 +42,7 @@ class ClientesIntegrationTest extends AbstractIntegracionApi {
         mockMvc.perform(get("/api/v1/clientes/carrito")
                         .header("Authorization", "Bearer " + clienteToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.clienteId").isNumber());
+                .andExpect(jsonPath("$.total").isNumber());
 
         String codigo = "CLI-" + System.nanoTime();
         String idem = "idem-" + System.nanoTime();
@@ -237,8 +237,7 @@ class ClientesIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.metodoEntrega").value("DOMICILIO"))
-                .andExpect(jsonPath("$.direccionId").value(direccionId));
+                .andExpect(jsonPath("$.metodoEntrega").value("DOMICILIO"));
 
         // Confirmar
         mockMvc.perform(post("/api/v1/clientes/pedidos/" + codigo + "/confirmar")
