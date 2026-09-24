@@ -79,10 +79,13 @@ public class ClientesController {
         return clientes.marcarListo(codigo);
     }
 
-    /** RF-43: el cliente se suscribe y recibe el estado en tiempo real. */
+    /** RF-43: el cliente se suscribe y recibe el estado en tiempo real. El
+     *  usuario de la sesión STOMP lo fija {@code StompJwtChannelInterceptor}
+     *  al validar el JWT del CONNECT (el solo puede verse a sí mismo). */
     @SubscribeMapping("/topic/pedido/{codigo}")
-    public PedidoClienteSPI estadoEnVivo(@DestinationVariable String codigo) {
-        return clientes.pedidoSPIporCodigo(clienteIdActual(), codigo);
+    public PedidoClienteSPI estadoEnVivo(@DestinationVariable String codigo,
+                                         java.security.Principal principal) {
+        return clientes.pedidoSPIporCodigo(clientes.resolverClienteId(principal.getName()), codigo);
     }
 
     /** RF-45: historial del cliente paginado (A-10: page size máximo 100,

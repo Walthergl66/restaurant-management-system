@@ -14,3 +14,7 @@ app:
     secret: teste2jgqm8n0h2c65xv8fo02j4kb8tq8wqx2c65zgr8d6a3k5z65w08kj9f4o2j4kb8tq8w0000teste2a3k5z65
   inicial:
     admin-password: admin123
+  stomp:
+    # El difusor casi nunca corre solo en tests: el E2E lo dispara a mano.
+    difusor-delay-ms: 3600000
+    difusor-initial-delay-ms: 3600000

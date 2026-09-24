@@ -7,6 +7,7 @@ import com.restaurante.clientes.CarritoClienteSPI;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
 import com.restaurante.clientes.PedidoClienteConfirmado;
+import com.restaurante.clientes.PedidoClienteEventos;
 import com.restaurante.clientes.PedidoClienteSPI;
 import com.restaurante.clientes.domain.Cliente;
 import com.restaurante.clientes.domain.DireccionCliente;
@@ -25,6 +26,8 @@ import com.restaurante.shared.domain.Money;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
+import com.restaurante.shared.outbox.EventoOutbox;
+import com.restaurante.shared.outbox.OutboxRepository;
 import com.restaurante.usuarios.Usuarios;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -44,19 +47,22 @@ public class ClientesService implements Clientes {
     private final Usuarios usuarios;
     private final Catalogo catalogo;
     private final ApplicationEventPublisher eventPublisher;
+    private final OutboxRepository outboxRepository;
 
     public ClientesService(PedidoClienteRepository pedidoRepository,
                            ClienteRepository clienteRepository,
                            DireccionClienteRepository direccionRepository,
                            Usuarios usuarios,
                            Catalogo catalogo,
-                           ApplicationEventPublisher eventPublisher) {
+                           ApplicationEventPublisher eventPublisher,
+                           OutboxRepository outboxRepository) {
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.direccionRepository = direccionRepository;
         this.usuarios = usuarios;
         this.catalogo = catalogo;
         this.eventPublisher = eventPublisher;
+        this.outboxRepository = outboxRepository;
     }
 
     @Override
@@ -252,6 +258,7 @@ public class ClientesService implements Clientes {
                 .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
         pedido.marcarEnPreparacion();
         pedidoRepository.save(pedido);
+        notificarEstado(pedido);
         return toSPI(pedido);
     }
 
@@ -261,6 +268,7 @@ public class ClientesService implements Clientes {
                 .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
         pedido.marcarListo();
         pedidoRepository.save(pedido);
+        notificarEstado(pedido);
         return toSPI(pedido);
     }
 
@@ -352,6 +360,28 @@ public class ClientesService implements Clientes {
                 })
                 .toList();
         eventPublisher.publishEvent(new PedidoClienteConfirmado(pedido.getCodigo(), lineas));
+        notificarEstado(pedido);
+    }
+
+    /** Escribe el aviso de cambio de estado en el outbox (tabla V4, misma
+     *  transacción, RNF-17); el difusor lo consune y lo entrega por STOMP
+     *  "al menos una vez" (RF-43). */
+    private void notificarEstado(PedidoCliente pedido) {
+        outboxRepository.save(new EventoOutbox(
+                PedidoClienteEventos.TIPO_ESTADO,
+                pedido.getCodigo(),
+                pedido.getCodigo(),
+                null, null, null,
+                PedidoClienteEventos.EVENTO_ESTADO));
+    }
+
+    /** Vista congelada para difundir por STOMP (RF-43). En el mismo módulo,
+     *  usado por {@code DifusorEstadoPedidoCliente}. */
+    @Transactional(readOnly = true)
+    public PedidoClienteSPI estadoParaDifusion(String codigo) {
+        PedidoCliente pedido = pedidoRepository.findByCodigoWithLineas(codigo)
+                .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
+        return toSPI(pedido);
     }
 
     private PedidoClienteSPI toSPI(PedidoCliente p) {
