@@ -280,6 +280,11 @@ public class PedidoService implements Pedidos {
     }
 
     @Override
+    public boolean existe(String pedidoCodigo) {
+        return pedidoRepository.existsByCodigo(pedidoCodigo);
+    }
+
+    @Override
     public void marcarListo(String pedidoCodigo) {
         Pedido pedido = cargarConLineas(pedidoCodigo);
         pedido.marcarListo();

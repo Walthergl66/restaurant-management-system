@@ -19,6 +19,12 @@ public interface Pedidos {
     void marcarEnPreparacion(String pedidoCodigo);
 
     /**
+     * True si existe un pedido presencial con ese código (las comandas de la
+     * app del cliente lo usan para decidir a qué módulo delegar los estados).
+     */
+    boolean existe(String pedidoCodigo);
+
+    /**
      * Marca el pedido como listo (si aún no lo está).
      */
     void marcarListo(String pedidoCodigo);
