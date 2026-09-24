@@ -54,6 +54,9 @@ public class PedidoClienteLinea extends BaseEntity {
     }
 
     public PedidoClienteLinea(Long productoId, String nombre, Money precio, int cantidad, String observaciones) {
+        if (cantidad <= 0) {
+            throw new com.restaurante.shared.domain.exception.BusinessRuleException("La cantidad debe ser mayor que cero");
+        }
         this.productoId = productoId;
         this.nombre = nombre;
         this.precio = precio;
