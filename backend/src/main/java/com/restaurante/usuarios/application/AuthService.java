@@ -27,17 +27,20 @@ public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenFamiliaRevoker familiaRevoker;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
 
     public AuthService(UsuarioRepository usuarioRepository,
                        RefreshTokenRepository refreshTokenRepository,
+                       RefreshTokenFamiliaRevoker familiaRevoker,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        JwtProperties jwtProperties) {
         this.usuarioRepository = usuarioRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.familiaRevoker = familiaRevoker;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
@@ -53,17 +56,33 @@ public class AuthService {
     }
 
     public AuthResponse refresh(String rawToken) {
+        UUID uuid = parseUuid(rawToken);
+        String hash = RefreshToken.hash(uuid);
         RefreshToken refreshToken = refreshTokenRepository
-                .findByTokenHash(RefreshToken.hash(parseUuid(rawToken)))
+                .findByTokenHash(hash)
                 .orElseThrow(() -> new UnauthorizedException("Token de refresco inválido"));
-        if (refreshToken.isRevoked() || refreshToken.isExpired()) {
+
+        // Reutilización de un token ya consumido: posible robo o carrera perdida.
+        // La revocación de la familia persiste en transacción propia (el 401
+        // vuelca la transacción exterior).
+        if (refreshToken.isRevoked()) {
+            familiaRevoker.revocarFamiliaDe(refreshToken.getUsuario().getId());
+            throw new UnauthorizedException("Token de refresco vencido o revocado");
+        }
+        if (refreshToken.isExpired()) {
             throw new UnauthorizedException("Token de refresco vencido o revocado");
         }
         Usuario usuario = refreshToken.getUsuario();
         if (!usuario.isActivo()) {
             throw new UnauthorizedException("El usuario está desactivado");
         }
-        refreshToken.revocar();
+
+        // A-03: consumo atómico en la base. Si otra transacción rotó el token
+        // justo antes (carrera), el UPDATE afecta 0 filas y esta petición pierde.
+        if (refreshTokenRepository.consumirActivoSiExiste(hash) != 1) {
+            familiaRevoker.revocarFamiliaDe(usuario.getId());
+            throw new UnauthorizedException("Token de refresco vencido o revocado");
+        }
 
         String nuevoRefresh = generarYGuardarRefreshToken(usuario);
         return emitirAcceso(usuario, nuevoRefresh);
