@@ -49,13 +49,13 @@ public class CajaService implements Cajas {
     }
 
     public MovimientoResponse egreso(Long cajaId, String concepto, Money monto, String metodo) {
-        Caja caja = cargarAbierta(cajaId);
+        Caja caja = cargarAbiertaBloqueada(cajaId);
         MovimientoCaja movimiento = movimientoRepository.save(new MovimientoCaja(caja.getId(), "EGRESO", concepto, monto, metodo, null));
         return tipoMovimiento(movimiento);
     }
 
     public CajaResponse cierre(Long id, Money montoReal) {
-        Caja caja = cargar(id);
+        Caja caja = cargarBloqueada(id);
         Money esperado = calcularEsperado(caja);
         caja.cerrar(montoReal, esperado, usuarioActual());
         cajaRepository.save(caja);
@@ -88,7 +88,7 @@ public class CajaService implements Cajas {
     }
 
     public void registrarIngreso(Long cajaId, String concepto, Money monto, String metodo, Long pagoId) {
-        cargarAbierta(cajaId);
+        cargarAbiertaBloqueada(cajaId);
         movimientoRepository.save(new MovimientoCaja(cajaId, "INGRESO", concepto, monto, metodo, pagoId));
     }
 
@@ -127,6 +127,23 @@ public class CajaService implements Cajas {
     private Caja cargar(Long id) {
         return cajaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Caja " + id + " no encontrada"));
+    }
+
+    /** A-02: lecturas para mutar o cerrar la caja bloquean la fila. Un egreso,
+     *  ingreso o cierre concurrente espera y vuelve a leer el estado: el que
+     *  cierra primero deja la caja CERRADA y el movimiento posterior se rechaza,
+     *  de modo que no quedan movimientos fuera de la conciliación calculada. */
+    private Caja cargarBloqueada(Long id) {
+        return cajaRepository.findByIdParaActualizar(id)
+                .orElseThrow(() -> new NotFoundException("Caja " + id + " no encontrada"));
+    }
+
+    private Caja cargarAbiertaBloqueada(Long id) {
+        Caja caja = cargarBloqueada(id);
+        if (caja.getEstado() != EstadoCaja.ABIERTA) {
+            throw new BusinessRuleException("La caja " + id + " está cerrada");
+        }
+        return caja;
     }
 
     private Caja cargarAbierta(Long id) {
