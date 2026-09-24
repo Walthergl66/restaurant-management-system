@@ -111,9 +111,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "parametro-invalido", message, request, null);
     }
 
-    @ExceptionHandler({DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class, OptimisticLockingFailureException.class})
+    @ExceptionHandler({DataIntegrityViolationException.class,
+            ObjectOptimisticLockingFailureException.class,
+            OptimisticLockingFailureException.class,
+            org.springframework.dao.PessimisticLockingFailureException.class})
     public ResponseEntity<ProblemDetail> handleIntegrity(Exception ex, HttpServletRequest request) {
-        log.warn("Conflicto de integridad o concurrencia: {}", ex.getMessage());
+        log.warn("Conflicto de integridad, concurrencia o bloqueo: {}", ex.getMessage());
         return build(HttpStatus.CONFLICT, "conflicto-datos", "La operación entró en conflicto con los datos actuales", request, null);
     }
 
