@@ -1,4 +1,4 @@
-package com.restaurante.comandas.domain;
+package com.restaurante.shared.outbox;
 
 import com.restaurante.shared.domain.BaseEntity;
 import jakarta.persistence.Column;
@@ -11,9 +11,12 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
- * Orden de impresión en el outbox. Se escribe en la MISMA transacción que la
- * confirmación del pedido, así si el agente local se cae, la orden queda
- * pendiente y se reenvía (al menos una vez).
+ * Evento del outbox (tabla V4). Se escribe en la MISMA transacción que el
+ * cambio de negocio que lo origina y lo consumen módulos vecinos: comandas
+ * (órdenes de impresión del agente local, tipo {@code comanda}) y clientes
+ * (aviso de cambio de estado para STOMP, tipo {@code pedido-cliente-estado}).
+ * Vive en {@code shared} para que todos los módulos reutilicen la misma tabla
+ * sin crear ciclos de dependencia (RNF-17).
  */
 @Entity
 @Table(name = "outbox")

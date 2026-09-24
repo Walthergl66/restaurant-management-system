@@ -1,6 +1,6 @@
 package com.restaurante.comandas.web.dto;
 
-import com.restaurante.comandas.domain.EventoOutbox;
+import com.restaurante.shared.outbox.EventoOutbox;
 
 import java.time.Instant;
 

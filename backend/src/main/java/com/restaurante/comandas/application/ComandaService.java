@@ -3,14 +3,14 @@ package com.restaurante.comandas.application;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.comandas.domain.Comanda;
 import com.restaurante.comandas.domain.ComandaEstado;
-import com.restaurante.comandas.domain.EstadoOutbox;
-import com.restaurante.comandas.domain.EventoOutbox;
 import com.restaurante.comandas.infrastructure.ComandaRepository;
-import com.restaurante.comandas.infrastructure.OutboxRepository;
 import com.restaurante.comandas.web.dto.ComandaResponse;
 import com.restaurante.comandas.web.dto.ImpresionResponse;
 import com.restaurante.pedidos.Pedidos;
 import com.restaurante.shared.domain.exception.NotFoundException;
+import com.restaurante.shared.outbox.EstadoOutbox;
+import com.restaurante.shared.outbox.EventoOutbox;
+import com.restaurante.shared.outbox.OutboxRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,8 +81,10 @@ public class ComandaService {
 
     @Transactional(readOnly = true)
     public List<ImpresionResponse> imprimirPendientes() {
-        List<EventoOutbox> pendientes =
-                outboxRepository.buscarPorEstado(EstadoOutbox.PENDIENTE, PageRequest.of(0, TAMANO_LOTE_IMPRESION));
+        List<EventoOutbox> pendientes = outboxRepository.buscarPorTipoYEstados(
+                GeneradorComandas.TIPO_OUTBOX,
+                List.of(EstadoOutbox.PENDIENTE),
+                PageRequest.of(0, TAMANO_LOTE_IMPRESION));
         return pendientes.stream().map(ImpresionResponse::from).toList();
     }
 
