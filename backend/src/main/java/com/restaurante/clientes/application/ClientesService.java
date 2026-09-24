@@ -6,6 +6,7 @@ import com.restaurante.catalogo.ProductoParaPedido;
 import com.restaurante.clientes.CarritoClienteSPI;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
+import com.restaurante.clientes.PedidoClienteConfirmado;
 import com.restaurante.clientes.PedidoClienteSPI;
 import com.restaurante.clientes.domain.Cliente;
 import com.restaurante.clientes.domain.DireccionCliente;
@@ -25,6 +26,7 @@ import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.usuarios.Usuarios;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,17 +43,20 @@ public class ClientesService implements Clientes {
     private final DireccionClienteRepository direccionRepository;
     private final Usuarios usuarios;
     private final Catalogo catalogo;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ClientesService(PedidoClienteRepository pedidoRepository,
                            ClienteRepository clienteRepository,
                            DireccionClienteRepository direccionRepository,
                            Usuarios usuarios,
-                           Catalogo catalogo) {
+                           Catalogo catalogo,
+                           ApplicationEventPublisher eventPublisher) {
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.direccionRepository = direccionRepository;
         this.usuarios = usuarios;
         this.catalogo = catalogo;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -181,6 +186,7 @@ public class ClientesService implements Clientes {
 
         pedido.confirmar(clave);
         pedidoRepository.save(pedido);
+        publicarConfirmado(pedido);
         return toSPI(pedido);
     }
 
@@ -227,6 +233,7 @@ public class ClientesService implements Clientes {
         }
         pedido.confirmar(clave);
         pedidoRepository.save(pedido);
+        publicarConfirmado(pedido);
         return pedidoPorCodigo(codigo);
     }
 
@@ -322,6 +329,29 @@ public class ClientesService implements Clientes {
         if (!pedido.getClienteId().equals(clienteId)) {
             throw new NotFoundException("Pedido no encontrado: " + pedido.getCodigo());
         }
+    }
+
+    /**
+     * Publica el evento en la MISMA transacción de la confirmación: las comandas
+     * y su outbox se guardan junto con ella (RNF-17). El área se resuelve del
+     * catálogo al confirmar, igual que en el flujo presencial.
+     */
+    private void publicarConfirmado(PedidoCliente pedido) {
+        List<PedidoClienteConfirmado.LineaConfirmada> lineas = pedido.getLineas().stream()
+                .map(l -> {
+                    ProductoParaPedido producto =
+                            catalogo.productoParaPedido(l.getProductoId()).orElse(null);
+                    return new PedidoClienteConfirmado.LineaConfirmada(
+                            l.getProductoId(),
+                            l.getNombre(),
+                            l.getCantidad(),
+                            l.getExtras().stream().map(e -> e.getNombre()).toList(),
+                            l.getObservaciones(),
+                            producto == null ? null : producto.areaId(),
+                            producto == null ? null : producto.areaNombre());
+                })
+                .toList();
+        eventPublisher.publishEvent(new PedidoClienteConfirmado(pedido.getCodigo(), lineas));
     }
 
     private PedidoClienteSPI toSPI(PedidoCliente p) {
