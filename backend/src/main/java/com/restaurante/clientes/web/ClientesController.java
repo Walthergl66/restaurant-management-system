@@ -85,12 +85,18 @@ public class ClientesController {
         return clientes.pedidoSPIporCodigo(clienteIdActual(), codigo);
     }
 
-    /** RF-45: historial del cliente. RF-43 RF-44: solo lectura. */
+    /** RF-45: historial del cliente paginado (A-10: page size máximo 100,
+     *  orden descendente por id = últimos primero). */
     @GetMapping("/historial")
     @PreAuthorize("hasAuthority('clientes:historial-ver')")
-    @Operation(summary = "Historial del cliente")
-    public List<PedidoClienteSPI> historial() {
-        return clientes.historial(clienteIdActual());
+    @Operation(summary = "Historial paginado del cliente")
+    public org.springframework.data.domain.Page<PedidoClienteSPI> historial(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        int limite = Math.min(Math.max(size, 1), 100);
+        return clientes.historial(clienteIdActual(),
+                org.springframework.data.domain.PageRequest.of(page, limite,
+                        org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")));
     }
 
     /** Tabla RF-14 agrega direcci&oacute;n RF-42 (Domicilio RF-42/43). */

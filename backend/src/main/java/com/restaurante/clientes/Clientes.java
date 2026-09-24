@@ -5,6 +5,8 @@ import com.restaurante.clientes.domain.PedidoClienteTablet;
 import com.restaurante.clientes.web.ConfirmarPedidoClienteRequest;
 import com.restaurante.clientes.web.CrearPedidoClienteRequest;
 import com.restaurante.clientes.web.NuevaDireccionClienteRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -51,8 +53,9 @@ public interface Clientes {
     /** RF-44: tablet marca LISTO (RF-25). */
     PedidoClienteSPI marcarListo(String codigo);
 
-    /** RF-45: historial del cliente. */
-    List<PedidoClienteSPI> historial(Long clienteId);
+    /** RF-45: historial del cliente paginado (A-10: sin N+1 y con tamaño de
+     *  página acotado). */
+    Page<PedidoClienteSPI> historial(Long clienteId, Pageable pageable);
 
     /** RF-42: nueva dirección para domicilio. */
     DireccionClienteSPI nuevaDireccion(Long clienteId, NuevaDireccionClienteRequest request);

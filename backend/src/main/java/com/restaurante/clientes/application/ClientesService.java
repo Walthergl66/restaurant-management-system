@@ -259,9 +259,9 @@ public class ClientesService implements Clientes {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PedidoClienteSPI> historial(Long clienteId) {
-        List<PedidoCliente> pedidos = pedidoRepository.findByClienteId(clienteId);
-        return pedidos.stream().map(this::toSPI).toList();
+    public org.springframework.data.domain.Page<PedidoClienteSPI> historial(Long clienteId,
+                                                                            org.springframework.data.domain.Pageable pageable) {
+        return pedidoRepository.historialPaginado(clienteId, pageable).map(this::toSPI);
     }
 
     @Override
