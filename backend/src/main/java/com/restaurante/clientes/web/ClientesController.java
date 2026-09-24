@@ -7,8 +7,6 @@ import com.restaurante.clientes.PedidoClienteSPI;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,13 +77,14 @@ public class ClientesController {
         return clientes.marcarListo(codigo);
     }
 
-    /** RF-43: el cliente se suscribe y recibe el estado en tiempo real. El
-     *  usuario de la sesión STOMP lo fija {@code StompJwtChannelInterceptor}
-     *  al validar el JWT del CONNECT (el solo puede verse a sí mismo). */
-    @SubscribeMapping("/topic/pedido/{codigo}")
-    public PedidoClienteSPI estadoEnVivo(@DestinationVariable String codigo,
-                                         java.security.Principal principal) {
-        return clientes.pedidoSPIporCodigo(clientes.resolverClienteId(principal.getName()), codigo);
+    /** RF-43: el cliente se suscribe al tópico y recibe en vivo cada cambio de
+     *  estado (broker + outbox). El estado inicial NO viaja por el tópico (sin
+     *  replay): se obtiene con este snapshot v&iacute;a REST al abrir la pantalla. */
+    @GetMapping("/pedidos/{codigo}")
+    @PreAuthorize("hasAnyAuthority('clientes:historial-ver', 'clientes:gestionar')")
+    @Operation(summary = "Estado/snapshot de un pedido propio")
+    public PedidoClienteSPI pedido(@PathVariable String codigo) {
+        return clientes.pedidoSPIporCodigo(clienteIdActual(), codigo);
     }
 
     /** RF-45: historial del cliente paginado (A-10: page size máximo 100,
