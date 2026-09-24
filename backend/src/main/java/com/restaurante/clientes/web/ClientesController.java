@@ -60,7 +60,7 @@ public class ClientesController {
     @Operation(summary = "Confirmar pedido cliente idempotente")
     public PedidoClienteSPI confirmar(@PathVariable String codigo,
                                       @Valid @RequestBody ConfirmarPedidoClienteRequest req) {
-        return clientes.confirmar(codigo, req);
+        return clientes.confirmar(clienteIdActual(), codigo, req);
     }
 
     /** RF-44: tablet del mesero RF-15/24 tablet RF-22 marca EN_PREPARACION. */
@@ -82,7 +82,7 @@ public class ClientesController {
     /** RF-43: el cliente se suscribe y recibe el estado en tiempo real. */
     @SubscribeMapping("/topic/pedido/{codigo}")
     public PedidoClienteSPI estadoEnVivo(@DestinationVariable String codigo) {
-        return clientes.pedidoSPIporCodigo(codigo);
+        return clientes.pedidoSPIporCodigo(clienteIdActual(), codigo);
     }
 
     /** RF-45: historial del cliente. RF-43 RF-44: solo lectura. */

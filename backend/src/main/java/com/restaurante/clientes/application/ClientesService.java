@@ -160,10 +160,11 @@ public class ClientesService implements Clientes {
     }
 
     @Override
-    public PedidoClienteSPI confirmar(String codigo, ConfirmarPedidoClienteRequest request) {
+    public PedidoClienteSPI confirmar(Long clienteId, String codigo, ConfirmarPedidoClienteRequest request) {
         String clave = request.idempotencyKey();
         PedidoCliente pedido = pedidoRepository.findByCodigoWithLineas(codigo)
                 .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
+        protegerPedidoDe(clienteId, pedido);
 
         // Idempotencia: si no es BORRADOR, misma clave => 200, distinta => 409
         if (pedido.getEstado() != EstadoPedidoCliente.BORRADOR) {
@@ -231,9 +232,10 @@ public class ClientesService implements Clientes {
 
     @Override
     @Transactional(readOnly = true)
-    public PedidoClienteSPI pedidoSPIporCodigo(String codigo) {
+    public PedidoClienteSPI pedidoSPIporCodigo(Long clienteId, String codigo) {
         PedidoCliente pedido = pedidoRepository.findByCodigoWithLineas(codigo)
                 .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
+        protegerPedidoDe(clienteId, pedido);
         return toSPI(pedido);
     }
 
@@ -312,6 +314,14 @@ public class ClientesService implements Clientes {
                     .getId();
         }
         return id;
+    }
+
+    /** A-01: un pedido solo es operable por su propietario. 404 (no 403) para
+     *  no revelar la existencia de códigos ajenos. */
+    private void protegerPedidoDe(Long clienteId, PedidoCliente pedido) {
+        if (!pedido.getClienteId().equals(clienteId)) {
+            throw new NotFoundException("Pedido no encontrado: " + pedido.getCodigo());
+        }
     }
 
     private PedidoClienteSPI toSPI(PedidoCliente p) {

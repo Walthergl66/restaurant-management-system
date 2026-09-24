@@ -30,8 +30,9 @@ public interface Clientes {
     /** RF-41: crear pedido (carrito -> BORRADOR) con idempotencia. */
     PedidoClienteSPI crearPedido(Long clienteId, CrearPedidoClienteRequest request);
 
-    /** RF-41: confirmar con Money congelado, idempotente 200 / 409. */
-    PedidoClienteSPI confirmar(String codigo, ConfirmarPedidoClienteRequest request);
+    /** RF-41: confirmar con Money congelado, idempotente 200 / 409.
+     *  Autorización por propietario: el pedido debe pertenecer a clienteId (A-01). */
+    PedidoClienteSPI confirmar(Long clienteId, String codigo, ConfirmarPedidoClienteRequest request);
 
     /** RF-41 legacy: confirmar con clave suelta (tablet). */
     PedidoClienteTablet confirmar(String codigo, Object idempotencyKey);
@@ -40,8 +41,9 @@ public interface Clientes {
      *  RF-09/41/42). */
     PedidoClienteTablet pedidoPorCodigo(String codigo);
 
-    /** RF-41 SPI para el controlador (estado en vivo). */
-    PedidoClienteSPI pedidoSPIporCodigo(String codigo);
+    /** RF-41 SPI para el controlador (estado en vivo). Autorización por
+     *  propietario: el pedido debe pertenecer a clienteId (A-01). */
+    PedidoClienteSPI pedidoSPIporCodigo(Long clienteId, String codigo);
 
     /** RF-44: tablet marca EN_PREPARACION (RF-24). */
     PedidoClienteSPI marcarEnPreparacion(String codigo);
