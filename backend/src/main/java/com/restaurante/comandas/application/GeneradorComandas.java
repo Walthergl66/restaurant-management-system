@@ -1,5 +1,6 @@
 package com.restaurante.comandas.application;
 
+import com.restaurante.clientes.PedidoClienteConfirmado;
 import com.restaurante.comandas.domain.Comanda;
 import com.restaurante.comandas.domain.ComandaLinea;
 import com.restaurante.comandas.domain.EventoOutbox;
@@ -17,10 +18,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Reacciona a la confirmación de un pedido, en la mísma transacción, generando
- * una comanda por cada área con productos y una orden de impresión en el outbox.
- * Idempotente: la UNIQUE (pedido_codigo, area_id) protege de duplicados aunque
- * el evento se procese dos veces (RNF-17).
+ * Reacciona a la confirmación de un pedido (presencial o de la app del cliente),
+ * en la mísma transacción, generando una comanda por cada área con productos y
+ * una orden de impresión en el outbox. Idempotente: la UNIQUE (pedido_codigo,
+ * area_id) protege de duplicados aunque el evento se procese dos veces (RNF-17).
  */
 @Component
 public class GeneradorComandas {
@@ -39,24 +40,54 @@ public class GeneradorComandas {
     @EventListener
     @Transactional
     public void alConfirmar(PedidoConfirmado evento) {
-        Map<Long, List<PedidoConfirmado.LineaConfirmada>> porArea = evento.lineas().stream()
-                .filter(linea -> linea.areaId() != null)
-                .collect(Collectors.groupingBy(PedidoConfirmado.LineaConfirmada::areaId, LinkedHashMap::new, Collectors.toList()));
+        generar(evento.pedidoCodigo(), evento.lineas().stream()
+                .map(l -> new LineaFuente(
+                        l.productoId(),
+                        l.nombreProducto(),
+                        l.cantidad(),
+                        l.extras(),
+                        l.ingredientesRemovidos(),
+                        l.observaciones(),
+                        l.areaId(),
+                        l.areaNombre()))
+                .toList());
+    }
 
-        porArea.forEach((areaId, lineas) -> {
-            String areaNombre = lineas.get(0).areaNombre();
-            if (comandaRepository.existsByPedidoCodigoAndAreaId(evento.pedidoCodigo(), areaId)) {
+    @EventListener
+    @Transactional
+    public void alConfirmarCliente(PedidoClienteConfirmado evento) {
+        generar(evento.pedidoCodigo(), evento.lineas().stream()
+                .map(l -> new LineaFuente(
+                        l.productoId(),
+                        l.nombreProducto(),
+                        l.cantidad(),
+                        l.extras(),
+                        List.of(),
+                        l.observaciones(),
+                        l.areaId(),
+                        l.areaNombre()))
+                .toList());
+    }
+
+    private void generar(String pedidoCodigo, List<LineaFuente> lineas) {
+        Map<Long, List<LineaFuente>> porArea = lineas.stream()
+                .filter(linea -> linea.areaId() != null)
+                .collect(Collectors.groupingBy(LineaFuente::areaId, LinkedHashMap::new, Collectors.toList()));
+
+        porArea.forEach((areaId, delArea) -> {
+            String areaNombre = delArea.get(0).areaNombre();
+            if (comandaRepository.existsByPedidoCodigoAndAreaId(pedidoCodigo, areaId)) {
                 return;
             }
             int numero = comandaRepository.siguienteNumeroComanda().intValue();
-            Comanda comanda = new Comanda(evento.pedidoCodigo(), numero, areaId, areaNombre);
-            agregarLineas(comanda, lineas);
+            Comanda comanda = new Comanda(pedidoCodigo, numero, areaId, areaNombre);
+            agregarLineas(comanda, delArea);
             comandaRepository.save(comanda);
 
             outboxRepository.save(new EventoOutbox(
                     TIPO_OUTBOX,
                     String.valueOf(numero),
-                    evento.pedidoCodigo(),
+                    pedidoCodigo,
                     numero,
                     areaId,
                     areaNombre,
@@ -68,15 +99,15 @@ public class GeneradorComandas {
      * Agrupa las líneas repetidas del mismo producto+extras+ingredientes
      * sumando cantidades y concatenando observaciones.
      */
-    private void agregarLineas(Comanda comanda, List<PedidoConfirmado.LineaConfirmada> lineas) {
+    private void agregarLineas(Comanda comanda, List<LineaFuente> lineas) {
         Map<String, LineaAcumulada> agrupadas = new LinkedHashMap<>();
-        for (PedidoConfirmado.LineaConfirmada l : lineas) {
+        for (LineaFuente l : lineas) {
             String clave = l.productoId()
                     + "|" + normalizar(l.extras())
-                    + "|" + normalizar(l.ingredientesRemovidos());
+                    + "|" + normalizar(l.ingredientes());
             agrupadas.computeIfAbsent(clave, k -> new LineaAcumulada(
                             l.productoId(), l.nombreProducto(),
-                            normalizar(l.extras()), normalizar(l.ingredientesRemovidos())))
+                            normalizar(l.extras()), normalizar(l.ingredientes())))
                     .agregar(l);
         }
         int orden = 1;
@@ -98,6 +129,17 @@ public class GeneradorComandas {
                 : valores.stream().filter(v -> v != null && !v.isBlank()).sorted().collect(Collectors.joining(","));
     }
 
+    private record LineaFuente(
+            Long productoId,
+            String nombreProducto,
+            int cantidad,
+            List<String> extras,
+            List<String> ingredientes,
+            String observaciones,
+            Long areaId,
+            String areaNombre) {
+    }
+
     private static final class LineaAcumulada {
         private final Long productoId;
         private final String nombreProducto;
@@ -113,7 +155,7 @@ public class GeneradorComandas {
             this.ingredientes = ingredientes;
         }
 
-        private void agregar(PedidoConfirmado.LineaConfirmada linea) {
+        private void agregar(LineaFuente linea) {
             this.cantidad += linea.cantidad();
             if (linea.observaciones() != null && !linea.observaciones().isBlank()) {
                 this.observaciones.add(linea.observaciones());

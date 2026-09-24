@@ -1,5 +1,6 @@
 package com.restaurante.comandas.application;
 
+import com.restaurante.clientes.Clientes;
 import com.restaurante.comandas.domain.Comanda;
 import com.restaurante.comandas.domain.ComandaEstado;
 import com.restaurante.comandas.domain.EstadoOutbox;
@@ -29,11 +30,14 @@ public class ComandaService {
     private final ComandaRepository comandaRepository;
     private final OutboxRepository outboxRepository;
     private final Pedidos pedidos;
+    private final Clientes clientes;
 
-    public ComandaService(ComandaRepository comandaRepository, OutboxRepository outboxRepository, Pedidos pedidos) {
+    public ComandaService(ComandaRepository comandaRepository, OutboxRepository outboxRepository,
+                          Pedidos pedidos, Clientes clientes) {
         this.comandaRepository = comandaRepository;
         this.outboxRepository = outboxRepository;
         this.pedidos = pedidos;
+        this.clientes = clientes;
     }
 
     @Transactional(readOnly = true)
@@ -51,14 +55,14 @@ public class ComandaService {
     public ComandaResponse marcarEnPreparacion(Long id) {
         Comanda comanda = cargar(id);
         comanda.marcarEnPreparacion();
-        pedidos.marcarEnPreparacion(comanda.getPedidoCodigo());
+        avanzarEnPreparacion(comanda.getPedidoCodigo());
         return ComandaResponse.from(comanda);
     }
 
     public ComandaResponse marcarListo(Long id) {
         Comanda comanda = cargar(id);
         comanda.marcarListo();
-        pedidos.marcarListo(comanda.getPedidoCodigo());
+        avanzarListo(comanda.getPedidoCodigo());
         return ComandaResponse.from(comanda);
     }
 
@@ -104,5 +108,27 @@ public class ComandaService {
     private Comanda cargar(Long id) {
         return comandaRepository.findByIdConLineas(id)
                 .orElseThrow(() -> new NotFoundException("Comanda " + id + " no encontrada"));
+    }
+
+    /**
+     * Avanza el pedido presencial (RF-14/RF-15); si el código pertenece a un
+     * pedido de la app del cliente, avanza su estado vía el SPI de clientes
+     * (RF-44). No se usa try/catch sobre el SPI de pedidos porque su
+     * NotFound marcaría la transacción rollback-only.
+     */
+    private void avanzarEnPreparacion(String codigo) {
+        if (pedidos.existe(codigo)) {
+            pedidos.marcarEnPreparacion(codigo);
+        } else {
+            clientes.marcarEnPreparacion(codigo);
+        }
+    }
+
+    private void avanzarListo(String codigo) {
+        if (pedidos.existe(codigo)) {
+            pedidos.marcarListo(codigo);
+        } else {
+            clientes.marcarListo(codigo);
+        }
     }
 }
