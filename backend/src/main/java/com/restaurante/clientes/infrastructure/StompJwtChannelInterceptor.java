@@ -32,6 +32,10 @@ import java.util.List;
 @Component
 public class StompJwtChannelInterceptor implements ChannelInterceptor {
 
+    /** El constructor/máximo del CONNECT se guarda en los atributos de la
+     *  sesión WebSocket para que los SUBSCRIBE posteriores lo recuperen. */
+    static final String ATTR_PRINCIPAL = StompJwtChannelInterceptor.class.getName() + ".principal";
+
     private final JwtValidador jwtValidador;
     private final Clientes clientes;
 
@@ -48,14 +52,18 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
         }
         StompCommand comando = accessor.getCommand();
         if (StompCommand.CONNECT.equals(comando)) {
-            autenticar(accessor);
+            Principal principal = autenticar(accessor);
+            accessor.setUser(principal);
+            if (accessor.getSessionAttributes() != null) {
+                accessor.getSessionAttributes().put(ATTR_PRINCIPAL, principal);
+            }
         } else if (StompCommand.SUBSCRIBE.equals(comando)) {
             verificarPropietario(accessor);
         }
         return message;
     }
 
-    private void autenticar(StompHeaderAccessor accessor) {
+    private Principal autenticar(StompHeaderAccessor accessor) {
         String auth = accessor.getFirstNativeHeader("Authorization");
         var acceso = jwtValidador.validar(auth);
         if (acceso.isEmpty()) {
@@ -66,7 +74,7 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
         if (acceso.get().rol() != null && !acceso.get().rol().isBlank()) {
             autoridades.add(new SimpleGrantedAuthority("ROLE_" + acceso.get().rol()));
         }
-        accessor.setUser(new UsernamePasswordAuthenticationToken(acceso.get().username(), null, autoridades));
+        return new UsernamePasswordAuthenticationToken(acceso.get().username(), null, autoridades);
     }
 
     private void verificarPropietario(StompHeaderAccessor accessor) {
@@ -79,6 +87,9 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
             return;
         }
         Principal principal = accessor.getUser();
+        if (principal == null && accessor.getSessionAttributes() != null) {
+            principal = (Principal) accessor.getSessionAttributes().get(ATTR_PRINCIPAL);
+        }
         if (principal == null || principal.getName() == null) {
             throw new MessagingException("No autenticado");
         }
