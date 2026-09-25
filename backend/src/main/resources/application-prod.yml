@@ -61,6 +61,11 @@ management:
       probes:
         enabled: true
 
+# La app siempre va detrás de un proxy TLS: confía en las cabeceras
+# X-Forwarded-* para generar URLs/esquemas correctos (HSTS + /ws wss).
+server:
+  forward-headers-strategy: framework
+
 logging:
   level:
     com.restaurante: INFO
