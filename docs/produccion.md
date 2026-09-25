@@ -48,6 +48,22 @@ Nunca se commitean valores de `JWT_SECRET`, `ADMIN_INITIAL_PASSWORD` ni
    los tokens firmados con la anterior quedan inválidos, así que la rotación debe
    programarse en una ventana en la que se pueda forzar re-login.
 
+## TLS, proxy y WebSocket
+
+- La app se despliega **siempre detrás de un proxy TLS** (Caddy, nginx,
+  Traefik, ALB + ACM, etc.). El proxy termina HTTPS y reenvía hacia el backend
+  con `X-Forwarded-*`; el backend activa `server.forward-headers-strategy` para
+  construir URLs/`wss` correctos y emite HSTS. Nunca publiques el backend
+  directamente en un puerto abierto.
+- Los orígenes del WebSocket `/ws` (handshake STOMP) usan la **misma lista**
+  `CORS_ALLOWED_ORIGINS` que el REST; en producción es obligatoria y no se
+  acepta `*`. El proxy debe reenviar las cabeceras de upgrade
+  (`Upgrade`/`Connection`) y soportar `wss`.
+- La duración del access token la define `JWT_EXPIRATION_MS` en el despliegue
+  (default 1 hora). `docker-compose.yml` solo levanta PostgreSQL; el backend no
+  se ejecuta en Compose, de modo que los valores los inyecta el orquestador del
+  proxy (systemd/`EnvironmentFile`, K8s `Secrets`, etc.).
+
 ## Arranque
 
 ```bash
