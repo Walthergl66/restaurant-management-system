@@ -1,6 +1,24 @@
+# =============================================================================
+# Perfil de producción.
+#
+# Variables de entorno OBLIGATORIAS (sin ellas la app se niega a arrancar;
+# los placeholders SIN default hacen fallar la resolución y ProdSecretsValidator
+# reporta un mensaje claro):
+#
+#   ADMIN_INITIAL_PASSWORD  Contraseña del primer usuario 'admin' (solo se
+#                           consume si aún no existe ningún ADMIN).
+#   JWT_SECRET              Secreto HS256 de firma, mínimo 32 caracteres.
+#   DB_USER / DB_PASSWORD   Credenciales de la base PostgreSQL.
+#   CORS_ALLOWED_ORIGINS    Lista de orígenes permitidos para navegador, p.ej.
+#                           "https://app.midominio.com,https://admin.midominio.com"
+#
+# Opcionales con default razonable:
+#   DB_HOST (localhost) / DB_PORT (5432) / DB_NAME
+#   JWT_EXPIRATION_MS (3600000 = 1 hora) / JWT_REFRESH_EXPIRATION_MS (7 días)
+# =============================================================================
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     hikari:
@@ -24,12 +42,12 @@ springdoc:
 
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
   inicial:
-    admin-password: ${ADMIN_INITIAL_PASSWORD:?ADMIN_INITIAL_PASSWORD obligatorio en prod}
+    admin-password: ${ADMIN_INITIAL_PASSWORD}
   jwt:
-    secret: ${JWT_SECRET:?JWT_SECRET obligatorio en prod (min 32 chars HS256)}
-    expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hora (A-04)
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hora (A-04: ventana corta)
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 días
 
 management:
