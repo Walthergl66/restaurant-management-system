@@ -14,6 +14,14 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+# A-11: documentación OpenAPI desactivada en producción (la base la deja
+# permitAll; en prod no se sirve ni swagger-ui ni api-docs).
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
