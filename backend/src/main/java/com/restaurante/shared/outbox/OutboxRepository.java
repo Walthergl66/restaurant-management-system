@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +23,8 @@ public interface OutboxRepository extends JpaRepository<EventoOutbox, Long> {
     List<EventoOutbox> buscarPorTipoYEstados(String tipo, Collection<EstadoOutbox> estados, Pageable pageable);
 
     Optional<EventoOutbox> findByTipoAndAgregadoIdAndEvento(String tipo, String agregadoId, String evento);
+
+    /** Órdenes en un estado con antigüedad mayor o igual al corte (monitoreo). */
+    @Query("select count(o) from EventoOutbox o where o.estado = :estado and o.creadaAt <= :corte")
+    long contarPorEstadoAntesDe(EstadoOutbox estado, Instant corte);
 }
