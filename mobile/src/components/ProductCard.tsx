@@ -9,15 +9,13 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { Producto } from '../types';
 import { useCart } from '../store/CartContext';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 48) / 2;
+const CARD_WIDTH = 160;
 
 interface ProductCardProps {
   producto: Producto;
@@ -27,11 +25,6 @@ interface ProductCardProps {
 export function ProductCard({ producto, onPress }: ProductCardProps) {
   const { addItem, getItemQuantity } = useCart();
   const quantity = getItemQuantity(producto.id);
-
-  const handleAdd = (e: any) => {
-    e.stopPropagation?.();
-    addItem(producto);
-  };
 
   return (
     <TouchableOpacity
@@ -48,7 +41,7 @@ export function ProductCard({ producto, onPress }: ProductCardProps) {
           />
         ) : (
           <View style={styles.imagePlaceholder}>
-            <Ionicons name="fast-food" size={40} color={colors.neonOrange} />
+            <Ionicons name="fast-food" size={36} color={colors.neonOrange} />
           </View>
         )}
         {quantity > 0 && (
@@ -69,11 +62,11 @@ export function ProductCard({ producto, onPress }: ProductCardProps) {
         <View style={styles.footer}>
           <Text style={styles.price}>${producto.precio}</Text>
           <TouchableOpacity
-            onPress={handleAdd}
+            onPress={() => addItem(producto)}
             style={styles.addButton}
             activeOpacity={0.7}
           >
-            <Ionicons name="add" size={20} color={colors.background} />
+            <Ionicons name="add" size={18} color={colors.background} />
           </TouchableOpacity>
         </View>
       </View>
@@ -95,7 +88,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: CARD_WIDTH * 0.75,
+    height: 120,
     backgroundColor: colors.surfaceLight,
   },
   image: {
@@ -125,19 +118,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   content: {
-    padding: 14,
+    padding: 12,
   },
   name: {
     color: colors.textPrimary,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     marginBottom: 4,
   },
   description: {
     color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 16,
-    marginBottom: 12,
+    fontSize: 11,
+    lineHeight: 15,
+    marginBottom: 10,
   },
   footer: {
     flexDirection: 'row',
@@ -146,14 +139,14 @@ const styles = StyleSheet.create({
   },
   price: {
     color: colors.neonOrange,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
   },
   addButton: {
     backgroundColor: colors.neonOrange,
     borderRadius: 10,
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.neonOrange,

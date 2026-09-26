@@ -26,60 +26,65 @@ export function CategoryFilter({
   onSelect,
 }: CategoryFilterProps) {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-    >
-      <TouchableOpacity
-        onPress={() => onSelect(null)}
-        style={[
-          styles.chip,
-          selectedId === null && styles.chipActive,
-        ]}
+    <View style={styles.wrapper}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.container}
       >
-        <Ionicons
-          name="grid"
-          size={16}
-          color={selectedId === null ? colors.background : colors.textSecondary}
-        />
-        <Text
-          style={[
-            styles.chipText,
-            selectedId === null && styles.chipTextActive,
-          ]}
-        >
-          Todos
-        </Text>
-      </TouchableOpacity>
-
-      {categorias.map(cat => (
         <TouchableOpacity
-          key={cat.id}
-          onPress={() => onSelect(cat.id)}
+          onPress={() => onSelect(null)}
           style={[
             styles.chip,
-            selectedId === cat.id && styles.chipActive,
+            selectedId === null && styles.chipActive,
           ]}
         >
+          <Ionicons
+            name="grid"
+            size={16}
+            color={selectedId === null ? colors.background : colors.textSecondary}
+          />
           <Text
             style={[
               styles.chipText,
-              selectedId === cat.id && styles.chipTextActive,
+              selectedId === null && styles.chipTextActive,
             ]}
           >
-            {cat.nombre}
+            Todos
           </Text>
         </TouchableOpacity>
-      ))}
-    </ScrollView>
+
+        {categorias.map(cat => (
+          <TouchableOpacity
+            key={cat.id}
+            onPress={() => onSelect(cat.id)}
+            style={[
+              styles.chip,
+              selectedId === cat.id && styles.chipActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                selectedId === cat.id && styles.chipTextActive,
+              ]}
+            >
+              {cat.nombre}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    paddingVertical: 8,
+  },
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingRight: 32,
     gap: 10,
   },
   chip: {
