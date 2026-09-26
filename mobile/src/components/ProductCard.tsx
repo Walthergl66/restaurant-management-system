@@ -1,5 +1,6 @@
 /**
  * Estación Burger — Tarjeta de Producto
+ * Con efectos neón y profundidad mejorados
  */
 
 import React from 'react';
@@ -10,6 +11,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { Producto } from '../types';
@@ -32,44 +34,56 @@ export function ProductCard({ producto, onPress }: ProductCardProps) {
       activeOpacity={0.9}
       style={styles.container}
     >
-      <View style={styles.imageContainer}>
-        {producto.imagenUrl ? (
-          <Image
-            source={{ uri: producto.imagenUrl }}
-            style={styles.image}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="fast-food" size={36} color={colors.neonOrange} />
-          </View>
-        )}
-        {quantity > 0 && (
-          <View style={styles.quantityBadge}>
-            <Text style={styles.quantityText}>{quantity}</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={2}>
-          {producto.nombre}
-        </Text>
-        <Text style={styles.description} numberOfLines={2}>
-          {producto.descripcion}
-        </Text>
-
-        <View style={styles.footer}>
-          <Text style={styles.price}>${producto.precio}</Text>
-          <TouchableOpacity
-            onPress={() => addItem(producto)}
-            style={styles.addButton}
-            activeOpacity={0.7}
+      <LinearGradient
+        colors={[colors.surface, '#151515']}
+        style={styles.gradient}
+      >
+        {/* Imagen con overlay para profundidad */}
+        <View style={styles.imageContainer}>
+          <LinearGradient
+            colors={['#1a1a1a', '#0d0d0d']}
+            style={styles.imageGradient}
           >
-            <Ionicons name="add" size={18} color={colors.background} />
-          </TouchableOpacity>
+            {producto.imagenUrl ? (
+              <Image
+                source={{ uri: producto.imagenUrl }}
+                style={styles.image}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="fast-food" size={36} color={colors.neonOrange} />
+              </View>
+            )}
+          </LinearGradient>
+          {quantity > 0 && (
+            <View style={styles.quantityBadge}>
+              <Text style={styles.quantityText}>{quantity}</Text>
+            </View>
+          )}
         </View>
-      </View>
+
+        {/* Contenido */}
+        <View style={styles.content}>
+          <Text style={styles.name} numberOfLines={2}>
+            {producto.nombre}
+          </Text>
+          <Text style={styles.description} numberOfLines={2}>
+            {producto.descripcion}
+          </Text>
+
+          <View style={styles.footer}>
+            <Text style={styles.price}>${producto.precio}</Text>
+            <TouchableOpacity
+              onPress={() => addItem(producto)}
+              style={styles.addButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="add" size={18} color={colors.background} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
@@ -77,23 +91,31 @@ export function ProductCard({ producto, onPress }: ProductCardProps) {
 const styles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
-    backgroundColor: colors.surface,
     borderRadius: 18,
     overflow: 'hidden',
+    backgroundColor: colors.surface,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  gradient: {
+    flex: 1,
   },
   imageContainer: {
     width: '100%',
     height: 120,
-    backgroundColor: colors.surfaceLight,
+  },
+  imageGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   image: {
     width: '100%',
     height: '100%',
+    opacity: 0.85,
   },
   imagePlaceholder: {
     flex: 1,
@@ -111,6 +133,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
+    shadowColor: colors.neonPink,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 6,
   },
   quantityText: {
     color: colors.background,
@@ -141,18 +168,23 @@ const styles = StyleSheet.create({
     color: colors.neonOrange,
     fontSize: 16,
     fontWeight: '800',
+    textShadowColor: colors.neonOrange,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
   addButton: {
-    backgroundColor: colors.neonOrange,
+    backgroundColor: colors.neonPink,
     borderRadius: 10,
     width: 32,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.neonOrange,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowColor: colors.neonPink,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 10,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 16, 240, 0.3)',
   },
 });

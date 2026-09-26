@@ -1,5 +1,6 @@
 /**
- * Estación Burger — Pantalla de Login
+ * Estación Burger — Login
+ * Estética neón basada en referencia
  */
 
 import React, { useState } from 'react';
@@ -37,10 +38,8 @@ export default function LoginScreen() {
       setError('Ingresa usuario y contraseña');
       return;
     }
-
     setError(null);
     setLoading(true);
-
     try {
       await login(username.trim(), password);
       router.replace('/(tabs)');
@@ -63,35 +62,26 @@ export default function LoginScreen() {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.backButton, { top: insets.top + 12 }]}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-
         <View style={styles.header}>
           <Image source={logo} style={styles.logo} resizeMode="cover" />
-          <Text style={styles.title}>Estación Burger</Text>
-          <Text style={styles.subtitle}>
-            Las mejores hamburguesas de la ciudad
-          </Text>
+          <Text style={styles.welcome}>¡BIENVENIDO!</Text>
+          <Text style={styles.tagline}>Sabor extremo con el flow del neón</Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="Usuario"
-            placeholder="Ingresa tu usuario"
+            label="EMAIL O USUARIO"
+            placeholder="carlos.estacion@burger.com"
             value={username}
             onChangeText={setUsername}
-            icon="person-outline"
+            icon="mail-outline"
             autoCapitalize="none"
             autoCorrect={false}
           />
 
           <Input
-            label="Contraseña"
-            placeholder="Ingresa tu contraseña"
+            label="CONTRASEÑA"
+            placeholder="••••••••"
             value={password}
             onChangeText={setPassword}
             icon="lock-closed-outline"
@@ -105,24 +95,31 @@ export default function LoginScreen() {
             </View>
           )}
 
+          <TouchableOpacity style={styles.forgotButton}>
+            <Text style={styles.forgotText}>¿Olvidé mi contraseña?</Text>
+          </TouchableOpacity>
+
           <Button
-            title="Iniciar sesión"
+            title="INICIAR SESIÓN"
             onPress={handleLogin}
             loading={loading}
             size="lg"
             style={styles.loginButton}
           />
 
-          <TouchableOpacity style={styles.forgotButton}>
-            <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>o</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>¿No tienes cuenta?</Text>
-          <TouchableOpacity>
-            <Text style={styles.footerLink}>Regístrate</Text>
-          </TouchableOpacity>
+          <Button
+            title="CREAR CUENTA"
+            onPress={() => {}}
+            variant="outline"
+            size="lg"
+            style={styles.createButton}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -139,46 +136,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 40,
   },
-  backButton: {
-    position: 'absolute',
-    left: 24,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
   header: {
     alignItems: 'center',
     marginBottom: 40,
   },
   logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: colors.neonOrange,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    marginBottom: 24,
     shadowColor: colors.neonOrange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
-    marginBottom: 20,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '800',
+  welcome: {
+    color: colors.neonOrange,
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: 1,
     marginBottom: 6,
+    textShadowColor: colors.neonOrange,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
-  subtitle: {
+  tagline: {
     color: colors.textSecondary,
-    fontSize: 15,
+    fontSize: 14,
+    letterSpacing: 0.3,
   },
   form: {
-    marginBottom: 32,
+    width: '100%',
   },
   errorContainer: {
     flexDirection: 'row',
@@ -191,30 +180,38 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 13,
   },
-  loginButton: {
-    marginTop: 8,
-  },
   forgotButton: {
-    alignItems: 'center',
-    marginTop: 20,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 24,
   },
   forgotText: {
-    color: colors.textSecondary,
-    fontSize: 14,
+    color: colors.neonPink,
+    fontSize: 13,
+    fontWeight: '600',
   },
-  footer: {
+  loginButton: {
+    borderRadius: 14,
+    paddingVertical: 18,
+  },
+  divider: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 'auto',
+    alignItems: 'center',
+    marginVertical: 24,
   },
-  footerText: {
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.surfaceBorder,
+  },
+  dividerText: {
     color: colors.textMuted,
-    fontSize: 14,
+    fontSize: 13,
+    marginHorizontal: 16,
   },
-  footerLink: {
-    color: colors.neonOrange,
-    fontSize: 14,
-    fontWeight: '700',
+  createButton: {
+    borderRadius: 14,
+    paddingVertical: 18,
+    borderColor: colors.neonPink,
   },
 });

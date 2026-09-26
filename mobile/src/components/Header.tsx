@@ -1,10 +1,12 @@
 /**
- * Estación Burger — Header con logo
+ * Estación Burger — Header con saludo y carrito
+ * Estética neón basada en referencia
  */
 
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import logo from '../../assets/EstacionLogo.jpeg';
 
@@ -24,7 +26,10 @@ export function Header({ title, showLogo = true, right }: HeaderProps) {
           {showLogo && (
             <Image source={logo} style={styles.logo} resizeMode="cover" />
           )}
-          {title && <Text style={styles.title}>{title}</Text>}
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greeting}>¡Buenas noches!</Text>
+            <Text style={styles.title}>¡Hola, Carlos!</Text>
+          </View>
         </View>
         {right && <View style={styles.right}>{right}</View>}
       </View>
@@ -51,15 +56,22 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 2,
     borderColor: colors.neonOrange,
   },
+  greetingContainer: {
+    gap: 2,
+  },
+  greeting: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
   title: {
     color: colors.textPrimary,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
   },
   right: {
