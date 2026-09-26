@@ -1,5 +1,6 @@
 /**
  * Estación Burger — Tarjeta de Pedido
+ * Compatible con PedidoClienteSPI del backend
  */
 
 import React from 'react';
@@ -18,7 +19,7 @@ const estadoConfig: Record<
   { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }
 > = {
   BORRADOR: { label: 'Borrador', color: colors.textMuted, icon: 'document-text' },
-  PENDIENTE: { label: 'Pendiente', color: colors.warning, icon: 'time' },
+  CONFIRMADO: { label: 'Confirmado', color: colors.warning, icon: 'checkmark-done' },
   EN_PREPARACION: {
     label: 'En preparación',
     color: colors.neonOrange,
@@ -26,7 +27,7 @@ const estadoConfig: Record<
   },
   LISTO: { label: 'Listo', color: colors.success, icon: 'checkmark-circle' },
   ENTREGADO: { label: 'Entregado', color: colors.success, icon: 'bag-check' },
-  CANCELADO: { label: 'Cancelado', color: colors.error, icon: 'close-circle' },
+  ANULADO: { label: 'Anulado', color: colors.error, icon: 'close-circle' },
 };
 
 export function OrderCard({ pedido, onPress }: OrderCardProps) {
@@ -42,8 +43,8 @@ export function OrderCard({ pedido, onPress }: OrderCardProps) {
         <View>
           <Text style={styles.codigo}>#{pedido.codigo}</Text>
           <Text style={styles.fecha}>
-            {pedido.fechaCreacion
-              ? new Date(pedido.fechaCreacion).toLocaleDateString('es-ES', {
+            {pedido.creadoAt
+              ? new Date(pedido.creadoAt).toLocaleDateString('es-ES', {
                   day: 'numeric',
                   month: 'short',
                   hour: '2-digit',
@@ -65,12 +66,12 @@ export function OrderCard({ pedido, onPress }: OrderCardProps) {
       <View style={styles.footer}>
         <Text style={styles.lineas} numberOfLines={1}>
           {pedido.lineas
-            .map(l => `${l.cantidad}x ${l.nombreProducto}`)
+            .map(l => `${l.cantidad}x ${l.nombre}`)
             .join(', ')}
         </Text>
         <View style={styles.right}>
-          {pedido.total && (
-            <Text style={styles.total}>${parseFloat(pedido.total).toFixed(2)}</Text>
+          {pedido.total !== undefined && (
+            <Text style={styles.total}>${pedido.total.toFixed(2)}</Text>
           )}
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </View>

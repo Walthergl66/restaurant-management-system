@@ -1,6 +1,6 @@
 /**
  * Estación Burger — Tipos TypeScript
- * Reflejan las entidades del backend
+ * Compatibles con el backend Spring Boot (PedidoClienteSPI, LineaSPI, ExtraSPI)
  */
 
 export interface Producto {
@@ -32,32 +32,65 @@ export interface Categoria {
   activo: boolean;
 }
 
+/**
+ * PedidoClienteSPI — respuesta del backend
+ * Fuente: com.restaurante.clientes.PedidoClienteSPI
+ */
 export interface PedidoCliente {
   codigo: string;
   estado: string;
   metodoPago: string;
   metodoEntrega: string;
-  direccion?: DireccionCliente;
+  direccionId?: number;
   lineas: PedidoClienteLinea[];
-  total?: string;
-  fechaCreacion?: string;
-  observaciones?: string;
+  total?: number;
+  creadoAt?: string;
+  actualizadoAt?: string;
+  version?: number;
 }
 
+/**
+ * LineaSPI — línea de pedido en respuesta del backend
+ */
 export interface PedidoClienteLinea {
   id?: number;
   productoId: number;
-  nombreProducto: string;
-  precioUnitario: string;
+  nombre: string;
+  precio: number;
   cantidad: number;
+  subtotal: number;
   observaciones?: string;
   extras?: PedidoClienteLineaExtra[];
 }
 
+/**
+ * ExtraSPI — extra en línea de pedido
+ */
 export interface PedidoClienteLineaExtra {
   extraId: number;
-  nombreExtra: string;
-  precio: string;
+  nombre: string;
+  precio: number;
+}
+
+/**
+ * Request para crear pedido (lo que el backend espera)
+ * POST /api/v1/clientes/pedidos
+ */
+export interface CreatePedidoRequest {
+  codigo: string;
+  metodoPago: string;
+  metodoEntrega: string;
+  direccionId?: number;
+  idempotencyKey: string;
+  items: CreatePedidoItem[];
+}
+
+export interface CreatePedidoItem {
+  productoId: number;
+  cantidad: number;
+  extraIds: number[];
+  ingredientesRemovidos?: number[];
+  observaciones?: string;
 }
 
 export interface DireccionCliente {
@@ -80,6 +113,8 @@ export interface Usuario {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
+  expiresInSeconds?: number;
+  tokenType?: string;
   usuario: Usuario;
 }
 

@@ -1,13 +1,10 @@
 /**
  * Estación Burger — Servicio de Autenticación
+ * Compatible con POST /api/v1/auth/login
  */
 
 import api from './api';
 import { AuthResponse, Usuario } from '../types';
-
-const TOKEN_KEY = 'estacion_token';
-const REFRESH_KEY = 'estacion_refresh';
-const USER_KEY = 'estacion_user';
 
 export interface StoredAuth {
   accessToken: string;
@@ -69,8 +66,4 @@ export const authService = {
   clearAuth() {
     api.setToken(null);
   },
-
-  getTokenKey: () => TOKEN_KEY,
-  getRefreshKey: () => REFRESH_KEY,
-  getUserKey: () => USER_KEY,
 };

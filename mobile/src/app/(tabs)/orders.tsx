@@ -1,5 +1,5 @@
 /**
- * Estación Burger — Pantalla de Pedidos (con datos demo)
+ * Estación Burger — Pantalla de Pedidos (con datos demo compatibles con el backend)
  */
 
 import React, { useState, useCallback } from 'react';
@@ -11,7 +11,6 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { colors } from '../../theme/colors';
 import { PedidoCliente } from '../../types';
 import { OrderCard } from '../../components/OrderCard';
@@ -24,24 +23,24 @@ const demoPedidos: PedidoCliente[] = [
     metodoPago: 'TARJETA',
     metodoEntrega: 'DOMICILIO',
     lineas: [
-      { productoId: 1, nombreProducto: 'La Estación', precioUnitario: '8.99', cantidad: 2, extras: [{ extraId: 1, nombreExtra: 'Queso cheddar', precio: '1.50' }] },
-      { productoId: 5, nombreProducto: 'Papas Rústicas', precioUnitario: '3.25', cantidad: 1, extras: [] },
-      { productoId: 8, nombreProducto: 'Limonada de Fresa', precioUnitario: '2.25', cantidad: 2, extras: [] },
+      { productoId: 1, nombre: 'La Estación', precio: 8.99, cantidad: 2, subtotal: 20.98, extras: [{ extraId: 1, nombre: 'Queso cheddar', precio: 1.5 }] },
+      { productoId: 5, nombre: 'Papas Rústicas', precio: 3.25, cantidad: 1, subtotal: 3.25, extras: [] },
+      { productoId: 8, nombre: 'Limonada de Fresa', precio: 2.25, cantidad: 2, subtotal: 4.5, extras: [] },
     ],
-    total: '27.48',
-    fechaCreacion: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    total: 28.73,
+    creadoAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
   },
   {
     codigo: 'PED-2026-002',
     estado: 'EN_PREPARACION',
     metodoPago: 'EFECTIVO',
-    metodoEntrega: 'LOCAL',
+    metodoEntrega: 'RETIRAR',
     lineas: [
-      { productoId: 2, nombreProducto: 'Clásica Burger', precioUnitario: '6.50', cantidad: 1, extras: [] },
-      { productoId: 9, nombreProducto: 'Té Helado de Durazno', precioUnitario: '2.00', cantidad: 1, extras: [] },
+      { productoId: 2, nombre: 'Clásica Burger', precio: 6.5, cantidad: 1, subtotal: 6.5, extras: [] },
+      { productoId: 9, nombre: 'Té Helado de Durazno', precio: 2.0, cantidad: 1, subtotal: 2.0, extras: [] },
     ],
-    total: '8.50',
-    fechaCreacion: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    total: 8.5,
+    creadoAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
   },
   {
     codigo: 'PED-2026-003',
@@ -49,17 +48,16 @@ const demoPedidos: PedidoCliente[] = [
     metodoPago: 'TARJETA',
     metodoEntrega: 'DOMICILIO',
     lineas: [
-      { productoId: 4, nombreProducto: 'Doble Bacon Cheese', precioUnitario: '9.50', cantidad: 1, extras: [{ extraId: 2, nombreExtra: 'Bacon crujiente', precio: '2.00' }] },
-      { productoId: 7, nombreProducto: 'Nachos Supreme', precioUnitario: '4.50', cantidad: 1, extras: [] },
-      { productoId: 11, nombreProducto: 'Cheesecake de Frutos Rojos', precioUnitario: '4.25', cantidad: 1, extras: [] },
+      { productoId: 4, nombre: 'Doble Bacon Cheese', precio: 9.5, cantidad: 1, subtotal: 11.5, extras: [{ extraId: 2, nombre: 'Bacon crujiente', precio: 2.0 }] },
+      { productoId: 7, nombre: 'Nachos Supreme', precio: 4.5, cantidad: 1, subtotal: 4.5, extras: [] },
+      { productoId: 11, nombre: 'Cheesecake de Frutos Rojos', precio: 4.25, cantidad: 1, subtotal: 4.25, extras: [] },
     ],
-    total: '20.25',
-    fechaCreacion: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    total: 20.25,
+    creadoAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
   },
 ];
 
 export default function OrdersScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
 

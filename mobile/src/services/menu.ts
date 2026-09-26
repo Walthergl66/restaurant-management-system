@@ -32,7 +32,7 @@ const demoProductos: Producto[] = [
   { id: 5, nombre: 'Papas Rústicas', descripcion: 'Papas gruesas con piel, romero y sal marina', imagenUrl: null, precio: '3.25', categoriaId: 2, areaId: 1, activo: true, extras: [] },
   { id: 6, nombre: 'Aros de Cebolla', descripcion: 'Crujientes aros de cebolla con salsa chipotle', imagenUrl: null, precio: '3.75', categoriaId: 2, areaId: 1, activo: true, extras: [] },
   { id: 7, nombre: 'Nachos Supreme', descripcion: 'Nachos con queso fundido, guacamole, pico de gallo y crema', imagenUrl: null, precio: '4.50', categoriaId: 2, areaId: 1, activo: true, extras: [] },
-  { id: 8, nombre: 'Limonada de Fresa', descripcion: 'Natural con fresas frescas y menta', imagenUrl: null, precio: '2.25', categoriaId: 3, areaId: 2, activo: true, extras: [] },
+  { id: 8, nombre: 'Limonada de Fresa', descripcion: 'Natural con frescas fresas y menta', imagenUrl: null, precio: '2.25', categoriaId: 3, areaId: 2, activo: true, extras: [] },
   { id: 9, nombre: 'Té Helado de Durazno', descripcion: 'Té negro con durazno natural', imagenUrl: null, precio: '2.00', categoriaId: 3, areaId: 2, activo: true, extras: [] },
   { id: 10, nombre: 'Malchoc Shake', descripcion: 'Batido de chocolate con malvaviscos', imagenUrl: null, precio: '3.50', categoriaId: 3, areaId: 2, activo: true, extras: [] },
   { id: 11, nombre: 'Cheesecake de Frutos Rojos', descripcion: 'Suave cheesecake con coulis de frutos rojos', imagenUrl: null, precio: '4.25', categoriaId: 4, areaId: 3, activo: true, extras: [] },
