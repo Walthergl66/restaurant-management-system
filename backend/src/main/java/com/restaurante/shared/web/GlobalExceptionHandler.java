@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ProblemDetail> handleBusinessRule(BusinessRuleException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNPROCESSABLE_ENTITY, "regla-de-negocio", ex.getMessage(), request, null);
+        return build(HttpStatus.UNPROCESSABLE_CONTENT, "regla-de-negocio", ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(DomainException.class)

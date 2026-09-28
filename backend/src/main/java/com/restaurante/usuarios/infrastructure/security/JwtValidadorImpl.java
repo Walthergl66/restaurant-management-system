@@ -33,11 +33,10 @@ public class JwtValidadorImpl implements JwtValidador {
         if (claims == null || !sesionValida(claims)) {
             return Optional.empty();
         }
-        List<String> permisos = Optional.ofNullable(claims.get(JwtService.CLAIM_AUTHORITIES, List.class))
-                .orElse(List.of())
-                .stream()
-                .map(String::valueOf)
-                .toList();
+        Object authorities = claims.get(JwtService.CLAIM_AUTHORITIES);
+        List<String> permisos = authorities instanceof List<?> lista
+                ? lista.stream().map(String::valueOf).toList()
+                : List.of();
         return Optional.of(new AccesoValido(claims.getSubject(),
                 claims.get(JwtService.CLAIM_ROL, String.class), permisos));
     }

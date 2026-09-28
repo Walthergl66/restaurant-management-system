@@ -288,7 +288,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (2000 + System.nanoTime() % 5000))))
+                                """.formatted(siguienteNumeroMesa())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
