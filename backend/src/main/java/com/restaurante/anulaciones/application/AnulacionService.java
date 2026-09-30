@@ -87,6 +87,27 @@ public class AnulacionService implements Anulaciones {
 
     public AnulacionResponse aprobar(Long id) {
         Anulacion anulacion = cargar(id);
+
+        // Última barrera antes de mover dinero: al aprobar se comprueba el saldo
+        // real de la línea. La validación de la solicitud no basta por sí sola
+        // (dos cajeros pueden resolver a la vez y dejarían solicitudes que se
+        // cruzaron; también hay solicitudes heredadas de antes del saldo con
+        // pendientes). Si el saldo ya no alcanza, la cuenta quedaría con total
+        // negativo, y CalculadoraCuenta lo rechazaría con un error confuso
+        // en vez de un 422 claro.
+        int cantidadLinea = cantidadDeLinea(anulacion);
+        int yaAprobada = anulacionRepository.cantidadAprobada(
+                anulacion.getPedidoCodigo(), anulacion.getLineaId());
+        int otrasPendientes = anulacionRepository.cantidadSolicitada(
+                anulacion.getPedidoCodigo(), anulacion.getLineaId()) - anulacion.getCantidad();
+        if (yaAprobada + otrasPendientes + anulacion.getCantidad() > cantidadLinea) {
+            throw new BusinessRuleException(
+                    "No queda saldo anulable suficiente en la línea "
+                            + anulacion.getLineaId() + " (pedido: " + cantidadLinea
+                            + ", ya aprobado: " + yaAprobada
+                            + ", pendiente por resolver: " + Math.max(0, otrasPendientes) + ")");
+        }
+
         anulacion.aprobar(usuarioActual());
         eventPublisher.publishEvent(new AnulacionAprobada(
                 anulacion.getId(),
@@ -178,6 +199,21 @@ public class AnulacionService implements Anulaciones {
     private Anulacion cargar(Long id) {
         return anulacionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Anulación " + id + " no encontrada"));
+    }
+
+    /**
+     * Cantidad original de la línea anulada, leída del pedido. La anulación
+     * congela precio y producto, pero no la cantidad pedida porque esa es la
+     * que se quiere contrastar.
+     */
+    private int cantidadDeLinea(Anulacion anulacion) {
+        return pedidos.pedidoConfirmado(anulacion.getPedidoCodigo())
+                .map(pedido -> pedido.lineas().stream()
+                        .filter(l -> l.lineaId().equals(anulacion.getLineaId()))
+                        .findFirst()
+                        .map(LineaResumen::cantidad)
+                        .orElse(0))
+                .orElse(0);
     }
 
     private String usuarioActual() {
