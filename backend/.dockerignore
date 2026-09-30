@@ -5,3 +5,13 @@ README.md
 *.log
 .idea/
 .vscode/
+
+# Secretos: nunca deben viajar al contexto de build (quedan en el historial
+# del demonio y en las capas, aunque el Dockerfile no los copie).
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
