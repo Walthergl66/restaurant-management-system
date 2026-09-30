@@ -17,10 +17,11 @@
 #   JWT_EXPIRATION_MS (3600000 = 1 hora) / JWT_REFRESH_EXPIRATION_MS (7 días)
 # =============================================================================
 spring:
+  # La URL JDBC (con sslmode=require y timeouts) y las credenciales se
+  # heredan de application.yml: duplicarlas aqui era la via para que el
+  # perfil de produccion se quedara sin TLS. Lo que prod define de mas son
+  # los parametros que adjusts de verdad.
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
