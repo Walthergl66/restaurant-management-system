@@ -1,7 +1,8 @@
 package com.restaurante.usuarios.infrastructure.security;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -10,13 +11,20 @@ import java.time.temporal.ChronoUnit;
 
 /**
  * Configuración del JWT. El secreto llega por entorno ({@code JWT_SECRET}) y
- * debe tener al menos 32 bytes (256 bits) para HS256.
+ * debe tener al menos {@value #JWT_SECRET_MIN_LEN} caracteres (256 bits) para
+ * HS256. No hay valor por defecto en ningún perfil: si falta, el arranque falla
+ * aquí en vez de firmar tokens con una clave conocida o vacía.
  */
 @Validated
 @ConfigurationProperties(prefix = "app.jwt")
 public class JwtProperties {
 
-    @NotNull
+    /** Longitud mínima del secreto; la regla vive aquí y la reutiliza JwtService. */
+    public static final int JWT_SECRET_MIN_LEN = 32;
+
+    @NotBlank(message = "JWT_SECRET es obligatorio: sin valor por defecto en ningún perfil")
+    @Size(min = JWT_SECRET_MIN_LEN,
+            message = "JWT_SECRET debe tener al menos 32 caracteres (256 bits para HS256)")
     private String secret = "";
 
     @Min(0)

@@ -36,9 +36,10 @@ public class JwtService {
     @PostConstruct
     void initKey() {
         String secret = properties.getSecret().trim();
-        if (secret.length() < 32) {
+        if (secret.length() < JwtProperties.JWT_SECRET_MIN_LEN) {
             throw new IllegalStateException(
-                    "JWT_SECRET debe tener al menos 32 caracteres (256 bits para HS256)");
+                    "JWT_SECRET debe tener al menos " + JwtProperties.JWT_SECRET_MIN_LEN
+                            + " caracteres (256 bits para HS256)");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
