@@ -21,6 +21,29 @@ app:
     secret: ${JWT_SECRET}
   inicial:
     admin-password: ${ADMIN_INITIAL_PASSWORD:admin123}
+  cors:
+    # Solo en desarrollo: el frontend Next.js proxea /api/* desde el servidor
+    # (next.config.ts), asi que ni siquiera hace falta abrir CORS para el
+    # desarrollo local habitual. Se abre para poder depurar desde un cliente de
+    # navegador served desde otro origen (Swagger UI, Postman web, etc.).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+
+# La base deja esto cerrado (fail-closed) y el perfil lo abre a proposito:
+# documentacion interactiva y metricas solo mientras se desarrolla.
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
 
 logging:
   level:
