@@ -14,7 +14,7 @@ Este directorio contiene las herramientas, documentación y scripts de utilidad 
 
 ## ⚙️ Configuración y Credenciales
 
-Las credenciales de acceso se definen centralizadamente en el archivo `.env` en la raíz del repositorio:
+Las credenciales de acceso de la base de datos se definen en el archivo `backend/.env` (o plantilla `backend/.env.example`):
 
 ```env
 DB_HOST=localhost          # o la IP del servidor de BD (ej. 192.168.1.230)
@@ -24,7 +24,7 @@ DB_USER=restaurante
 DB_PASSWORD=restaurante
 ```
 
-Los scripts de este directorio (`backup.sh` y `restore.sh`) detectan y cargan automáticamente las variables de dicho archivo `.env`.
+Los scripts de este directorio (`backup.sh` y `restore.sh`) detectan y cargan automáticamente las variables desde `backend/.env`.
 
 ---
 
