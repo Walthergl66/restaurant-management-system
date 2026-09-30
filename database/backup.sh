@@ -3,10 +3,19 @@ set -euo pipefail
 
 # Backup de PostgreSQL para restaurante
 # Uso: ./database/backup.sh [ruta_archivo_salida]
-# Lee automáticamente las credenciales desde .env si existe en la raíz del proyecto.
+# Lee automáticamente las credenciales desde backend/.env si existe.
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_FILE="${ENV_FILE:-$RAIZ/.env}"
+
+if [[ -z "${ENV_FILE:-}" ]]; then
+  if [[ -f "$RAIZ/backend/.env" ]]; then
+    ENV_FILE="$RAIZ/backend/.env"
+  elif [[ -f "$RAIZ/.env" ]]; then
+    ENV_FILE="$RAIZ/.env"
+  else
+    ENV_FILE="$RAIZ/backend/.env"
+  fi
+fi
 
 if [[ -f "$ENV_FILE" ]]; then
   set -a
@@ -24,7 +33,7 @@ DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 DB_USER="${DB_USER:-${DB_USERNAME:-restaurante}}"
 export PGPASSWORD="${PGPASSWORD:-${DB_PASSWORD:-}}"
-DB_CONTAINER="${DB_CONTAINER:-restaurante-postgres}"
+DB_CONTAINER="${DB_CONTAINER:-restaurante-backend}"
 
 mkdir -p "$BACKUP_DIR"
 
@@ -32,7 +41,8 @@ echo "[backup] $DATE — iniciando respaldo de la base '$DB_NAME'"
 
 if command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${DB_CONTAINER}$"; then
   echo "[backup] usando contenedor Docker activo: $DB_CONTAINER"
-  docker exec -e PGPASSWORD="$PGPASSWORD" "$DB_CONTAINER" pg_dump -U "$DB_USER" -d "$DB_NAME" -F c > "$BACKUP_FILE"
+  docker exec -e PGPASSWORD="$PGPASSWORD" "$DB_CONTAINER" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -F c > "$BACKUP_FILE" 2>/dev/null || \
+  pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -F c -f "$BACKUP_FILE"
 else
   echo "[backup] realizando pg_dump directo a $DB_HOST:$DB_PORT ($DB_NAME)"
   pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -F c -f "$BACKUP_FILE"
