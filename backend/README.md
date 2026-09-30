@@ -65,23 +65,32 @@ La aplicación queda en `http://localhost:8080` (health real:
 
 ### Configuración por variables de entorno
 
-La aplicación arma la URL JDBC con `DB_HOST`, `DB_PORT` y `DB_NAME`. Para
-cargar las variables del archivo `.env` al iniciar desde una terminal Bash:
+La aplicación arma la URL JDBC con `DB_HOST`, `DB_PORT` y `DB_NAME`, y lee el
+archivo `.env` **por sí sola**: `spring.config.import` busca `./.env` y
+`./backend/.env`, así que funciona tanto arrancando desde `backend/` como desde
+la raíz del repo. Para Develop se usa `./scripts/run-backend.sh`, que además
+exporta las variables al entorno.
+
+Ojo con el perfil: `SPRING_PROFILES_ACTIVE` **no activa el perfil si está dentro
+de `.env`** (verificado: el perfil se decide antes de procesar los archivos
+importados). Debe llegar como variable real del entorno o como propiedad de
+sistema:
 
 ```bash
-set -a
-. ./.env
-set +a
-./backend/mvnw -f backend/pom.xml spring-boot:run
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run    # dentro de backend/
 ```
+
+Sin perfil la app arranca, pero con la configuración **fail-closed**: sin
+Swagger, sin `/actuator/metrics`, sin CORS y con `/actuator/health` sin
+detalles. Eso es intencionado, no un error de arranque.
 
 El archivo `.env` local está ignorado por Git. No subas credenciales al
 repositorio. Genera el secreto del JWT con `openssl rand -hex 64` y ponlo en
 `JWT_SECRET`: no hay valor por defecto en ningún perfil, sin el secreto la
 aplicación se niega a arrancar en vez de firmar tokens con una clave conocida.
 
-Perfiles: no hay perfil por defecto (a propósito). `SPRING_PROFILES_ACTIVE=dev`
-para desarrollo y `=prod` para producción; prod exige `JWT_SECRET`,
+Perfiles: no hay perfil por defecto (a propósito). `dev` es el único que abre
+Swagger, métricas y CORS con comodín; `prod` exige `JWT_SECRET`,
 `ADMIN_INITIAL_PASSWORD`, `CORS_ALLOWED_ORIGINS` (sin `*`) y las credenciales de
 base de datos.
 

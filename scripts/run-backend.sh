@@ -2,8 +2,10 @@
 # Levanta el backend en modo dev.
 #
 # Resuelve los dos tropiezos habituales al arrancar a mano:
-#   1. spring-boot:run NO lee el .env de backend, asi que sin esto la app cae
-#      contra localhost:5432 en vez de la base configurada.
+#   1. El perfil se decide antes de leer .env, asi que SPRING_PROFILES_ACTIVE
+#      no activa nada desde el archivo: hay que exportarlo al entorno (lo hace
+#      el `set -a` de mas abajo). El resto de variables ya las lee la propia
+#      app via spring.config.import, pero exportarlas no estorba.
 #   2. El java del PATH puede ser un JRE sin javac (no compila release 25).
 #
 # Uso: ./scripts/run-backend.sh [args extra para spring-boot:run]
