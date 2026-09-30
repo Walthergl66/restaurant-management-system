@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: restaurante-app
     env_file:
+      - path: ./backend/.env
+        required: false
       - path: .env
         required: false
     environment:
