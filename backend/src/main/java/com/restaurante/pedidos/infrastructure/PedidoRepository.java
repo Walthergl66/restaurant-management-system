@@ -2,8 +2,10 @@ package com.restaurante.pedidos.infrastructure;
 
 import com.restaurante.pedidos.domain.EstadoPedido;
 import com.restaurante.pedidos.domain.Pedido;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,6 +28,20 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos", "confirmaciones"})
     @Query("SELECT p FROM Pedido p WHERE p.codigo = :codigo")
     Optional<Pedido> findByCodigoConRelaciones(@Param("codigo") String codigo);
+
+    /**
+     * Igual que {@link #findByCodigoConRelaciones} pero con bloqueo pesimista
+     * de escritura sobre el pedido. Lo usan las operaciones que recalculan un
+     * saldo agregado de sus líneas (anulaciones): dos cajeros que resuelven
+     * anulaciones distintas de la misma línea leen el saldo en paralelo y
+     * ambos pasarían la validación, dejando el total descuenciado de más. Con
+     * el lock, la segunda transacción espera y vuelve a leer el saldo ya
+     * actualizado por la primera.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos", "confirmaciones"})
+    @Query("SELECT p FROM Pedido p WHERE p.codigo = :codigo")
+    Optional<Pedido> findByCodigoParaActualizar(@Param("codigo") String codigo);
 
     boolean existsByCodigo(String codigo);
 
