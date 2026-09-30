@@ -1,9 +1,13 @@
 spring:
-  # Carga backend/.env como archivo de propiedades (gitignored). Las variables
-  # de entorno reales del sistema tienen prioridad sobre este archivo.
-  # `optional` evita fallar en Docker/CI donde no existe .env.
+  # Carga el archivo .env (gitignored) como properties. Las variables de
+  # entorno reales del sistema tienen prioridad sobre este archivo.
+  #
+  # La ruta es relativa al DIRECTORIO DE TRABAJO, y el .env vive en backend/:
+  # arrancando desde la raiz del repo (como documenta el README) solo existe
+  # backend/.env, y arrancando desde backend/ solo existe ./.env. Se intentan
+  # las dos; ambas son `optional` para no fallar en Docker/CI donde no existe.
   config:
-    import: optional:file:.env[.properties]
+    import: optional:file:.env[.properties],optional:file:backend/.env[.properties]
   application:
     name: restaurant-management-system
   # NO se fija spring.profiles.active aquí a propósito: con un perfil por
