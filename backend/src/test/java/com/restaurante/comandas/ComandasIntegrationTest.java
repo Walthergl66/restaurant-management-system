@@ -7,6 +7,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -153,6 +156,56 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         // Las dos: listo.
         marcar(comandaFrituras, "listo");
         assertEquals("LISTO", estadoPedido(codigo));
+    }
+
+    /**
+     * Los extras de dos líneas se unen para agrupar; si el separador puede
+     * aparecer dentro de un nombre, dos combinaciones distintas colapsan en
+     * una sola línea de comanda y la cocina recibe menos platos de los pedidos.
+     */
+    @Test
+    void extrasConComaNoSeConfundenConDosExtrasDistintos() throws Exception {
+        long area = crearArea("Cocina " + System.nanoTime() % 100000);
+        long producto = crearProductoConArea("Plato con extras", "9.00", area);
+        long extraConComa = crearExtra("bebida,grande", "1.00");
+        long extraBebida = crearExtra("bebida", "0.50");
+        long extraGrande = crearExtra("grande", "0.50");
+        long mesaId = crearMesa();
+        String codigo = "EXTRAS-" + System.nanoTime();
+        crearBorrador(mesaId, codigo);
+
+        // Línea 1: un solo extra llamado "bebida,grande".
+        postItemConExtras(codigo, producto, 1, List.of(extraConComa));
+        // Línea 2: dos extras distintos, "bebida" y "grande".
+        postItemConExtras(codigo, producto, 1, List.of(extraBebida, extraGrande));
+        confirmar(codigo, "key-extras-" + System.nanoTime());
+
+        JsonNode comanda = buscar(codigo, null).path(0);
+        assertEquals(2, comanda.path("lineas").size(),
+                "Son dos platos distintos y deben viajar en dos líneas: " + comanda);
+    }
+
+    private void postItemConExtras(String codigo, long productoId, int cantidad, List<Long> extraIds) throws Exception {
+        String extras = extraIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+        mockMvc.perform(post("/api/v1/pedidos/" + codigo + "/items")
+                        .header("Authorization", "Bearer " + meseroToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productoId":%d,"cantidad":%d,"extraIds":[%s],"ingredientesRemovidos":[]}
+                                """.formatted(productoId, cantidad, extras)))
+                .andExpect(status().isCreated());
+    }
+
+    private long crearExtra(String nombre, String precio) throws Exception {
+        String body = mockMvc.perform(post("/api/v1/extras")
+                        .header("Authorization", "Bearer " + administradorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"%s","precio":%s}
+                                """.formatted(nombre, precio)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(body).path("id").asLong();
     }
 
     private void marcar(long comandaId, String transicion) throws Exception {
