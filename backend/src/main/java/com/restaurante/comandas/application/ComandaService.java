@@ -3,6 +3,7 @@ package com.restaurante.comandas.application;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.comandas.domain.Comanda;
 import com.restaurante.comandas.domain.ComandaEstado;
+import com.restaurante.comandas.domain.TipoComanda;
 import com.restaurante.comandas.infrastructure.ComandaRepository;
 import com.restaurante.comandas.web.dto.ComandaResponse;
 import com.restaurante.comandas.web.dto.ImpresionResponse;
@@ -55,14 +56,14 @@ public class ComandaService {
     public ComandaResponse marcarEnPreparacion(Long id) {
         Comanda comanda = cargar(id);
         comanda.marcarEnPreparacion();
-        avanzarEnPreparacion(comanda.getPedidoCodigo());
+        avanzarSiTodoElPedidoAvanza(comanda.getPedidoCodigo(), false);
         return ComandaResponse.from(comanda);
     }
 
     public ComandaResponse marcarListo(Long id) {
         Comanda comanda = cargar(id);
         comanda.marcarListo();
-        avanzarListo(comanda.getPedidoCodigo());
+        avanzarSiTodoElPedidoAvanza(comanda.getPedidoCodigo(), true);
         return ComandaResponse.from(comanda);
     }
 
@@ -113,24 +114,47 @@ public class ComandaService {
     }
 
     /**
+     * Un pedido genera una comanda por área, así que el estado del pedido no
+     * puede depender de una sola: con el paso de una comanda, el pedido quedaba
+     * "en preparación" o "listo" mientras otra cocina no había empezado, y el
+     * mesero veía un pedido que aún no estaba. El pedido avanza cuando todas
+     * sus áreas llegaron al estado, y solo se consideran las comandas de
+     * orden: las de cancelación son instrucciones aparte y su propio ciclo.
+     */
+    private void avanzarSiTodoElPedidoAvanza(String codigo, boolean listo) {
+        List<Comanda> areas = comandaRepository.findPorPedido(codigo).stream()
+                .filter(c -> c.getTipo() == TipoComanda.ORDEN)
+                .toList();
+        boolean todasListas = areas.stream().allMatch(c -> c.getEstado() == ComandaEstado.LISTO);
+        boolean todasPreparando = areas.stream()
+                .allMatch(c -> c.getEstado() == ComandaEstado.EN_PREPARACION
+                        || c.getEstado() == ComandaEstado.LISTO);
+        if (listo) {
+            if (todasListas) {
+                avanzar(codigo, true);
+            }
+        } else if (todasPreparando) {
+            avanzar(codigo, false);
+        }
+    }
+
+    /**
      * Avanza el pedido presencial (RF-14/RF-15); si el código pertenece a un
      * pedido de la app del cliente, avanza su estado vía el SPI de clientes
      * (RF-44). No se usa try/catch sobre el SPI de pedidos porque su
      * NotFound marcaría la transacción rollback-only.
      */
-    private void avanzarEnPreparacion(String codigo) {
+    private void avanzar(String codigo, boolean listo) {
         if (pedidos.existe(codigo)) {
-            pedidos.marcarEnPreparacion(codigo);
+            if (listo) {
+                pedidos.marcarListo(codigo);
+            } else {
+                pedidos.marcarEnPreparacion(codigo);
+            }
+        } else if (listo) {
+            clientes.marcarListo(codigo);
         } else {
             clientes.marcarEnPreparacion(codigo);
-        }
-    }
-
-    private void avanzarListo(String codigo) {
-        if (pedidos.existe(codigo)) {
-            pedidos.marcarListo(codigo);
-        } else {
-            clientes.marcarListo(codigo);
         }
     }
 }
