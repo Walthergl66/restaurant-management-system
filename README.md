@@ -2,7 +2,7 @@
 
 Sistema integral para la gestión operativa y administrativa de restaurantes: catálogo de productos, salones y mesas, pedidos presenciales, comandas por área de preparación, cuentas, adiciones, anulaciones, facturación, cierres de caja y auditoría.
 
-Repositorio estructurado como **monorepo**: cada componente reside en su propio directorio con su propia documentación, configuración y ciclo de vida independiente.
+Repositorio estructurado como **monorepo**: cada componente reside en su propio directorio con su propia documentación, configuración por `.env` y ciclo de vida independiente.
 
 ---
 
@@ -11,25 +11,26 @@ Repositorio estructurado como **monorepo**: cada componente reside en su propio 
 ```
 .
 ├── backend/            # API REST (Java 25 LTS + Spring Boot 4.1 + PostgreSQL)
+│   ├── .env.example    # Plantilla de variables para backend y base de datos
 │   ├── Dockerfile      # Imagen Docker optimizada (Eclipse Temurin 25 JRE)
 │   ├── pom.xml         # Dependencias Maven y plugins de compilación
 │   ├── README.md       # Documentación técnica, endpoints y arquitectura modular
 │   └── src/            # Código fuente y migraciones Flyway
 ├── frontend/           # Aplicación Web (Next.js 16 + React 19 + TypeScript + Tailwind)
+│   ├── .env.example    # Plantilla de variables de Next.js (BACKEND_URL)
 │   ├── package.json    # Dependencias npm y scripts de ejecución
 │   ├── README.md       # Guía de interfaz web, rutas y componentes
 │   └── src/            # Vistas (mesas, pedidos, cocina KDS, caja, auditoría)
 ├── database/           # Herramientas y utilidades de base de datos
 │   ├── backups/        # Directorio local para almacenamiento de respaldos (.dump)
-│   ├── backup.sh       # Script para generar copias de seguridad de PostgreSQL
-│   ├── restore.sh      # Script para restaurar copias de seguridad
+│   ├── backup.sh       # Script para generar copias de seguridad (lee backend/.env)
+│   ├── restore.sh      # Script para restaurar copias de seguridad (lee backend/.env)
 │   └── README.md       # Documentación de motor, esquema y respaldo
 ├── scripts/            # Scripts utilitarios para ejecución local
-│   ├── run-backend.sh  # Inicia el backend cargando .env y JDK local
+│   ├── run-backend.sh  # Inicia el backend cargando backend/.env y JDK local
 │   └── run-frontend.sh # Inicia el frontend instalando dependencias si faltan
 ├── docs/               # Documentación complementaria (API, carga, producción)
-├── docker-compose.yml  # Configuración para ejecutar exclusivamente el Backend en Docker
-├── .env.example        # Plantilla central de variables de entorno
+├── docker-compose.yml  # Configuración para ejecutar el Backend en Docker (lee backend/.env)
 └── README.md           # Guía principal del repositorio
 ```
 
@@ -37,12 +38,20 @@ Repositorio estructurado como **monorepo**: cada componente reside en su propio 
 
 ## ⚡ Puesta en Marcha
 
-### 1. Variables de Entorno
+### 1. Variables de Entorno (Por Módulo)
 
-Copia la plantilla `.env.example` en la raíz como `.env` y ajusta las credenciales de tu PostgreSQL:
+Cada aplicación gestiona sus variables de manera independiente:
 
+#### Backend
+Copia la plantilla y configura la conexión a PostgreSQL:
 ```bash
-cp .env.example .env
+cp backend/.env.example backend/.env
+```
+
+#### Frontend
+Copia la plantilla para la app web:
+```bash
+cp frontend/.env.example frontend/.env.local
 ```
 
 ---
