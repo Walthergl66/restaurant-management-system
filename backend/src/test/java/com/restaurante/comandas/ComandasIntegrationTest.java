@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -206,6 +207,109 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
+    }
+
+    /**
+     * Una comanda CANCELACION generada tras anular un ítem de un pedido que ya
+     * está LISTO se puede marcar en preparación/lista sin que el pedido intente
+     * retroceder a preparación (lo que lanzaba 422 y deshacía el cambio).
+     */
+    @Test
+    void comandaCancelacionEnPedidoListoSePuedeMarcarSinError() throws Exception {
+        long area = crearArea("Cocina Cancel " + System.nanoTime() % 100000);
+        long producto = crearProductoConArea("Plato A Anular", "10.00", area);
+        long mesaId = crearMesa();
+        String codigo = "CAN-LISTO-" + System.nanoTime();
+        crearBorrador(mesaId, codigo);
+        MvcResult item = postItemConRespuesta(codigo, producto, 2);
+        long lineaId = itemId(item);
+        confirmar(codigo, "key-can-" + System.nanoTime());
+
+        // Avanza el pedido a LISTO
+        long comandaOrdenId = comandaDe(codigo, "ORDEN");
+        marcar(comandaOrdenId, "en-preparacion");
+        marcar(comandaOrdenId, "listo");
+        assertEquals("LISTO", estadoPedido(codigo));
+
+        // Solicita y aprueba anulación -> se genera comanda CANCELACION
+        solicitarAnulacion(codigo, lineaId, 1, "cambio de opinión");
+        aprobarAnulacionDesdeMesa(codigo, lineaId);
+
+        long comandaCancelId = comandaDe(codigo, "CANCELACION");
+
+        // Marcar la comanda CANCELACION en preparación debe dar 200 OK
+        marcar(comandaCancelId, "en-preparacion");
+        assertEquals("EN_PREPARACION", estadoComanda(comandaCancelId));
+
+        marcar(comandaCancelId, "listo");
+        assertEquals("LISTO", estadoComanda(comandaCancelId));
+        // El pedido sigue LISTO
+        assertEquals("LISTO", estadoPedido(codigo));
+    }
+
+    private long comandaDe(String codigo, String tipo) throws Exception {
+        JsonNode list = buscar(codigo, null);
+        for (JsonNode c : list) {
+            if (tipo.equals(c.path("tipo").asText())) {
+                return c.path("id").asLong();
+            }
+        }
+        throw new AssertionError("No hay comanda " + tipo + " para el pedido " + codigo);
+    }
+
+    private String estadoComanda(long id) throws Exception {
+        String res = mockMvc.perform(get("/api/v1/comandas/" + id)
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(res).path("estado").asText();
+    }
+
+    private MvcResult postItemConRespuesta(String codigo, long productoId, int cantidad) throws Exception {
+        return mockMvc.perform(post("/api/v1/pedidos/" + codigo + "/items")
+                        .header("Authorization", "Bearer " + meseroToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productoId":%d,"cantidad":%d,"extraIds":[],"ingredientesRemovidos":[]}
+                                """.formatted(productoId, cantidad)))
+                .andExpect(status().isCreated())
+                .andReturn();
+    }
+
+    private long itemId(MvcResult item) throws Exception {
+        return objectMapper.readTree(item.getResponse().getContentAsString())
+                .path("lineas").get(0).path("id").asLong();
+    }
+
+    private void solicitarAnulacion(String codigo, long lineaId, int cantidad, String motivo) throws Exception {
+        mockMvc.perform(post("/api/v1/pedidos/" + codigo + "/items/" + lineaId + "/anulaciones")
+                        .header("Authorization", "Bearer " + meseroToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"cantidad":%d,"motivo":"%s"}
+                                """.formatted(cantidad, motivo)))
+                .andExpect(status().isCreated());
+    }
+
+    private void aprobarAnulacionDesdeMesa(String codigo, long lineaId) throws Exception {
+        String cajeroToken = asegurarUsuario("cajero_comandas_test", "CAJERO", "clave789");
+        String lista = mockMvc.perform(get("/api/v1/anulaciones?pedidoCodigo=" + codigo)
+                        .header("Authorization", "Bearer " + cajeroToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long anulacionId = -1;
+        for (JsonNode anulacion : objectMapper.readTree(lista)) {
+            if (anulacion.path("lineaId").asLong() == lineaId
+                    && "SOLICITADA".equals(anulacion.path("estado").asText())) {
+                anulacionId = anulacion.path("id").asLong();
+            }
+        }
+        if (anulacionId < 0) {
+            throw new AssertionError("No hay anulación solicitada para la línea: " + lineaId);
+        }
+        mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/aprobar")
+                        .header("Authorization", "Bearer " + cajeroToken))
+                .andExpect(status().isOk());
     }
 
     private void marcar(long comandaId, String transicion) throws Exception {
