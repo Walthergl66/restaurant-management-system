@@ -113,6 +113,62 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(jsonPath("$.estado").value("LISTO"));
     }
 
+    /**
+     * Un pedido genera una comanda por área. El pedido no puede estar listo
+     * hasta que TODAS las áreas lo estén: si una sola comanda lo marcara,
+     * el mesero vería el pedido listo con la otra cocina sin empezar.
+     */
+    @Test
+    void elPedidoSoloAvanzaCuandoTodasLasAreasLoHacen() throws Exception {
+        long parrilla = crearArea("Parrilla " + System.nanoTime() % 100000);
+        long frituras = crearArea("Frituras " + System.nanoTime() % 100000);
+        long productoParrilla = crearProductoConArea("Churrasco", "13.00", parrilla);
+        long productoFrituras = crearProductoConArea("Papas fritas", "4.00", frituras);
+        long mesaId = crearMesa();
+        String codigo = "MULTI-" + System.nanoTime();
+        crearBorrador(mesaId, codigo);
+        postItem(codigo, productoParrilla, 1, null, null, null);
+        postItem(codigo, productoFrituras, 1, null, null, null);
+        confirmar(codigo, "key-multiarea");
+
+        JsonNode comandas = buscar(codigo, null);
+        assertEquals(2, comandas.size(), "Cada área debe tener su comanda: " + comandas);
+        long comandaParrilla = buscarPorArea(comandas, parrilla).path("id").asLong();
+        long comandaFrituras = buscarPorArea(comandas, frituras).path("id").asLong();
+
+        // Una sola de las dos en preparación: el pedido aún no puede estarlo.
+        marcar(comandaParrilla, "en-preparacion");
+        assertEquals("CONFIRMADO", estadoPedido(codigo),
+                "Con la otra área sin empezar, el pedido no puede estar en preparación");
+
+        // Las dos en preparación: ahora sí.
+        marcar(comandaFrituras, "en-preparacion");
+        assertEquals("EN_PREPARACION", estadoPedido(codigo));
+
+        // Una sola lista: todavía no.
+        marcar(comandaParrilla, "listo");
+        assertEquals("EN_PREPARACION", estadoPedido(codigo),
+                "Con una área sin terminar, el pedido no puede estar listo");
+
+        // Las dos: listo.
+        marcar(comandaFrituras, "listo");
+        assertEquals("LISTO", estadoPedido(codigo));
+    }
+
+    private void marcar(long comandaId, String transicion) throws Exception {
+        mockMvc.perform(post("/api/v1/comandas/" + comandaId + "/" + transicion)
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk());
+    }
+
+    private String estadoPedido(String codigo) throws Exception {
+        return mockMvc.perform(get("/api/v1/pedidos/" + codigo)
+                        .header("Authorization", "Bearer " + meseroToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString()
+                .replaceAll(".*\"estado\":\"([A-Z_]+)\".*", "$1");
+    }
+
     @Test
     void confirmarIdempotenteNoDuplicaComandas() throws Exception {
         long area = crearArea("Horno");
