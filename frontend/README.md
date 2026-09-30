@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend — Sistema de Gestión de Restaurante
 
-## Getting Started
+Aplicación web desarrollada en **Next.js 16** con **React 19**, **TypeScript** y **Tailwind CSS**, diseñada para la operativa del restaurante: salones, mesas, pedidos en tiempo real, cocina (KDS), caja, cuentas, anulaciones, reportes y administración.
 
-First, run the development server:
+El frontend se ejecuta directamente en el entorno de desarrollo del cliente con Node.js y se comunica con la API REST del backend en `http://localhost:8080`.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+- **Framework:** Next.js 16 (App Router)
+- **UI & Estado:** React 19, Zustand (estado global), TanStack React Query (caché y sincronización de datos)
+- **Estilos:** Tailwind CSS v4, Lucide React (iconografía)
+- **Cliente HTTP:** Axios (con rewrites de `/api/*` hacia el backend en `next.config.ts`)
+- **Visualización:** Recharts (reportes y métricas)
+- **Notificaciones:** React Hot Toast
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+frontend/
+├── src/
+│   ├── app/                      # Rutas de Next.js (App Router)
+│   │   ├── (dashboard)/          # Vistas principales protegidas
+│   │   │   ├── anulaciones/      # Aprobación y consulta de anulaciones
+│   │   │   ├── auditoria/        # Registro de eventos auditables
+│   │   │   ├── caja/             # Apertura, movimientos y cierre de caja
+│   │   │   ├── cocina/           # Pantalla de comandas en preparación (KDS)
+│   │   │   ├── cuentas/          # Consulta y cierre de cuentas
+│   │   │   ├── dashboard/        # Resumen general del turno
+│   │   │   ├── mesas/            # Mapa y estados de mesas
+│   │   │   ├── pedidos/          # Toma de pedidos presenciales
+│   │   │   ├── productos/        # Catálogo de productos y categorías
+│   │   │   ├── reportes/         # Reportes financieros y ventas
+│   │   │   └── usuarios/         # Gestión de usuarios y roles
+│   │   └── login/                # Autenticación y obtención de JWT
+│   ├── components/               # Componentes UI reutilizables
+│   ├── lib/                      # Cliente API, utilidades y helpers
+│   ├── store/                    # Stores de Zustand (auth, turno, carrito)
+│   └── types/                    # Tipos e interfaces TypeScript
+├── next.config.ts                # Configuración de proxy/rewrites hacia backend
+└── package.json                  # Dependencias y scripts npm
+```
+
+---
+
+## 🚀 Puesta en Marcha
+
+### 1. Requisitos Previos
+
+- **Node.js**: v20+ o v24+ LTS
+- **npm** (o yarn / pnpm)
+- **Backend**: debe estar corriendo en `http://localhost:8080` (vía Docker o `run-backend.sh`)
+
+### 2. Configurar Variables de Entorno
+
+Copia el archivo de ejemplo a `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Contenido de `.env.local`:
+
+```env
+# Dirección del backend Spring Boot
+BACKEND_URL=http://localhost:8080
+```
+
+### 3. Instalar Dependencias
+
+```bash
+npm install
+```
+
+### 4. Ejecutar en Modo Desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📜 Scripts Disponibles
 
-## Learn More
+- `npm run dev`: Inicia el servidor de desarrollo con hot reload en el puerto 3000.
+- `npm run build`: Compila la aplicación para producción.
+- `npm run start`: Inicia el servidor de producción compilado.
+- `npm run lint`: Ejecuta el linter ESLint para comprobar estándares de código.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔗 Comunicación con el Backend
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+El frontend utiliza la directiva `rewrites` en `next.config.ts`:
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Todas las peticiones al path `/api/*` son redirigidas automáticamente a `${BACKEND_URL}/api/*`.
+- Esto evita problemas de CORS durante el desarrollo y unifica los endpoints bajo el mismo dominio de origen en el navegador.
