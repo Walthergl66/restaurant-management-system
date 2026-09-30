@@ -144,6 +144,68 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isUnprocessableEntity());
     }
 
+    /**
+     * Regresión del invariante RNF-16: la unidad ya comprometida en una
+     * solicitud SOLICITADA no puede comprometerse otra vez. Antes solo se
+     *zeecontaba lo aprobado, así que dos solicitudes de 1 sobre una línea de
+     * 2 se aceptaban y, al aprobar ambas, el total de la cuenta quedaba
+     * negativo.
+     */
+    @Test
+    void noSePuedeComprometerDosVecesLaMismaUnidad() throws Exception {
+        long mesaId = crearMesa();
+        long productoId = crearProducto("Chuzo de Camarones", "8.00", null);
+
+        String codigo = crearBorrador(mesaId);
+        MvcResult item = postItemConRespuesta(codigo, productoId, 2);
+        long lineaId = itemId(item);
+        confirmar(codigo);
+        long cuentaId = cuentaAbiertaDe(mesaId);
+
+        // 1 de 2 queda comprometido por esta solicitud.
+        MvcResult primera = solicitarAnulacion(codigo, lineaId, 1, "se deslizó al servir")
+                .andExpect(status().isCreated())
+                .andReturn();
+        long primeraId = objectMapper.readTree(primera.getResponse().getContentAsString()).path("id").asLong();
+
+        // Intentar comprometer la misma unidad otra vez debe rebotar: solo
+        // queda 1 libre de 2.
+        solicitarAnulacion(codigo, lineaId, 2, "misma unidad dos veces")
+                .andExpect(status().isUnprocessableEntity());
+
+        // La primera sigue siendo aprobable y descuenta lo suyo.
+        mockMvc.perform(patch("/api/v1/anulaciones/" + primeraId + "/aprobar")
+                        .header("Authorization", "Bearer " + cajeroToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("APROBADA"));
+
+        // Total: 16.00 pedido - 8.00 anulado = 8.00 (no negativo).
+        obtenerCuenta(cuentaId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(8.00));
+
+        // Queda exactamente 1 unidad: se puede anular, y con eso se agota.
+        MvcResult segunda = solicitarAnulacion(codigo, lineaId, 1, "última unidad")
+                .andExpect(status().isCreated())
+                .andReturn();
+        long segundaId = objectMapper.readTree(segunda.getResponse().getContentAsString()).path("id").asLong();
+
+        // Ya no queda nada anulable: la línea tenía 2 y están comprometidas las 2.
+        solicitarAnulacion(codigo, lineaId, 1, "excede lo anulable")
+                .andExpect(status().isUnprocessableEntity());
+
+        // Al aprobar la segunda el total llega a 0.00 exactos: el máximo
+        // anulable es lo pedido, y la cuenta nunca queda negativa.
+        mockMvc.perform(patch("/api/v1/anulaciones/" + segundaId + "/aprobar")
+                        .header("Authorization", "Bearer " + cajeroToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("APROBADA"));
+
+        obtenerCuenta(cuentaId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0.00));
+    }
+
     @Test
     void meseroNoApruebaAnulaciones() throws Exception {
         long mesaId = crearMesa();
