@@ -50,14 +50,16 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12);
     }
 
-    @Value("${app.cors.allowed-origins:*}")
+    @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         List<String> origins = Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
-        if (origins.isEmpty()) origins = List.of("*");
+        // Sin origenes configurados NO se cae a '*': la lista vacia deja el
+        // acceso desde navegador bloqueado (fail-closed). El perfil 'dev' los
+        // abre explicitamente y 'prod' exige la variable sin comodin.
         boolean isWildcard = origins.size() == 1 && "*".equals(origins.get(0));
         if (isWildcard) {
             config.setAllowedOriginPatterns(List.of("*"));

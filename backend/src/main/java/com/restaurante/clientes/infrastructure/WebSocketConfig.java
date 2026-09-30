@@ -25,7 +25,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompJwtChannelInterceptor stompJwtChannelInterceptor;
 
-    @Value("${app.cors.allowed-origins:*}")
+    @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
     public WebSocketConfig(StompJwtChannelInterceptor stompJwtChannelInterceptor) {
@@ -45,7 +45,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .filter(s -> !s.isEmpty())
                 .toArray(String[]::new);
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns(origins.length == 0 ? new String[]{"*"} : origins);
+                // Igual que en HTTP: sin origenes configurados no se acepta
+                // ninguno (fail-closed) en lugar de abrir a '*'.
+                .setAllowedOriginPatterns(origins);
     }
 
     @Override
