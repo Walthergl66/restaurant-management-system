@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -45,6 +46,15 @@ public class Comanda extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ComandaEstado estado = ComandaEstado.PENDIENTE;
+
+    /**
+     * Versión optimista: dos terminals de cocina pueden mover la misma comanda
+     * a la vez. Sin ella, la segunda escritura pisa a la primera sin avisar y
+     * la comanda retrocede de LISTO a EN_PREPARACION.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     @OneToMany(mappedBy = "comanda", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orden")
