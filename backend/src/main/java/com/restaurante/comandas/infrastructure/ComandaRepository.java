@@ -5,6 +5,7 @@ import com.restaurante.comandas.domain.ComandaEstado;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,14 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     Optional<Comanda> findByIdConLineas(Long id);
 
     boolean existsByPedidoCodigoAndAreaId(String pedidoCodigo, Long areaId);
+
+    /**
+     * Comandas de un pedido, por área. Es lo que permite decidir si el pedido
+     * puede avanzar: con una comanda por área, un área sin terminar significa
+     * pedido incompleto.
+     */
+    @Query("select c from Comanda c where c.pedidoCodigo = :pedidoCodigo")
+    List<Comanda> findPorPedido(@Param("pedidoCodigo") String pedidoCodigo);
 
     /**
      * Idempotencia de la comanda de cancelación: una sola por anulación aprobada.
