@@ -56,14 +56,14 @@ public class ComandaService {
     public ComandaResponse marcarEnPreparacion(Long id) {
         Comanda comanda = cargar(id);
         comanda.marcarEnPreparacion();
-        avanzarSiTodoElPedidoAvanza(comanda.getPedidoCodigo(), false);
+        avanzarSiTodoElPedidoAvanza(comanda, false);
         return ComandaResponse.from(comanda);
     }
 
     public ComandaResponse marcarListo(Long id) {
         Comanda comanda = cargar(id);
         comanda.marcarListo();
-        avanzarSiTodoElPedidoAvanza(comanda.getPedidoCodigo(), true);
+        avanzarSiTodoElPedidoAvanza(comanda, true);
         return ComandaResponse.from(comanda);
     }
 
@@ -121,7 +121,11 @@ public class ComandaService {
      * sus áreas llegaron al estado, y solo se consideran las comandas de
      * orden: las de cancelación son instrucciones aparte y su propio ciclo.
      */
-    private void avanzarSiTodoElPedidoAvanza(String codigo, boolean listo) {
+    private void avanzarSiTodoElPedidoAvanza(Comanda comanda, boolean listo) {
+        if (comanda.getTipo() != TipoComanda.ORDEN) {
+            return;
+        }
+        String codigo = comanda.getPedidoCodigo();
         List<Comanda> areas = comandaRepository.findPorPedido(codigo).stream()
                 .filter(c -> c.getTipo() == TipoComanda.ORDEN)
                 .toList();
