@@ -5,9 +5,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -204,6 +210,117 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
         obtenerCuenta(cuentaId)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(0.00));
+    }
+
+    /**
+     * Regresión del RNF-16 bajo concurrencia: dos cajeros aprueban al mismo
+     * tiempo dos solicitudes sobre la misma línea. Con el saldo leído sin
+     * bloqueo, ambos leen lo mismo y los dos aprueban, con lo que la cuenta
+     * queda descuenciada por encima de lo pedido.
+     *
+     * El escenario es 1 unidad pedida y 2 solicitudes de 1: solo una puede
+     * acabar APROBADA; la otra debe rebotar con 422.
+     */
+    @Test
+    void solicitudesConcurrentesSobreLaUltimaUnidadSoloUnaProspera() throws Exception {
+        long mesaId = crearMesa();
+        long productoId = crearProducto("Ajiaco", "7.00", null);
+
+        String codigo = crearBorrador(mesaId);
+        MvcResult item = postItemConRespuesta(codigo, productoId, 1);
+        long lineaId = itemId(item);
+        confirmar(codigo);
+
+        // Una sola unidad y dos meseros pidiendo su anulación a la vez. Ambas
+        // solicitudes caben por separado contra el saldo, y en conjunto no.
+        // Sin serializar la reserva, las dos leerían "comprometido 0" y las dos
+        // pasarían, deixando la unidad prometida dos veces; al aprobarlas, la
+        // cuenta quedaría descuenciada por debajo de lo consumido.
+        int[] estados = enParalelo(
+                () -> solicitarAnulacion(codigo, lineaId, 1, "primera"),
+                () -> solicitarAnulacion(codigo, lineaId, 1, "segunda"));
+
+        assertEquals(1, estados[0] == 201 ? 1 : 0,
+                "Solo una solicitud debe crearse, la otra rebotar con 422. Estados: "
+                        + estados[0] + " y " + estados[1]);
+        assertEquals(201, estados[1] == 201 ? 201 : 422, estados[1]);
+        assertTrue(estados[0] == 201 || estados[1] == 201,
+                "Al menos una solicitud debe prosperar: " + estados[0] + " y " + estados[1]);
+    }
+
+    @Test
+    void aprobacionesConcurrentesDeSolicitudesValidasNoInviertenElSaldo() throws Exception {
+        long mesaId = crearMesa();
+        long productoId = crearProducto("Sancocho", "6.00", null);
+
+        String codigo = crearBorrador(mesaId);
+        MvcResult item = postItemConRespuesta(codigo, productoId, 2);
+        long lineaId = itemId(item);
+        confirmar(codigo);
+        long cuentaId = cuentaAbiertaDe(mesaId);
+
+        // 2 unidades, 2 solicitudes de 1: cada una reserva la suya y juntas
+        // agotan la línea exactamente. Las dos aprobaciones en paralelo son
+        // legítimas y el total debe cerrar en cero.
+        long idA = idDeAnulacion(solicitarAnulacion(codigo, lineaId, 1, "primera")
+                .andExpect(status().isCreated()).andReturn());
+        long idB = idDeAnulacion(solicitarAnulacion(codigo, lineaId, 1, "segunda")
+                .andExpect(status().isCreated()).andReturn());
+
+        int[] estados = enParalelo(
+                () -> mockMvc.perform(patch("/api/v1/anulaciones/" + idA + "/aprobar")
+                        .header("Authorization", "Bearer " + cajeroToken)),
+                () -> mockMvc.perform(patch("/api/v1/anulaciones/" + idB + "/aprobar")
+                        .header("Authorization", "Bearer " + cajeroToken)));
+
+        assertEquals(200, estados[0], "Aprobación A: " + estados[0]);
+        assertEquals(200, estados[1], "Aprobación B: " + estados[1]);
+
+        // 2 unidades a 6.00 = 12.00, anuladas 2 unidades = 12.00.
+        obtenerCuenta(cuentaId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0.00));
+    }
+
+    /**
+     * Lanza las dos peticiones a la vez y devuelve su código de estado. Cada
+     * petición corre en su propia transacción: las pruebas no son
+     * transaccionales, así que el hilo que llama a la API abre y cierra
+     * transacción por su cuenta.
+     */
+    private int[] enParalelo(PeticionConcurrente a, PeticionConcurrente b) throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch arranque = new CountDownLatch(1);
+        try {
+            Future<Integer> fa = pool.submit(() -> {
+                arranque.await(10, TimeUnit.SECONDS);
+                return a.ejecutar().andReturn().getResponse().getStatus();
+            });
+            Future<Integer> fb = pool.submit(() -> {
+                arranque.await(10, TimeUnit.SECONDS);
+                return b.ejecutar().andReturn().getResponse().getStatus();
+            });
+            arranque.countDown();
+            return new int[]{fa.get(30, TimeUnit.SECONDS), fb.get(30, TimeUnit.SECONDS)};
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    @FunctionalInterface
+    private interface PeticionConcurrente {
+        ResultActions ejecutar() throws Exception;
+    }
+
+    private long idDeAnulacion(MvcResult solicitud) throws Exception {
+        return objectMapper.readTree(solicitud.getResponse().getContentAsString()).path("id").asLong();
+    }
+
+    private int aprobarEnParalelo(long anulacionId, CountDownLatch arranque) throws Exception {
+        arranque.await(10, TimeUnit.SECONDS);
+        return mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/aprobar")
+                        .header("Authorization", "Bearer " + cajeroToken))
+                .andReturn().getResponse().getStatus();
     }
 
     @Test

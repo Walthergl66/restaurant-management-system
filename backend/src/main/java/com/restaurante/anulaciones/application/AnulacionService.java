@@ -48,7 +48,7 @@ public class AnulacionService implements Anulaciones {
     }
 
     public AnulacionResponse solicitar(String pedidoCodigo, Long lineaId, SolicitarAnulacionRequest request) {
-        PedidoResumen pedido = pedidos.pedidoConfirmado(pedidoCodigo)
+        PedidoResumen pedido = pedidos.pedidoConfirmadoParaActualizar(pedidoCodigo)
                 .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + pedidoCodigo));
         LineaResumen linea = pedido.lineas().stream()
                 .filter(l -> l.lineaId().equals(lineaId))
@@ -61,6 +61,10 @@ public class AnulacionService implements Anulaciones {
         // resolvieron (rechazada o aprobada). Reservar también lo pendiente
         // impide que dos solicitudes se peleen la misma unidad y, al aprobar
         // la segunda, la cuenta quede con total negativo (invariante RNF-16).
+        //
+        // La reserva se serializa con el lock del pedido (leído arriba): sin
+        // él, dos solicitudes simultáneas leerían el mismo comprometido y las
+        // dos pasarían, dejando unidades prometidas dos veces.
         int yaAprobada = anulacionRepository.cantidadAprobada(pedidoCodigo, lineaId);
         int yaSolicitada = anulacionRepository.cantidadSolicitada(pedidoCodigo, lineaId);
         int comprometido = yaAprobada + yaSolicitada;
