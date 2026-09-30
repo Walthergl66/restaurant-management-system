@@ -120,6 +120,51 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
         assertEquals("EN_PREPARACION", pedido.path("estado").asText());
     }
 
+    /**
+     * El paso de la comanda reintenta es normal: la app de cocina repite la
+     * llamada si se quedó sin red a media confirmación, y el botón de la tablet
+     * se puede pulsar dos veces. Reintentar no debe cobrarle al cliente su
+     * pedido: el estado ya pedido tiene que aceptarse sin error, igual que
+     * pasa con los pedidos presenciales.
+     */
+    @Test
+    void repetirElPasoDeLaComandaNoFallaEnPedidoCliente() throws Exception {
+        long area = crearArea("Parrilla " + System.nanoTime() % 100000);
+        long producto = crearProductoConArea("Churrasco Reintento", "14.00", area);
+        String codigo = "CLI-REINT-" + System.nanoTime();
+        String idem = "idem-clireint-" + System.nanoTime();
+        crearPedidoCliente(codigo, idem, producto);
+        confirmarCliente(codigo, idem);
+        long comandaId = buscar(codigo, null).path(0).path("id").asLong();
+
+        marcar(comandaId, "en-preparacion");
+        marcar(comandaId, "en-preparacion");
+        marcar(comandaId, "listo");
+        marcar(comandaId, "listo");
+
+        assertEquals(1, buscar(codigo, "LISTO").size());
+        assertEquals("LISTO", estadoEnHistorial(codigo));
+    }
+
+    private void marcar(long comandaId, String transicion) throws Exception {
+        mockMvc.perform(post("/api/v1/comandas/" + comandaId + "/" + transicion)
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk());
+    }
+
+    private String estadoEnHistorial(String codigo) throws Exception {
+        JsonNode historial = objectMapper.readTree(mockMvc.perform(get("/api/v1/clientes/historial?page=0&size=50")
+                        .header("Authorization", "Bearer " + clienteToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        for (JsonNode n : historial.path("content")) {
+            if (codigo.equals(n.path("codigo").asText())) {
+                return n.path("estado").asText();
+            }
+        }
+        throw new AssertionError("El pedido no aparece en el historial: " + codigo);
+    }
+
     // ---------------------------------------------------------------
     // Utilidades de contexto de datos
     // ---------------------------------------------------------------
