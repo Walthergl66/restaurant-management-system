@@ -29,6 +29,15 @@ public class GeneradorComandas {
     public static final String TIPO_OUTBOX = "comanda";
     public static final String EVENTO_IMPRESION = "comanda.impresion";
 
+    /**
+     * Separador de control no imprimible. La clave de agrupación une producto,
+     * extras e ingredientes; con un separador visible ("," o "|") dos
+     * combinaciones distintas se fusionarían en una sola línea: un extra
+     * llamado "bebida,grande" y los extras "bebida" + "grande" darían el mismo
+     * texto, y la cocina recibiría un plato por dos.
+     */
+    private static final String SEPARADOR = "\u001F";
+
     private final ComandaRepository comandaRepository;
     private final OutboxRepository outboxRepository;
 
@@ -103,8 +112,8 @@ public class GeneradorComandas {
         Map<String, LineaAcumulada> agrupadas = new LinkedHashMap<>();
         for (LineaFuente l : lineas) {
             String clave = l.productoId()
-                    + "|" + normalizar(l.extras())
-                    + "|" + normalizar(l.ingredientes());
+                    + SEPARADOR + normalizar(l.extras())
+                    + SEPARADOR + normalizar(l.ingredientes());
             agrupadas.computeIfAbsent(clave, k -> new LineaAcumulada(
                             l.productoId(), l.nombreProducto(),
                             normalizar(l.extras()), normalizar(l.ingredientes())))
@@ -126,7 +135,7 @@ public class GeneradorComandas {
     private String normalizar(List<String> valores) {
         return valores == null
                 ? ""
-                : valores.stream().filter(v -> v != null && !v.isBlank()).sorted().collect(Collectors.joining(","));
+                : valores.stream().filter(v -> v != null && !v.isBlank()).sorted().collect(Collectors.joining(SEPARADOR));
     }
 
     private record LineaFuente(
