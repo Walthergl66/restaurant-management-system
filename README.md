@@ -1,61 +1,120 @@
-# restaurant-management-system
+# Sistema de Gestión de Restaurante (restaurant-management-system)
 
-Sistema integral para la gestión operativa y administrativa de un restaurante:
-productos, mesas, pedidos, comandas por área, impresión, usuarios con permisos,
-y en fases posteriores cuenta, anulaciones, cobro, facturación, caja y reportes.
+Sistema integral para la gestión operativa y administrativa de restaurantes: catálogo de productos, salones y mesas, pedidos presenciales, comandas por área de preparación, cuentas, adiciones, anulaciones, facturación, cierres de caja y auditoría.
 
-Repositorio tipo **monorepo**: cada aplicación vive en su propia carpeta con su
-propio `README.md`, `.gitignore` y `Dockerfile`.
+Repositorio estructurado como **monorepo**: cada componente reside en su propio directorio con su propia documentación, configuración y ciclo de vida independiente.
 
-## Estructura
+---
+
+## 🏗️ Estructura del Monorepo
 
 ```
 .
-├── backend/           API REST (Java 25 + Spring Boot 4.1 + PostgreSQL)
-│   ├── README.md      Guía del backend
-│   ├── Dockerfile     Imagen de producción del backend
-│   └── .gitignore     Ignorados propios del backend
-├── database-system/   Scripts/herramientas de base de datos
-├── docker-compose.yml PostgreSQL local para desarrollo
-└── frontend/          (próximamente) App web de clientes
-    mobile/            (próximamente) App móvil
+├── backend/            # API REST (Java 25 LTS + Spring Boot 4.1 + PostgreSQL)
+│   ├── Dockerfile      # Imagen Docker optimizada (Eclipse Temurin 25 JRE)
+│   ├── pom.xml         # Dependencias Maven y plugins de compilación
+│   ├── README.md       # Documentación técnica, endpoints y arquitectura modular
+│   └── src/            # Código fuente y migraciones Flyway
+├── frontend/           # Aplicación Web (Next.js 16 + React 19 + TypeScript + Tailwind)
+│   ├── package.json    # Dependencias npm y scripts de ejecución
+│   ├── README.md       # Guía de interfaz web, rutas y componentes
+│   └── src/            # Vistas (mesas, pedidos, cocina KDS, caja, auditoría)
+├── database/           # Herramientas y utilidades de base de datos
+│   ├── backups/        # Directorio local para almacenamiento de respaldos (.dump)
+│   ├── backup.sh       # Script para generar copias de seguridad de PostgreSQL
+│   ├── restore.sh      # Script para restaurar copias de seguridad
+│   └── README.md       # Documentación de motor, esquema y respaldo
+├── scripts/            # Scripts utilitarios para ejecución local
+│   ├── run-backend.sh  # Inicia el backend cargando .env y JDK local
+│   └── run-frontend.sh # Inicia el frontend instalando dependencias si faltan
+├── docs/               # Documentación complementaria (API, carga, producción)
+├── docker-compose.yml  # Configuración para ejecutar exclusivamente el Backend en Docker
+├── .env.example        # Plantilla central de variables de entorno
+└── README.md           # Guía principal del repositorio
 ```
 
-## Módulos
+---
 
-- **backend/**: API REST, contexto completo en `backend/README.md`
-  (stack, variables de entorno, pruebas y Docker).
-- **frontend/**: Pendiente.
-- **mobile/**: Pendiente.
+## ⚡ Puesta en Marcha
 
-## Requisitos de desarrollo
+### 1. Variables de Entorno
 
-- JDK 25 (Temurin) con `JAVA_HOME` configurado
-- Docker (PostgreSQL local y pruebas con Testcontainers)
-
-## Puesta en marcha
-
-Base de datos local y luego el backend:
+Copia la plantilla `.env.example` en la raíz como `.env` y ajusta las credenciales de tu PostgreSQL:
 
 ```bash
-docker compose up -d postgres
-cd backend && ./mvnw -q clean package -DskipTests && java -jar target/*.jar
+cp .env.example .env
 ```
 
-La API queda en `http://localhost:8080` (health: `/actuator/health`,
-Swagger: `/swagger-ui.html`).
+---
 
-## Producción (Fase 8)
+### 2. Backend
+
+Tienes dos opciones para ejecutar el backend:
+
+#### Opción A: Con Docker (Recomendado para contenedorizar el backend)
+
+Docker está configurado para ejecutar **únicamente** la aplicación backend:
 
 ```bash
-export JWT_SECRET="secreto-512-bits-min-32"
-export ADMIN_INITIAL_PASSWORD="admin-prod-seguro"
+docker compose up --build -d
+```
+
+- La API estará disponible en `http://localhost:8080`.
+- Healthcheck: `http://localhost:8080/actuator/health`
+- Documentación OpenAPI/Swagger: `http://localhost:8080/swagger-ui.html`
+
+Para detener el contenedor:
+
+```bash
+docker compose down
+```
+
+#### Opción B: De forma nativa con Maven
+
+```bash
+./scripts/run-backend.sh
+```
+
+---
+
+### 3. Frontend
+
+El frontend se ejecuta directamente en tu máquina con Node.js:
+
+```bash
+# Opción 1: Mediante el script utilitario
+./scripts/run-frontend.sh
+
+# Opción 2: Directamente con npm
+cd frontend
+npm install
+npm run dev
+```
+
+El frontend estará disponible en `http://localhost:3000` y redirige automáticamente las llamadas de API a `http://localhost:8080`.
+
+---
+
+### 4. Base de Datos (PostgreSQL)
+
+- **Migraciones:** Se aplican automáticamente al iniciar el backend mediante Flyway.
+- **Respaldos:**
+  ```bash
+  ./database/backup.sh
+  ```
+- **Restauración:**
+  ```bash
+  ./database/restore.sh ./database/backups/<archivo.dump>
+  ```
+
+---
+
+## 🚀 Despliegue en Producción
+
+Para entornos productivos, utiliza `docker-compose.prod.yml` que valida obligatoriamente variables seguras (`JWT_SECRET`, `ADMIN_INITIAL_PASSWORD`, `CORS_ALLOWED_ORIGINS` sin comodines):
+
+```bash
 docker compose -f docker-compose.prod.yml up --build -d
-curl http://localhost:8080/actuator/health
 ```
 
-Respaldos: `./database/backup.sh` y `./database/restore.sh ./database/backups/*.dump` (pg_dump custom, RNF-05). Docs: `docs/api.md` y `docs/carga.md`. Carga: `CargaConcurrenteTest` 50 hilos 0 duplicadas RNF-17.
-
-## CI
-
-GitHub Actions compila y ejecuta las pruebas del backend (`.github/workflows/ci.yml`).
+Consulta más detalles en [docs/produccion.md](file:///home/elpajarowtf/Documentos/octavo/INTEGRACION/restaurant-management-system/docs/produccion.md).
