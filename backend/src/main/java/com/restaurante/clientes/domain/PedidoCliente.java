@@ -108,18 +108,31 @@ public class PedidoCliente extends BaseEntity {
         this.confirmadoAt = Instant.now();
     }
 
+    /**
+     * Igual que {@link #confirmar()} en cuanto a reintentos: la cocina repite
+     * el paso de la comanda (se quedó sin red a media confirmación, o pulsó
+     * dos veces el botón), y un reintento no puede costarle el pedido al
+     * cliente. Por eso se acepta el estado que ya se pidió, igual que hace
+     * {@code Pedido} para los pedidos presenciales.
+     */
     public void marcarEnPreparacion() {
-        if (estado != EstadoPedidoCliente.CONFIRMADO) {
-            throw new BusinessRuleException("Solo CONFIRMADO -> EN_PREPARACION (actual=" + estado + ")");
+        if (estado != EstadoPedidoCliente.CONFIRMADO
+                && estado != EstadoPedidoCliente.EN_PREPARACION
+                && estado != EstadoPedidoCliente.LISTO) {
+            throw new BusinessRuleException("Solo un pedido confirmado puede pasar a preparación (estado actual: " + estado + ")");
         }
-        this.estado = EstadoPedidoCliente.EN_PREPARACION;
+        if (estado == EstadoPedidoCliente.CONFIRMADO) {
+            this.estado = EstadoPedidoCliente.EN_PREPARACION;
+        }
     }
 
     public void marcarListo() {
-        if (estado != EstadoPedidoCliente.EN_PREPARACION) {
-            throw new BusinessRuleException("Solo EN_PREPARACION -> LISTO (actual=" + estado + ")");
+        if (estado != EstadoPedidoCliente.EN_PREPARACION && estado != EstadoPedidoCliente.LISTO) {
+            throw new BusinessRuleException("Solo un pedido en preparación puede marcarse como listo (estado actual: " + estado + ")");
         }
-        this.estado = EstadoPedidoCliente.LISTO;
+        if (estado == EstadoPedidoCliente.EN_PREPARACION) {
+            this.estado = EstadoPedidoCliente.LISTO;
+        }
     }
 
     public void entregar() {
