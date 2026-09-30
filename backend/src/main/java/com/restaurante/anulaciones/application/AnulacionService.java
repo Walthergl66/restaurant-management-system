@@ -56,11 +56,19 @@ public class AnulacionService implements Anulaciones {
                 .orElseThrow(() -> new BusinessRuleException(
                         "La línea indicada no pertenece al pedido " + pedidoCodigo));
 
+        // Lo que no se puede volver a comprometer ni aprobar: las unidades ya
+        // aprobadas más las que hay en solicitudes SOLICITADA que aún no se
+        // resolvieron (rechazada o aprobada). Reservar también lo pendiente
+        // impide que dos solicitudes se peleen la misma unidad y, al aprobar
+        // la segunda, la cuenta quede con total negativo (invariante RNF-16).
         int yaAprobada = anulacionRepository.cantidadAprobada(pedidoCodigo, lineaId);
+        int yaSolicitada = anulacionRepository.cantidadSolicitada(pedidoCodigo, lineaId);
+        int comprometido = yaAprobada + yaSolicitada;
         int cantidad = request.cantidad();
-        if (yaAprobada + cantidad > linea.cantidad()) {
+        if (comprometido + cantidad > linea.cantidad()) {
             throw new BusinessRuleException(
-                    "No se puede anular más de la cantidad pedida (restante: " + (linea.cantidad() - yaAprobada) + ")");
+                    "No se puede anular más de la cantidad pedida (restante: "
+                            + (linea.cantidad() - comprometido) + ")");
         }
 
         Anulacion anulacion = new Anulacion(
