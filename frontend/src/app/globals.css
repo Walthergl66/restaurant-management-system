@@ -176,3 +176,19 @@ body {
   justify-content: center;
   padding: 16px;
 }
+
+/* ---- login page responsive ---- */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* en mobile ocultamos el panel de marca y mostramos el logo pequeño */
+@media (max-width: 680px) {
+  .login-brand-panel { display: none !important; }
+  .login-mobile-logo { display: flex !important; }
+}
+
+/* en desktop ocultamos el logo mobile */
+@media (min-width: 681px) {
+  .login-mobile-logo { display: none !important; }
+}
