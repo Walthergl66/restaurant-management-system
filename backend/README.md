@@ -76,7 +76,14 @@ set +a
 ```
 
 El archivo `.env` local está ignorado por Git. No subas credenciales al
-repositorio.
+repositorio. Genera el secreto del JWT con `openssl rand -hex 64` y ponlo en
+`JWT_SECRET`: no hay valor por defecto en ningún perfil, sin el secreto la
+aplicación se niega a arrancar en vez de firmar tokens con una clave conocida.
+
+Perfiles: no hay perfil por defecto (a propósito). `SPRING_PROFILES_ACTIVE=dev`
+para desarrollo y `=prod` para producción; prod exige `JWT_SECRET`,
+`ADMIN_INITIAL_PASSWORD`, `CORS_ALLOWED_ORIGINS` (sin `*`) y las credenciales de
+base de datos.
 
 | Variable | Default | Descripción |
 | --- | --- | --- |
@@ -86,11 +93,12 @@ repositorio.
 | `DB_USER` | `restaurante` | Usuario de BD |
 | `DB_PASSWORD` | *(obligatoria en el entorno)* | Contraseña de BD |
 | `SERVER_PORT` | `8080` | Puerto HTTP |
-| `JWT_SECRET` | *(vacío)* | Secreto HS256 32+ chars (obligatorio en prod) |
-| `JWT_EXPIRATION_MS` | `86400000` | Expiración del access token |
+| `JWT_SECRET` | *(obligatorio en todos los perfiles)* | Secreto de firma HS512, mínimo 32 chars (64+ recomendado). Sin él la app no arranca. |
+| `JWT_EXPIRATION_MS` | `3600000` | Expiración del access token (1 hora) |
 | `JWT_REFRESH_EXPIRATION_MS` | `604800000` | Expiración del refresh token |
 | `IVA_RATE` | `0.15` | Tasa de IVA (15 %, incluido en precios) |
-| `ADMIN_INITIAL_PASSWORD` | *(solo prod)* | Password inicial del usuario `admin` |
+| `ADMIN_INITIAL_PASSWORD` | `admin123` *(solo dev/test)* | Password inicial del usuario `admin`; obligatoria en prod |
+| `SPRING_PROFILES_ACTIVE` | *(sin default)* | Perfil activo (`dev` o `prod`). La app no fija perfil por defecto: sin esta variable arranca con la configuración base. |
 
 ### Usuario inicial
 
