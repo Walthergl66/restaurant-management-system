@@ -37,24 +37,37 @@ server:
   error:
     include-message: never
 
+# La documentación OpenAPI se publica solo en los perfiles que lo piden (hoy,
+# 'dev'). Motivo: la app NO tiene perfil por defecto, así que la base es la
+# configuración de una instancia a la que nadie eligió perfil, y esa instancia
+# no debe quedar más expuesta que 'prod'. En la base no se sirve nada.
 springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
   api-docs:
+    enabled: false
     path: /v3/api-docs
+  swagger-ui:
+    enabled: false
+    path: /swagger-ui.html
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        # 'env' y 'configprops' NUNCA se exponen: permitirían volcar el valor
+        # resuelto de app.jwt.secret. Solo 'health' como mínimo vital.
+        include: health
   endpoint:
     health:
-      show-details: when_authorized
+      # Sin detalles (BD, disco) ni siquiera para usuarios autenticados: los
+      # revela el perfil que lo pida, no la base.
+      show-details: never
 
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+    # Sin valor por defecto a propósito: una instancia sin perfil no acepta
+    # orígenes de navegador (fail-closed). El perfil 'dev' lo abre a '*' y
+    # 'prod' exige la variable sin comodín.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   jwt:
     secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:3600000}       # 1 hora (A-04: ventana corta)
