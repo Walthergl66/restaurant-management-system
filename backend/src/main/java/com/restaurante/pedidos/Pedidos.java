@@ -35,6 +35,15 @@ public interface Pedidos {
     Optional<PedidoResumen> pedidoConfirmado(String pedidoCodigo);
 
     /**
+     * Igual que {@link #pedidoConfirmado} pero bloqueando el pedido para
+     * escritura mientras dure la transacción. Lo usan las operaciones que
+     * recalculan un saldo agregado de sus líneas (anulaciones): sin el lock,
+     * dos resoluciones simultáneas leen el mismo saldo y ambas lo pasan por
+     * alto, con lo cual la cuenta queda descuenciada de más.
+     */
+    Optional<PedidoResumen> pedidoConfirmadoParaActualizar(String pedidoCodigo);
+
+    /**
      * Todos los pedidos no anulados de una mesa, con sus líneas.
      */
     List<PedidoResumen> pedidosDeMesa(Long mesaId);

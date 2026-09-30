@@ -207,6 +207,13 @@ public class PedidoService implements Pedidos {
     }
 
     @Override
+    public Optional<PedidoResumen> pedidoConfirmadoParaActualizar(String pedidoCodigo) {
+        return pedidoRepository.findByCodigoParaActualizar(pedidoCodigo)
+                .filter(p -> p.getEstado() != EstadoPedido.BORRADOR && p.getEstado() != EstadoPedido.ANULADO)
+                .map(this::aResumen);
+    }
+
+    @Override
     public List<PedidoResumen> pedidosDeMesa(Long mesaId) {
         return pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO).stream()
                 .map(this::aResumen)
