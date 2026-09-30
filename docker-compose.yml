@@ -11,6 +11,12 @@ services:
         required: false
     environment:
       SERVER_PORT: 8080
+      # Perfil explícito: la app ya no tiene perfil por defecto (a propósito),
+      # así que se declara aquí en lugar de depender de heredar el de .env.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      # Sin secreto la app se niega a arrancar (JwtProperties lo valida al
+      # enlazar la configuración); generálo con `openssl rand -hex 64` en backend/.env.
+      JWT_SECRET: ${JWT_SECRET:-}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     extra_hosts:
