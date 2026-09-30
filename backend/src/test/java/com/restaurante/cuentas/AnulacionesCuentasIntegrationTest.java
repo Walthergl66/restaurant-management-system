@@ -221,31 +221,61 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
      * El escenario es 1 unidad pedida y 2 solicitudes de 1: solo una puede
      * acabar APROBADA; la otra debe rebotar con 422.
      */
+    /**
+     * RNF-16 bajo concurrencia: una unidad pedida y dos meseros pidiendo su
+     * anulación a la vez. Ambas solicitudes caben por separado contra el saldo
+     * y en conjunto no, así que exactamente una debe prosperar y la otra
+     * rebotar con 422.
+     *
+     * Se repiten las carreras sobre varias líneas del mismo pedido a propósito:
+     * una sola carrera depende de que los dos hilos se pisen, algo que no está
+     * garantizado. Con cinco carreras, leer el saldo sin lock (ambas lecturas
+     * en paralelo) deja pasar la prueba solo de vez en cuando, mientras que
+     * con el lock el resultado es siempre exactamente cinco aceptadas.
+     */
     @Test
     void solicitudesConcurrentesSobreLaUltimaUnidadSoloUnaProspera() throws Exception {
+        int lineas = 5;
         long mesaId = crearMesa();
-        long productoId = crearProducto("Ajiaco", "7.00", null);
 
         String codigo = crearBorrador(mesaId);
-        MvcResult item = postItemConRespuesta(codigo, productoId, 1);
-        long lineaId = itemId(item);
+        long[] lineasId = new long[lineas];
+        for (int i = 0; i < lineas; i++) {
+            long productoId = crearProducto("Plato de Carrera " + i, "7.00", null);
+            postItem(codigo, productoId, 1);
+            // Cada producto es distinto, así que cada item abre su propia línea.
+            lineasId[i] = ultimaLinea(codigo);
+        }
         confirmar(codigo);
 
-        // Una sola unidad y dos meseros pidiendo su anulación a la vez. Ambas
-        // solicitudes caben por separado contra el saldo, y en conjunto no.
-        // Sin serializar la reserva, las dos leerían "comprometido 0" y las dos
-        // pasarían, deixando la unidad prometida dos veces; al aprobarlas, la
-        // cuenta quedaría descuenciada por debajo de lo consumido.
-        int[] estados = enParalelo(
-                () -> solicitarAnulacion(codigo, lineaId, 1, "primera"),
-                () -> solicitarAnulacion(codigo, lineaId, 1, "segunda"));
+        int aceptadas = 0;
+        for (long lineaId : lineasId) {
+            int[] estados = enParalelo(
+                    () -> solicitarAnulacion(codigo, lineaId, 1, "primera"),
+                    () -> solicitarAnulacion(codigo, lineaId, 1, "segunda"));
+            if (estados[0] == 201) {
+                aceptadas++;
+            }
+            if (estados[1] == 201) {
+                aceptadas++;
+            }
+            for (int estado : estados) {
+                assertTrue(estado == 201 || estado == 422,
+                        "Cada solicitud debe crearse (201) o rebotar por saldo (422). Fue: " + estado);
+            }
+        }
 
-        assertEquals(1, estados[0] == 201 ? 1 : 0,
-                "Solo una solicitud debe crearse, la otra rebotar con 422. Estados: "
-                        + estados[0] + " y " + estados[1]);
-        assertEquals(201, estados[1] == 201 ? 201 : 422, estados[1]);
-        assertTrue(estados[0] == 201 || estados[1] == 201,
-                "Al menos una solicitud debe prosperar: " + estados[0] + " y " + estados[1]);
+        assertEquals(lineas, aceptadas,
+                "En cada línea debe prosperar una sola de las dos solicitudes en conflicto");
+    }
+
+    private long ultimaLinea(String codigo) throws Exception {
+        MvcResult pedido = mockMvc.perform(get("/api/v1/pedidos/" + codigo)
+                        .header("Authorization", "Bearer " + administradorToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode lineas = objectMapper.readTree(pedido.getResponse().getContentAsString()).path("lineas");
+        return lineas.get(lineas.size() - 1).path("id").asLong();
     }
 
     @Test
