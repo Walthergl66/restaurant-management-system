@@ -1,4 +1,9 @@
 spring:
+  # Carga backend/.env como archivo de propiedades (gitignored). Las variables
+  # de entorno reales del sistema tienen prioridad sobre este archivo.
+  # `optional` evita fallar en Docker/CI donde no existe .env.
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: restaurant-management-system
   profiles:
