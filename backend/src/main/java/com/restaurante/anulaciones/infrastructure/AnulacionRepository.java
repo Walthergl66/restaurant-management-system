@@ -36,4 +36,16 @@ public interface AnulacionRepository extends JpaRepository<Anulacion, Long> {
             + "WHERE a.pedidoCodigo = :pedidoCodigo AND a.lineaId = :lineaId "
             + "AND a.estado = com.restaurante.anulaciones.domain.EstadoAnulacion.APROBADA")
     int cantidadAprobada(@Param("pedidoCodigo") String pedidoCodigo, @Param("lineaId") Long lineaId);
+
+    /**
+     * Cantidad comprometida en solicitudes que aún no se resolvieron
+     * (SOLICITADA). Se cuenta junto con lo aprobado para calcular el saldo
+     * anulable de una línea: si no, dos solicitudes sucesivas podrían
+     * reservarse la misma unidad y la segunda aprobación dejaría la cuenta en
+     * negativo (RF-21/RNF-16).
+     */
+    @Query("SELECT COALESCE(SUM(a.cantidad), 0) FROM Anulacion a "
+            + "WHERE a.pedidoCodigo = :pedidoCodigo AND a.lineaId = :lineaId "
+            + "AND a.estado = com.restaurante.anulaciones.domain.EstadoAnulacion.SOLICITADA")
+    int cantidadSolicitada(@Param("pedidoCodigo") String pedidoCodigo, @Param("lineaId") Long lineaId);
 }
