@@ -1,21 +1,32 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: restaurante-postgres
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: restaurante-backend
+    env_file:
+      - path: .env
+        required: false
     environment:
-      POSTGRES_DB: restaurante
-      POSTGRES_USER: restaurante
-      POSTGRES_PASSWORD: restaurante
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-restaurante}
+      DB_USER: ${DB_USER:-restaurante}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-estacion_burger_dev_secret_key_2022_neon}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-admin123}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+      SERVER_PORT: 8080
     ports:
-      - "5432:5432"
-    volumes:
-      - restaurante-pgdata:/var/lib/postgresql/data
+      - "${BACKEND_PORT:-8080}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U restaurante -d restaurante"]
-      interval: 5s
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 40s
     restart: unless-stopped
-
-volumes:
-  restaurante-pgdata:
