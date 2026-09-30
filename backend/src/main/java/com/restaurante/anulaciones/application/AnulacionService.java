@@ -95,7 +95,18 @@ public class AnulacionService implements Anulaciones {
         // pendientes). Si el saldo ya no alcanza, la cuenta quedaría con total
         // negativo, y CalculadoraCuenta lo rechazaría con un error confuso
         // en vez de un 422 claro.
-        int cantidadLinea = cantidadDeLinea(anulacion);
+        //
+        // El pedido se lee con lock pesimista: si otra transacción está
+        // resolviendo una anulación de la misma línea, esta espera y relee el
+        // saldo ya actualizado en vez de decidir sobre un valor obsoleto.
+        PedidoResumen pedido = pedidos.pedidoConfirmadoParaActualizar(anulacion.getPedidoCodigo())
+                .orElseThrow(() -> new NotFoundException(
+                        "Pedido no encontrado: " + anulacion.getPedidoCodigo()));
+        int cantidadLinea = pedido.lineas().stream()
+                .filter(l -> l.lineaId().equals(anulacion.getLineaId()))
+                .map(LineaResumen::cantidad)
+                .findFirst()
+                .orElse(0);
         int yaAprobada = anulacionRepository.cantidadAprobada(
                 anulacion.getPedidoCodigo(), anulacion.getLineaId());
         int otrasPendientes = anulacionRepository.cantidadSolicitada(
@@ -201,20 +212,7 @@ public class AnulacionService implements Anulaciones {
                 .orElseThrow(() -> new NotFoundException("Anulación " + id + " no encontrada"));
     }
 
-    /**
-     * Cantidad original de la línea anulada, leída del pedido. La anulación
-     * congela precio y producto, pero no la cantidad pedida porque esa es la
-     * que se quiere contrastar.
-     */
-    private int cantidadDeLinea(Anulacion anulacion) {
-        return pedidos.pedidoConfirmado(anulacion.getPedidoCodigo())
-                .map(pedido -> pedido.lineas().stream()
-                        .filter(l -> l.lineaId().equals(anulacion.getLineaId()))
-                        .findFirst()
-                        .map(LineaResumen::cantidad)
-                        .orElse(0))
-                .orElse(0);
-    }
+    
 
     private String usuarioActual() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
