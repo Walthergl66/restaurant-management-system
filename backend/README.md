@@ -33,10 +33,27 @@ Cada módulo vive en `com.restaurante.<modulo>` con los sub-paquetes
 
 ## Puesta en marcha (local)
 
-Desde la raíz del repo (donde está el `docker-compose.yml` con PostgreSQL):
+Tienes dos alternativas para ejecutar el backend:
+
+### Opción 1: Con Docker Compose (recomendado)
+
+Desde la raíz del repositorio:
 
 ```bash
-docker compose up -d postgres
+docker compose up --build -d
+```
+
+### Opción 2: De forma nativa con Maven
+
+Desde la raíz del repositorio utilizando el script utilitario (que carga automáticamente `.env` y el JDK):
+
+```bash
+./scripts/run-backend.sh
+```
+
+O directamente dentro del directorio `backend/`:
+
+```bash
 cd backend
 ./mvnw -q clean package -DskipTests
 java -jar target/*.jar        # o: ./mvnw spring-boot:run
