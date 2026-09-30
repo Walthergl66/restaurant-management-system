@@ -15,7 +15,13 @@ spring:
   # despliegue que no lo eligiera explícitamente. El perfil se elige solo por
   # entorno (SPRING_PROFILES_ACTIVE=dev|prod) o con -Dspring.profiles.active.
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:restaurante}
+    # La base de datos vive en otra máquina, así que la conexión cruza la red:
+    #   - sslmode=require obliga a cifrar TLS siempre (si el servidor no lo
+    #     soporta, falla en vez de degradar a texto plano). Para una instancia
+    #     local sin certificados hay que poner DB_SSLMODE=disable a mano.
+    #   - connectTimeout/socketTimeout evitan que un corte de red deje hilos del
+    #     pool bloqueados para siempre (socketTimeout=0 significa "infinito").
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:restaurante}?sslmode=${DB_SSLMODE:require}&connectTimeout=10&socketTimeout=60
     username: ${DB_USER:restaurante}
     password: ${DB_PASSWORD}
   jpa:
