@@ -6,8 +6,10 @@ spring:
     import: optional:file:.env[.properties]
   application:
     name: restaurant-management-system
-  profiles:
-    active: dev
+  # NO se fija spring.profiles.active aquí a propósito: con un perfil por
+  # defecto la app arrancaba en 'dev' (secreto y ajustes laxos) en cualquier
+  # despliegue que no lo eligiera explícitamente. El perfil se elige solo por
+  # entorno (SPRING_PROFILES_ACTIVE=dev|prod) o con -Dspring.profiles.active.
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:restaurante}
     username: ${DB_USER:restaurante}
