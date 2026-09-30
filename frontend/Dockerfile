@@ -9,7 +9,8 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# La URL del API la resuelve el proxy de Next.js en runtime; no es necesaria en build
+ARG BACKEND_URL=http://localhost:8080
+ENV BACKEND_URL=${BACKEND_URL}
 RUN npm run build
 
 # ---- runner ----

@@ -1,8 +1,8 @@
 'use client'
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { useAuthStore } from '@/store/authStore'
+import Logo from '@/components/Logo'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 
@@ -62,15 +62,9 @@ export default function LoginForm() {
         <div style={{ position:'absolute', top:'20%', left:'50%', transform:'translateX(-50%)', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.12) 0%, transparent 70%)', pointerEvents:'none' }}/>
         <div style={{ position:'absolute', bottom:'15%', left:'50%', transform:'translateX(-50%)', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.1) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
-        {/* logo — coloca tu archivo en frontend/public/logo.png */}
+        {/* Logo del sistema */}
         <div style={{ position:'relative', width:200, height:200, marginBottom:28 }}>
-          <Image
-            src="/logo.png"
-            alt="Estación Burger"
-            fill
-            style={{ objectFit:'contain', filter:'drop-shadow(0 0 24px rgba(245,166,35,.4))' }}
-            priority
-          />
+          <Logo size={200} />
         </div>
 
         <h2 style={{ fontSize:28, fontWeight:900, color:'var(--yellow)', letterSpacing:2, textAlign:'center', textShadow:'0 0 20px rgba(245,166,35,.4)' }}>
@@ -107,9 +101,7 @@ export default function LoginForm() {
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
-          <div style={{ position:'relative', width:80, height:80 }}>
-            <Image src="/logo.png" alt="Estación Burger" fill style={{ objectFit:'contain' }} priority/>
-          </div>
+          <Logo size={80} />
         </div>
 
         <h1 style={{ fontSize:26, fontWeight:900, color:'var(--yellow)', marginBottom:4, textAlign:'center' }}>

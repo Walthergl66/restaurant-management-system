@@ -59,6 +59,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        BACKEND_URL: ${BACKEND_URL:-http://backend:8080}
     container_name: restaurante-frontend
     depends_on:
       backend:
