@@ -94,8 +94,7 @@ public class ComandaService {
      * una vez: si no confirma, vuelve a aparecer en pendientes).
      */
     public void marcarEnviadaImpresion(Long id) {
-        EventoOutbox evento = outboxRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Orden de impresión " + id + " no encontrada"));
+        EventoOutbox evento = cargarOrdenDeImpresion(id);
         evento.marcarEnviado();
     }
 
@@ -103,9 +102,19 @@ public class ComandaService {
      * Marca la orden como fallida para reintentarla; el agente reporta el error.
      */
     public void marcarErrorImpresion(Long id, String motivo) {
-        EventoOutbox evento = outboxRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Orden de impresión " + id + " no encontrada"));
+        EventoOutbox evento = cargarOrdenDeImpresion(id);
         evento.marcarFallido(motivo);
+    }
+
+    /**
+     * El outbox es una tabla compartida con otros módulos (las notificaciones
+     * de estado de la app del cliente), así que la orden de impresión se
+     * busca acotando por su tipo. Sin el filtro, un acknowledgment podía
+     * marcar como enviado el evento de otro módulo y perder la notificación.
+     */
+    private EventoOutbox cargarOrdenDeImpresion(Long id) {
+        return outboxRepository.findByTipoAndId(GeneradorComandas.TIPO_OUTBOX, id)
+                .orElseThrow(() -> new NotFoundException("Orden de impresión " + id + " no encontrada"));
     }
 
     private Comanda cargar(Long id) {
