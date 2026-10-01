@@ -136,12 +136,21 @@ public class UsuarioService implements Usuarios {
     @Override
     @Transactional(readOnly = true)
     public Optional<UsuarioResumen> porUsername(String username) {
-        return usuarioRepository.findByUsername(username)
-                .map(u -> new UsuarioResumen(
-                        u.getId(),
-                        u.getUsername(),
-                        u.getNombre(),
-                        u.getRol() != null ? u.getRol().getCodigo() : null,
-                        u.isActivo()));
+        return usuarioRepository.findByUsername(username).map(this::resumen);
+    }
+
+    @Override
+    @Transactional
+    public Optional<UsuarioResumen> porUsernameBloqueado(String username) {
+        return usuarioRepository.findBloqueadoPorUsername(username).map(this::resumen);
+    }
+
+    private UsuarioResumen resumen(Usuario u) {
+        return new UsuarioResumen(
+                u.getId(),
+                u.getUsername(),
+                u.getNombre(),
+                u.getRol() != null ? u.getRol().getCodigo() : null,
+                u.isActivo());
     }
 }
