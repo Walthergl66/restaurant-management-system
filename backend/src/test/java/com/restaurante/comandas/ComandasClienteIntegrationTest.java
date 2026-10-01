@@ -1,8 +1,12 @@
 package com.restaurante.comandas;
 
 import com.restaurante.AbstractIntegracionApi;
+import com.restaurante.clientes.PedidoClienteEventos;
+import com.restaurante.shared.outbox.EstadoOutbox;
+import com.restaurante.shared.outbox.OutboxRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
@@ -27,6 +31,9 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
     private String administradorToken;
     private String cocineroToken;
     private String clienteToken;
+
+    @Autowired
+    private OutboxRepository outboxRepository;
 
     @BeforeEach
     void preparar() {
@@ -144,6 +151,46 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
 
         assertEquals(1, buscar(codigo, "LISTO").size());
         assertEquals("LISTO", estadoEnHistorial(codigo));
+    }
+
+    /**
+     * El outbox es una tabla compartida: además de las órdenes de impresión,
+     * guarda los avisos de cambio de estado de la app del cliente. El
+     * acknowledgment del agente de impresión solo puede tocar los suyos; si
+     * alcanzara un aviso ajeno, el cliente dejaría de recibir la notificación
+     * de su pedido.
+     */
+    @Test
+    void elAgenteNoPuedeAcknowledgearEventosDeOtroModulo() throws Exception {
+        long area = crearArea("Cocina Shared " + System.nanoTime() % 100000);
+        long producto = crearProductoConArea("Plato Shared", "5.00", area);
+
+        String codigo = "CLI-SHARED-" + System.nanoTime();
+        String idem = "idem-shared-" + System.nanoTime();
+        crearPedidoCliente(codigo, idem, producto);
+        confirmarCliente(codigo, idem);
+
+        // Aviso de estado que pertenece al módulo de clientes
+        long avisoId = outboxRepository
+                .findByTipoAndAgregadoIdAndEvento(
+                        PedidoClienteEventos.TIPO_ESTADO, codigo, PedidoClienteEventos.EVENTO_ESTADO)
+                .orElseThrow(() -> new AssertionError("No se generó el aviso de estado"))
+                .getId();
+
+        // El endpoint de impresión no lo alcanza
+        mockMvc.perform(post("/api/v1/comandas/impresion/" + avisoId + "/enviado")
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isNotFound());
+
+        // Sigue pendiente para su propio difusor
+        assertEquals(EstadoOutbox.PENDIENTE,
+                outboxRepository.findById(avisoId).orElseThrow().getEstado());
+
+        // Y una orden de impresión real sí se acknowledgea
+        long ordenId = buscarPendientes(codigo).path(0).path("id").asLong();
+        mockMvc.perform(post("/api/v1/comandas/impresion/" + ordenId + "/enviado")
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk());
     }
 
     private void marcar(long comandaId, String transicion) throws Exception {
