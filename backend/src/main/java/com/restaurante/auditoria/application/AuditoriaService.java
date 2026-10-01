@@ -13,9 +13,10 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Historial de operaciones (RF-52). El registro se hace SIEMPRE en una
- * transacción propia ({@code REQUIRES_NEW}) para que la auditoría quede
- * aunque la transacción del negocio se revierta (RNF-10/RNF-11).
+ * Historial de operaciones (RF-52). El registro se hace en una transacción
+ * propia ({@code REQUIRES_NEW}) porque el listener que lo dispara yaruns tras
+ * el commit del negocio ({@code AFTER_COMMIT}): así la escritura no depende de
+ * la transacción original y un fallo al auditar no invalida el commit (RNF-10/RNF-11).
  */
 @Service
 @Transactional
