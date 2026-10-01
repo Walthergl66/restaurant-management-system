@@ -5,8 +5,9 @@ import com.restaurante.pagos.CuentaCobrada;
 import com.restaurante.pedidos.PedidoCancelado;
 import com.restaurante.pedidos.PedidoConfirmado;
 import com.restaurante.pedidos.PedidoCreado;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
@@ -16,7 +17,12 @@ import java.util.Map;
 /**
  * Escucha los eventos de negocio publicados por otros módulos (vía paquetes
  * raíz, sin violar Modulith) y los registra en el historial de auditoría.
- * La escritura va en una transacción aparte (REQUIRES_NEW en el servicio).
+ * <p>
+ * La escucha es {@code AFTER_COMMIT}: el historial debe reflejar lo que
+ * realmente ocurrió, no lo que se intentó. Con un listener síncrono normal el
+ * registro entraba en su propia transacción ({@code REQUIRES_NEW}) y quedaba
+ * aunque el negocio se revirtiera después, de modo que un cobro o un pedido
+ * anulado aparecían como aplicados en el historial (RNF-10/RNF-11).
  */
 @Component
 public class EventosAuditables {
@@ -31,25 +37,25 @@ public class EventosAuditables {
         this.objectMapper = objectMapper;
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPedidoCreado(PedidoCreado evento) {
         auditoria.registrar("PEDIDO_CREADO", "PEDIDO", evento.pedidoCodigo(),
                 json(Map.of("mesaId", String.valueOf(evento.mesaId()))));
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPedidoConfirmado(PedidoConfirmado evento) {
         auditoria.registrar("PEDIDO_CONFIRMADO", "PEDIDO", evento.pedidoCodigo(),
                 json(Map.of("lineas", String.valueOf(evento.lineas().size()))));
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPedidoCancelado(PedidoCancelado evento) {
         auditoria.registrar("PEDIDO_CANCELADO", "PEDIDO", evento.pedidoCodigo(),
                 json(Map.of("mesaId", String.valueOf(evento.mesaId()))));
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAnulacionAprobada(AnulacionAprobada evento) {
         BigDecimal monto = evento.precioUnitario().multiply(BigDecimal.valueOf(evento.cantidad()));
         Map<String, String> detalle = new LinkedHashMap<>();
@@ -61,7 +67,7 @@ public class EventosAuditables {
                 json(detalle));
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCuentaCobrada(CuentaCobrada evento) {
         StringBuilder pagos = new StringBuilder();
         for (CuentaCobrada.PagoResumen p : evento.pagos()) {
