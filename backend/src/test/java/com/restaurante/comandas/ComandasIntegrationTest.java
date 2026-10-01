@@ -1,13 +1,20 @@
 package com.restaurante.comandas;
 
 import com.restaurante.AbstractIntegracionApi;
+import com.restaurante.comandas.application.ComandaService;
+import com.restaurante.comandas.domain.Comanda;
+import com.restaurante.comandas.infrastructure.ComandaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +34,15 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     private String cocineroToken;
     private String meseroToken;
     private String administradorToken;
+
+    @Autowired
+    private ComandaRepository comandaRepository;
+
+    @Autowired
+    private ComandaService comandaService;
+
+    @Autowired
+    private TransactionTemplate transacciones;
 
     @BeforeEach
     void preparar() {
@@ -245,6 +261,75 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         assertEquals("LISTO", estadoComanda(comandaCancelId));
         // El pedido sigue LISTO
         assertEquals("LISTO", estadoPedido(codigo));
+    }
+
+    /**
+     * Un pedido con dos áreas (Cocina y Barra) se marca en preparación desde
+     * dos tablets a la vez. Con el lock, la segunda transacción espera a la
+     * primera y ve su cambio ya confirmado: el pedido termina EN_PREPARACION.
+     * Sin el lock, cada una lee el cambio de la otra sin commitear (READ
+     * COMMITTED), ninguna ve las dos áreas listas y el pedido se queda en
+     * CONFIRMADO para siempre.
+     */
+    @Test
+    void dosAreasMarcadasALaVezNoDejanElPedidoSinAvanzar() throws Exception {
+        long areaCocina = crearArea("Cocina lock " + System.nanoTime() % 100000);
+        long areaBarra = crearArea("Barra lock " + System.nanoTime() % 100000);
+        long productoA = crearProductoConArea("Lomo lock", "10.00", areaCocina);
+        long productoB = crearProductoConArea("Jugo lock", "3.00", areaBarra);
+        long mesaId = crearMesa();
+        String codigo = "LOCK-" + System.nanoTime();
+        crearBorrador(mesaId, codigo);
+        postItem(codigo, productoA, 1, null, null, null);
+        postItem(codigo, productoB, 1, null, null, null);
+        confirmar(codigo, "key-lock-" + System.nanoTime());
+
+        JsonNode comandas = buscar(codigo, null);
+        assertEquals(2, comandas.size(), "una comanda por área");
+        long idCocina = comandas.get(0).path("id").asLong();
+
+        CountDownLatch bloqueando = new CountDownLatch(1);
+        CountDownLatch puedeSeguir = new CountDownLatch(1);
+
+        Thread primera = new Thread(() -> transacciones.executeWithoutResult(tx -> {
+            List<Comanda> areas = comandaRepository.findPorPedidoParaActualizar(codigo);
+            Comanda cocina = areas.stream()
+                    .filter(c -> c.getId() == idCocina)
+                    .findFirst().orElseThrow();
+            cocina.marcarEnPreparacion();
+            comandaRepository.save(cocina);
+            bloqueando.countDown();
+            esperarLatch(puedeSeguir);
+        }));
+
+        long idBarra = comandas.get(1).path("id").asLong();
+        Thread segunda = new Thread(() -> comandaService.marcarEnPreparacion(idBarra));
+
+        primera.start();
+        assertTrue(bloqueando.await(10, TimeUnit.SECONDS), "la primera no llegó a bloquear");
+        segunda.start();
+        // Con el lock la segunda queda esperando; sin él alcanza a decidir con
+        // la foto vieja durante esta pausa, antes de que la primera commitee.
+        Thread.sleep(500);
+        puedeSeguir.countDown();
+        primera.join(30_000);
+        segunda.join(30_000);
+
+        mockMvc.perform(get("/api/v1/pedidos/" + codigo)
+                        .header("Authorization", "Bearer " + meseroToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("EN_PREPARACION"));
+    }
+
+    private void esperarLatch(CountDownLatch latch) {
+        try {
+            if (!latch.await(15, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("La transacción no continuó a tiempo");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+        }
     }
 
     private long comandaDe(String codigo, String tipo) throws Exception {
