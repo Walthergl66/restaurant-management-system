@@ -10,6 +10,13 @@ public interface Usuarios {
 
     Optional<UsuarioResumen> porUsername(String username);
 
+    /**
+     * Usuario bloqueado para escritura (PESSIMISTIC_WRITE). Solo para
+     *  serializar operaciones de creación obligatorias por unicidad entre
+     *  módulos.
+     */
+    Optional<UsuarioResumen> porUsernameBloqueado(String username);
+
     record UsuarioResumen(Long id, String username, String nombre, String rolCodigo, boolean activo) {
     }
 }
