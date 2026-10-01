@@ -54,14 +54,14 @@ public class ComandaService {
     }
 
     public ComandaResponse marcarEnPreparacion(Long id) {
-        Comanda comanda = cargar(id);
+        Comanda comanda = cargarConAreasBloqueadas(id);
         comanda.marcarEnPreparacion();
         avanzarSiTodoElPedidoAvanza(comanda, false);
         return ComandaResponse.from(comanda);
     }
 
     public ComandaResponse marcarListo(Long id) {
-        Comanda comanda = cargar(id);
+        Comanda comanda = cargarConAreasBloqueadas(id);
         comanda.marcarListo();
         avanzarSiTodoElPedidoAvanza(comanda, true);
         return ComandaResponse.from(comanda);
@@ -111,6 +111,19 @@ public class ComandaService {
     private Comanda cargar(Long id) {
         return comandaRepository.findByIdConLineas(id)
                 .orElseThrow(() -> new NotFoundException("Comanda " + id + " no encontrada"));
+    }
+
+    /**
+     * Carga la comanda y bloquea para escritura todas las comandas de su pedido
+     * antes de mutarla. Sin el lock, dos áreas marcadas a la vez leen la una el
+     * cambio sin commitear de la otra (READ COMMITTED), ninguna ve el pedido
+     * completo y el pedido no avanza nunca. El lock se toma antes de cambiar el
+     * estado para que dos transacciones no se pisen al bloquear.
+     */
+    private Comanda cargarConAreasBloqueadas(Long id) {
+        Comanda comanda = cargar(id);
+        comandaRepository.findPorPedidoParaActualizar(comanda.getPedidoCodigo());
+        return comanda;
     }
 
     /**
