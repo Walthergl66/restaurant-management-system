@@ -293,33 +293,24 @@ public class ClientesService implements Clientes {
         return toSPI(dir);
     }
 
+    /**
+     * Resuelve (o crea) el cliente del usuario autenticado (RF-42). La fila
+     * del usuario se bloquea en escritura para todo el ciclo comprobar-crear:
+     * sin el lock, dos peticiones concurrentes del mismo usuario pasan a la
+     * vez el "no existe cliente", ambas insertan y una revienta con violación
+     * de la clave única {@code usuario_id} (error interno en el checkout).
+     */
     @Override
+    @Transactional
     public Long resolverClienteId(String username) {
-        var usuario = usuarios.porUsername(username)
+        var usuario = usuarios.porUsernameBloqueado(username)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado: " + username));
         Long usuarioId = usuario.id();
         Optional<Cliente> opt = clienteRepository.findByUsuarioId(usuarioId);
         if (opt.isPresent()) {
             return opt.get().getId();
         }
-        // Crear cliente on-the-fly (RF-42) con valores únicos determinísticos
-        String base = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-        String cedula = "C" + usuarioId + "-" + base.substring(0, 4);
-        String telefono = "09" + base.substring(0, 8);
-        // Asegurar unicidad en caso de colisión (hasta 5 intentos)
-        int intentos = 0;
-        while (clienteRepository.findByCedula(cedula).isPresent() && intentos < 5) {
-            base = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-            cedula = "C" + usuarioId + "-" + base.substring(0, 4);
-            intentos++;
-        }
-        intentos = 0;
-        while (clienteRepository.findByTelefono(telefono).isPresent() && intentos < 5) {
-            base = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-            telefono = "09" + base.substring(0, 8);
-            intentos++;
-        }
-        Cliente nuevo = new Cliente(usuarioId, cedula, telefono, usuario.nombre());
+        Cliente nuevo = new Cliente(usuarioId, cedulaLibre(usuarioId), telefonoLibre(), usuario.nombre());
         Cliente guardado = clienteRepository.saveAndFlush(nuevo);
         Long id = guardado.getId();
         if (id == null) {
@@ -329,6 +320,32 @@ public class ClientesService implements Clientes {
                     .getId();
         }
         return id;
+    }
+
+    /** Cédula única con el usuario como prefijo. Si se agota el espacio de
+     *  sufijos se falla en voz alta en vez de insertar una cédula repetida. */
+    private String cedulaLibre(Long usuarioId) {
+        for (int intento = 0; intento < 100; intento++) {
+            String cedula = "C" + usuarioId + "-" + aleatorio(4);
+            if (clienteRepository.findByCedula(cedula).isEmpty()) {
+                return cedula;
+            }
+        }
+        throw new IllegalStateException("No se pudo generar una cédula única para el usuario " + usuarioId);
+    }
+
+    private String telefonoLibre() {
+        for (int intento = 0; intento < 100; intento++) {
+            String telefono = "09" + aleatorio(8);
+            if (clienteRepository.findByTelefono(telefono).isEmpty()) {
+                return telefono;
+            }
+        }
+        throw new IllegalStateException("No se pudo generar un teléfono único para un cliente nuevo");
+    }
+
+    private static String aleatorio(int largo) {
+        return java.util.UUID.randomUUID().toString().replace("-", "").substring(0, largo);
     }
 
     /** A-01: un pedido solo es operable por su propietario. 404 (no 403) para
