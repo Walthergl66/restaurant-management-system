@@ -1,7 +1,9 @@
 package com.restaurante.usuarios.infrastructure;
 
 import com.restaurante.usuarios.domain.Usuario;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -10,6 +12,17 @@ import java.util.Optional;
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByUsername(String username);
+
+    /**
+     * Usuario con la fila bloqueada en escritura. Lo usa el módulo de
+     * clientes para serializar la creación on-the-fly del cliente (RF-42):
+     * sin el lock, dos peticiones concurrentes del mismo usuario pasan a la
+     * vez el "no existe cliente" y ambas insertan, y una revienta con
+     * violación de la clave única {@code usuario_id}.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from Usuario u where u.username = :username")
+    Optional<Usuario> findBloqueadoPorUsername(@Param("username") String username);
 
     Optional<Usuario> findByUsernameAndActivoTrue(String username);
 
