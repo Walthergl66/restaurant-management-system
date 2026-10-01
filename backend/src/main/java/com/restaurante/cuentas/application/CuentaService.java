@@ -51,11 +51,13 @@ public class CuentaService implements Cuentas {
     }
 
     /**
-     * Abre la cuenta del turno de la mesa (o reutiliza la abierta). Idempotente.
+     * Abre la cuenta del turno de la mesa (o reutiliza la abierta) y liga el
+     * pedido a ella. Idempotente.
      */
     @EventListener
     public void alCrearPedido(PedidoCreado evento) {
-        abrirParaMesa(evento.mesaId());
+        Cuenta cuenta = abrirParaMesa(evento.mesaId());
+        pedidos.asignarCuenta(evento.pedidoCodigo(), cuenta.getId());
     }
 
     /**
@@ -69,10 +71,9 @@ public class CuentaService implements Cuentas {
         }
     }
 
-    private void abrirParaMesa(Long mesaId) {
-        if (cuentaRepository.findByMesaIdAndEstado(mesaId, EstadoCuenta.ABIERTA).isEmpty()) {
-            cuentaRepository.save(new Cuenta(mesaId));
-        }
+    private Cuenta abrirParaMesa(Long mesaId) {
+        return cuentaRepository.findByMesaIdAndEstado(mesaId, EstadoCuenta.ABIERTA)
+                .orElseGet(() -> cuentaRepository.save(new Cuenta(mesaId)));
     }
 
     private void cerrarAbiertaDeMesa(Long mesaId) {
@@ -125,7 +126,7 @@ public class CuentaService implements Cuentas {
 
     private Cuenta cerrarValidando(Long id) {
         Cuenta cuenta = cargar(id);
-        boolean hayBorradores = pedidos.pedidosDeMesa(cuenta.getMesaId()).stream()
+        boolean hayBorradores = pedidos.pedidosDeCuenta(cuenta.getId()).stream()
                 .anyMatch(p -> "BORRADOR".equals(p.estado()));
         if (hayBorradores) {
             throw new BusinessRuleException(
@@ -160,7 +161,7 @@ public class CuentaService implements Cuentas {
     }
 
     private CuentaResponse aRespuesta(Cuenta cuenta) {
-        List<PedidoResumen> pedidosQueCuentan = pedidos.pedidosConfirmadosDeMesa(cuenta.getMesaId());
+        List<PedidoResumen> pedidosQueCuentan = pedidos.pedidosConfirmadosDeCuenta(cuenta.getId());
         List<String> codigos = pedidosQueCuentan.stream().map(PedidoResumen::codigo).toList();
         List<AnulacionResumen> aprobadas = anulaciones.aprobadasDe(codigos);
         Money total = calculadora.total(pedidosQueCuentan, aprobadas);
