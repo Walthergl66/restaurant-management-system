@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.time.Instant;
 
@@ -58,6 +59,15 @@ public class EventoOutbox extends BaseEntity {
 
     @Column(name = "procesada_at")
     private Instant procesadaAt;
+
+    /**
+     * Versión optimista: el agente de impresión y el difusor de estados
+     * pueden acknowledgear el mismo evento a la vez. Sin ella, la segunda
+     * escritura pisa a la primera y se pierde el conteo de intentos.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     protected EventoOutbox() {
     }
