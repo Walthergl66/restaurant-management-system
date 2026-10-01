@@ -24,6 +24,13 @@ public interface OutboxRepository extends JpaRepository<EventoOutbox, Long> {
 
     Optional<EventoOutbox> findByTipoAndAgregadoIdAndEvento(String tipo, String agregadoId, String evento);
 
+    /**
+     * Evento de un tipo concreto. El outbox es una tabla compartida, así que
+     * cada módulo debe acotar por su {@code tipo}: sin el filtro, un
+     * acknowledgment puede marcar como enviado un evento que no es suyo.
+     */
+    Optional<EventoOutbox> findByTipoAndId(String tipo, Long id);
+
     /** Órdenes en un estado con antigüedad mayor o igual al corte (monitoreo). */
     @Query("select count(o) from EventoOutbox o where o.estado = :estado and o.creadaAt <= :corte")
     long contarPorEstadoAntesDe(EstadoOutbox estado, Instant corte);
