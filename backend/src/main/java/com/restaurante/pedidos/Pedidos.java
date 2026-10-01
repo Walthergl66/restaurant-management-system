@@ -49,10 +49,23 @@ public interface Pedidos {
     List<PedidoResumen> pedidosDeMesa(Long mesaId);
 
     /**
-     * Pedidos de la mesa que ya cuentan para la cuenta (confirmados o más
-     * avanzados; se excluyen borradores y anulados).
+     * Liga el pedido a la cuenta del turno. Lo invoca el módulo de cuentas al
+     * abrir (o reutilizar) la cuenta de la mesa, de modo que la pertenencia
+     * pedido→cuenta quede fijada en el momento de crear el pedido.
      */
-    List<PedidoResumen> pedidosConfirmadosDeMesa(Long mesaId);
+    void asignarCuenta(String pedidoCodigo, Long cuentaId);
+
+    /**
+     * Pedidos de la cuenta (no anulados, con sus líneas).
+     */
+    List<PedidoResumen> pedidosDeCuenta(Long cuentaId);
+
+    /**
+     * Pedidos de la cuenta que ya cuentan para su total (confirmados o más
+     * avanzados; se excluyen borradores y anulados). Es lo que permite que una
+     * cuenta cierre y otra empiece en la misma mesa sin sumar lo ya cobrado.
+     */
+    List<PedidoResumen> pedidosConfirmadosDeCuenta(Long cuentaId);
 
     /**
      * True si la mesa tiene otro pedido no anulado distinto del indicado.

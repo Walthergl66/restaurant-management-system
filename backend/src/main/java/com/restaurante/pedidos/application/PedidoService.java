@@ -221,8 +221,22 @@ public class PedidoService implements Pedidos {
     }
 
     @Override
-    public List<PedidoResumen> pedidosConfirmadosDeMesa(Long mesaId) {
-        return pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO).stream()
+    public void asignarCuenta(String pedidoCodigo, Long cuentaId) {
+        Pedido pedido = pedidoRepository.findByCodigo(pedidoCodigo)
+                .orElseThrow(() -> new NotFoundException("Pedido " + pedidoCodigo + " no encontrado"));
+        pedido.asignarCuenta(cuentaId);
+    }
+
+    @Override
+    public List<PedidoResumen> pedidosDeCuenta(Long cuentaId) {
+        return pedidoRepository.findByCuentaIdAndEstadoNot(cuentaId, EstadoPedido.ANULADO).stream()
+                .map(this::aResumen)
+                .toList();
+    }
+
+    @Override
+    public List<PedidoResumen> pedidosConfirmadosDeCuenta(Long cuentaId) {
+        return pedidoRepository.findByCuentaIdAndEstadoNot(cuentaId, EstadoPedido.ANULADO).stream()
                 .filter(p -> p.getEstado() != EstadoPedido.BORRADOR)
                 .map(this::aResumen)
                 .toList();

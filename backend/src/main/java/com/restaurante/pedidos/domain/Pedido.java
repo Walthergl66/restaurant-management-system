@@ -40,6 +40,15 @@ public class Pedido extends AuditableEntity {
     @Column(name = "mesa_id")
     private Long mesaId;
 
+    /**
+     * Cuenta del turno a la que pertenece el pedido. La fija el módulo de
+     * cuentas al abrirse la cuenta y no se cambia: dos turnos de la misma mesa
+     * nunca comparten pedidos, así que el total de una cuenta no suma lo ya
+     * cobrado en otra.
+     */
+    @Column(name = "cuenta_id")
+    private Long cuentaId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoPedido estado = EstadoPedido.BORRADOR;
@@ -132,6 +141,20 @@ public class Pedido extends AuditableEntity {
         this.estado = EstadoPedido.ENTREGADO;
     }
 
+    /**
+     * Liga el pedido a la cuenta del turno. Idempotente mientras sea la misma
+     * cuenta; un pedido no puede migrar de una cuenta a otra.
+     */
+    public void asignarCuenta(Long cuentaId) {
+        if (cuentaId == null) {
+            throw new BusinessRuleException("La cuenta del pedido es obligatoria");
+        }
+        if (this.cuentaId != null && !this.cuentaId.equals(cuentaId)) {
+            throw new BusinessRuleException("El pedido ya pertenece a otra cuenta");
+        }
+        this.cuentaId = cuentaId;
+    }
+
     public Money totalLineas() {
         return lineas.stream()
                 .map(PedidoLinea::subtotal)
@@ -177,6 +200,10 @@ public class Pedido extends AuditableEntity {
 
     public Long getMesaId() {
         return mesaId;
+    }
+
+    public Long getCuentaId() {
+        return cuentaId;
     }
 
     public EstadoPedido getEstado() {

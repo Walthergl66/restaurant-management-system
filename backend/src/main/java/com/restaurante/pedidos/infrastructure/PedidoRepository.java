@@ -63,6 +63,14 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByMesaIdAndEstadoNot(Long mesaId, EstadoPedido estado);
 
     /**
+     * Pedidos no anulados de una cuenta, con sus líneas, para totalizarla. A
+     * diferencia de la mesa, una cuenta abarca un solo turno: es lo que evita
+     * que el total sume pedidos ya cobrados en otro turno.
+     */
+    @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
+    List<Pedido> findByCuentaIdAndEstadoNot(Long cuentaId, EstadoPedido estado);
+
+    /**
      * Pedidos vendibles del período (sin borradores ni anulados), con sus
      * líneas, para el reporte de ventas por producto (RF-51). El filtro va en
      * la base de datos, no en memoria.
