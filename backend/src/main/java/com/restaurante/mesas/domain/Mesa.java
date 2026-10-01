@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 /**
  * Mesa del salón. Su estado cambia en este único lugar: los pedidos (Fase 3)
@@ -31,6 +32,17 @@ public class Mesa extends AuditableEntity {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    /**
+     * Versión optimista: el estado de la mesa se muta desde varias rutas
+     * (PATCH de estado, ocupar al crear un pedido, liberar al cancelar el
+     * último borrador y liberar al cobrar). Sin ella, dos escrituras
+     * concurrentes se pisan — el cajero libera la mesa mientras el mesero
+     * la ocupa — y queda LIBRE con un pedido confirmado encima.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     protected Mesa() {
     }
