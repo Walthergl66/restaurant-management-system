@@ -445,6 +445,54 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
         assertTrue(cuentas.contains("\"estado\":\"ABIERTA\""), "Cuenta inválida tras cancelar adición: " + cuentas);
     }
 
+    /**
+     * La cuenta pertenece a un turno, no a la mesa. Turno 1 se cierra (tras
+     * cobrarse) y el turno 2 abre una cuenta nueva en la misma mesa: su total
+     * NO debe sumar lo ya cobrado del turno 1. Antes el total se calculaba con
+     * todos los pedidos no anulados de la mesa, así que el turno 2 cobraba dos
+     * veces el turno 1.
+     */
+    @Test
+    void laCuentaDeUnTurnoNoSumaLoCobradoEnElTurnoAnterior() throws Exception {
+        long mesaId = crearMesa();
+        long sopa = crearProducto("Sopa turno", "6.00", null);
+        long jugo = crearProducto("Jugo turno", "2.00", null);
+
+        // --- Turno 1 ---
+        String primero = crearBorrador(mesaId);
+        postItem(primero, sopa, 2);
+        confirmar(primero);
+        long cuenta1 = cuentaAbiertaDe(mesaId);
+        obtenerCuenta(cuenta1)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(12.00));
+
+        // Cerrar la cuenta libera la mesa: empieza el turno 2
+        mockMvc.perform(patch("/api/v1/cuentas/" + cuenta1 + "/cerrar")
+                        .header("Authorization", "Bearer " + cajeroToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("CERRADA"));
+
+        // --- Turno 2, misma mesa ---
+        String segundo = crearBorrador(mesaId);
+        postItem(segundo, jugo, 3);
+        confirmar(segundo);
+
+        long cuenta2 = cuentaAbiertaDe(mesaId);
+        assertTrue(cuenta2 != cuenta1, "el turno 2 debe abrir su propia cuenta");
+
+        obtenerCuenta(cuenta2)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(6.00))
+                .andExpect(jsonPath("$.pedidos.length()").value(1));
+
+        // La cuenta cerrada conserva su propio total, sin recalcular con la mesa
+        obtenerCuenta(cuenta1)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(12.00))
+                .andExpect(jsonPath("$.pedidos.length()").value(1));
+    }
+
     // --- utilidades ---
 
     private void postItem(String codigo, long productoId, int cantidad) throws Exception {
