@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
  * varios pagos, uno por método, cuya suma cubre el total de la cuenta.
  */
 @Entity
-@Table(name = "pagos")
+@Table(name = "pagos", schema = "tesoreria")
 public class Pago extends AuditableEntity {
 
     @Column(name = "cuenta_id", nullable = false)

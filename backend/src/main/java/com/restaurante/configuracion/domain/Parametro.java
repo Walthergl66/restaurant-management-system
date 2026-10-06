@@ -14,7 +14,7 @@ import java.math.BigDecimal;
  * Parámetro de configuración del restaurante (clave/valor tipado).
  */
 @Entity
-@Table(name = "parametros")
+@Table(name = "parametros", schema = "configuracion")
 public class Parametro extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 60)

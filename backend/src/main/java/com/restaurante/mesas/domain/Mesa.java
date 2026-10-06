@@ -14,7 +14,7 @@ import jakarta.persistence.Version;
  * la ocupan o liberan llamando a {@link #ocupar()} y {@link #liberar()}.
  */
 @Entity
-@Table(name = "mesas")
+@Table(name = "mesas", schema = "catalogo")
 public class Mesa extends AuditableEntity {
 
     @Column(nullable = false, unique = true)

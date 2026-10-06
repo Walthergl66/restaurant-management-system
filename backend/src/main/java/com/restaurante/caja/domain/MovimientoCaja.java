@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
  * solo-inserción; los cierres se concilian contra la suma de movimientos.
  */
 @Entity
-@Table(name = "caja_movimientos")
+@Table(name = "caja_movimientos", schema = "tesoreria")
 public class MovimientoCaja extends AuditableEntity {
 
     @Column(name = "caja_id", nullable = false)

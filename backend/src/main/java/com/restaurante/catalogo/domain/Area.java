@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
  * Área de preparación: divide las comandas (cocina, barra, postres...).
  */
 @Entity
-@Table(name = "areas")
+@Table(name = "areas", schema = "catalogo")
 public class Area extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 80)

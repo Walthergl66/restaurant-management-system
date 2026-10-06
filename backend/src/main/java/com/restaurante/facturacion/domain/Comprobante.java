@@ -13,7 +13,7 @@ import java.time.Instant;
  * emisión: no hay edición de comprobantes.
  */
 @Entity
-@Table(name = "comprobantes")
+@Table(name = "comprobantes", schema = "tesoreria")
 public class Comprobante extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 20)

@@ -17,7 +17,7 @@ import java.util.Objects;
  * garantiza que reintentar confirmar no duplique la comanda ni la impresión.
  */
 @Entity
-@Table(name = "confirmaciones")
+@Table(name = "confirmaciones", schema = "operaciones")
 public class Confirmacion extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

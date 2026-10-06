@@ -16,7 +16,7 @@ import java.util.UUID;
  * un robo de la base no sirva directamente. Admite revocación.
  */
 @Entity
-@Table(name = "refresh_tokens")
+@Table(name = "refresh_tokens", schema = "seguridad")
 public class RefreshToken extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

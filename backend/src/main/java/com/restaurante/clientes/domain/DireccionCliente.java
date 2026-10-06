@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 @Entity
-@Table(name = "clientes_direcciones")
+@Table(name = "clientes_direcciones", schema = "comercial")
 public class DireccionCliente extends BaseEntity {
 
     @Column(name = "cliente_id", nullable = false)

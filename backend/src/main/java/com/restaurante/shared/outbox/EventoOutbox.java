@@ -20,7 +20,7 @@ import java.time.Instant;
  * sin crear ciclos de dependencia (RNF-17).
  */
 @Entity
-@Table(name = "outbox")
+@Table(name = "outbox", schema = "auditoria")
 public class EventoOutbox extends BaseEntity {
 
     @Column(nullable = false, length = 40)

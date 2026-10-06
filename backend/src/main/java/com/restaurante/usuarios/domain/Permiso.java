@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
  * (ej. {@code pedidos:confirmar}).
  */
 @Entity
-@Table(name = "permisos")
+@Table(name = "permisos", schema = "seguridad")
 public class Permiso extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 60)

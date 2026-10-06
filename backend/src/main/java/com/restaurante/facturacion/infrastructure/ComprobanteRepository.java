@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> {
 
-    @Query(value = "SELECT nextval('seq_correlativo_comprobante')", nativeQuery = true)
+    @Query(value = "SELECT nextval('tesoreria.seq_correlativo_comprobante')", nativeQuery = true)
     Long siguienteSecuencial();
 
     List<Comprobante> findByFechaBetween(Instant desde, Instant hasta);

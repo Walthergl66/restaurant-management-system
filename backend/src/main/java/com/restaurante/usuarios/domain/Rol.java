@@ -16,7 +16,7 @@ import java.util.Set;
  * Rol de acceso. Agrupa permisos que se conceden a los usuarios.
  */
 @Entity
-@Table(name = "roles")
+@Table(name = "roles", schema = "seguridad")
 public class Rol extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 30)
@@ -29,8 +29,7 @@ public class Rol extends BaseEntity {
     private boolean activo = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "roles_permisos",
+    @JoinTable(name = "roles_permisos", schema = "seguridad",
             joinColumns = @JoinColumn(name = "rol_id"),
             inverseJoinColumns = @JoinColumn(name = "permiso_id"))
     private Set<Permiso> permisos = new LinkedHashSet<>();

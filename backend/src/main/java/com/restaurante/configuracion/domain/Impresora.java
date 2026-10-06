@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
  * nominal para no acoplar este módulo con el catálogo.
  */
 @Entity
-@Table(name = "impresoras")
+@Table(name = "impresoras", schema = "configuracion")
 public class Impresora extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 80)

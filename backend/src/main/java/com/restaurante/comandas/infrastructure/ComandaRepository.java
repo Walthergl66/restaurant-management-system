@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface ComandaRepository extends JpaRepository<Comanda, Long> {
 
-    @Query(value = "SELECT nextval('seq_numero_comanda')", nativeQuery = true)
+    @Query(value = "SELECT nextval('operaciones.seq_numero_comanda')", nativeQuery = true)
     Long siguienteNumeroComanda();
 
     @EntityGraph(attributePaths = "lineas")

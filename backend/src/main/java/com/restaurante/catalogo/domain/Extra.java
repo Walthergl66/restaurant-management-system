@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
  * Adición que acompaña a un producto (topping) con su propio precio.
  */
 @Entity
-@Table(name = "extras")
+@Table(name = "extras", schema = "catalogo")
 public class Extra extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 80)

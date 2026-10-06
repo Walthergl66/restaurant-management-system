@@ -16,7 +16,7 @@ import jakarta.persistence.Version;
  * {@link CalculadoraCuenta}, nunca se guarda un acumulado.
  */
 @Entity
-@Table(name = "cuentas")
+@Table(name = "cuentas", schema = "operaciones")
 public class Cuenta extends AuditableEntity {
 
     @Version

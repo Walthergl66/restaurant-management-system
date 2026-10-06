@@ -21,7 +21,7 @@ import java.util.Set;
  * única en la base protege de duplicados aunque el evento se reintente.
  */
 @Entity
-@Table(name = "comandas")
+@Table(name = "comandas", schema = "operaciones")
 public class Comanda extends AuditableEntity {
 
     @Column(name = "pedido_codigo", nullable = false, length = 40)

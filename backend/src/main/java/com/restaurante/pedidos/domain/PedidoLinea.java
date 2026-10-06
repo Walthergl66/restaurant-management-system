@@ -24,7 +24,7 @@ import java.util.Set;
  * momento en que se confirma el pedido (RF-09, regla de precios congelados).
  */
 @Entity
-@Table(name = "pedido_lineas")
+@Table(name = "pedido_lineas", schema = "operaciones")
 public class PedidoLinea extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

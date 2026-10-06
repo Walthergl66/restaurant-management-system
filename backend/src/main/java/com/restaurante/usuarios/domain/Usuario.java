@@ -17,7 +17,7 @@ import java.util.Set;
  * guarda siempre con un hash seguro (BCrypt).
  */
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuarios", schema = "seguridad")
 public class Usuario extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 50)

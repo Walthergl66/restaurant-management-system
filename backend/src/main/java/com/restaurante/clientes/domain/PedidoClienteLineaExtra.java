@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 @Entity
-@Table(name = "pedidos_clientes_lineas_extras")
+@Table(name = "pedidos_clientes_lineas_extras", schema = "comercial")
 public class PedidoClienteLineaExtra extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

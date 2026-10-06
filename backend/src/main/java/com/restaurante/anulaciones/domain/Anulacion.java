@@ -20,7 +20,7 @@ import java.time.Instant;
  * viven únicamente aquí; la línea original nunca se toca.
  */
 @Entity
-@Table(name = "anulaciones")
+@Table(name = "anulaciones", schema = "operaciones")
 public class Anulacion extends AuditableEntity {
 
     @Version

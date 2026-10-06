@@ -20,7 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "pedidos_clientes_lineas")
+@Table(name = "pedidos_clientes_lineas", schema = "comercial")
 public class PedidoClienteLinea extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

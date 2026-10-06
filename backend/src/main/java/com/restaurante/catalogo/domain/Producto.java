@@ -26,7 +26,7 @@ import java.util.Set;
  * congelan su propia copia al confirmar (regla 3 del negocio).
  */
 @Entity
-@Table(name = "productos")
+@Table(name = "productos", schema = "catalogo")
 public class Producto extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 120)
@@ -54,7 +54,7 @@ public class Producto extends AuditableEntity {
     private Area area;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "producto_extras",
+    @JoinTable(name = "producto_extras", schema = "catalogo",
             joinColumns = @JoinColumn(name = "producto_id"),
             inverseJoinColumns = @JoinColumn(name = "extra_id"))
     private Set<Extra> extras = new LinkedHashSet<>();

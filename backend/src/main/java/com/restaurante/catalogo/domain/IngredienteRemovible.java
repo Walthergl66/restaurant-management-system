@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
  * (sin cebolla, sin tomate...).
  */
 @Entity
-@Table(name = "producto_ingredientes")
+@Table(name = "producto_ingredientes", schema = "catalogo")
 public class IngredienteRemovible extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

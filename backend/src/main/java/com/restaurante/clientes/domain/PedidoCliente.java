@@ -24,7 +24,7 @@ import java.util.Set;
  * Transiciones en UNA sola clase (misma regla que Pedido). Idempotencia RF-41: UNIQUE(cliente_id, idempotency_key).
  */
 @Entity
-@Table(name = "pedidos_clientes")
+@Table(name = "pedidos_clientes", schema = "comercial")
 public class PedidoCliente extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 40)

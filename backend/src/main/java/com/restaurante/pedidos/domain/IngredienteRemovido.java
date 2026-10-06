@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
  * Ingrediente removido de una línea (p. ej. "sin cebolla").
  */
 @Entity
-@Table(name = "pedido_linea_ingredientes")
+@Table(name = "pedido_linea_ingredientes", schema = "operaciones")
 public class IngredienteRemovido extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

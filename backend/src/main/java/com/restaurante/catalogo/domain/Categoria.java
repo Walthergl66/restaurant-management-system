@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
  * Categoría del menú (entradas, platos fuertes, postres...).
  */
 @Entity
-@Table(name = "categorias")
+@Table(name = "categorias", schema = "catalogo")
 public class Categoria extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 80)

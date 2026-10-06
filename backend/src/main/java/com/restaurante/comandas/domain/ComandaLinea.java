@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
  * Línea de una comanda, con los datos congelados al confirmar el pedido.
  */
 @Entity
-@Table(name = "comanda_lineas")
+@Table(name = "comanda_lineas", schema = "operaciones")
 public class ComandaLinea extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

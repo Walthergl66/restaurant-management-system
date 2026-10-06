@@ -27,7 +27,7 @@ import java.util.Set;
  * duplicar (RNF-06); la unicidad la valida la base de datos.
  */
 @Entity
-@Table(name = "pedidos")
+@Table(name = "pedidos", schema = "operaciones")
 public class Pedido extends AuditableEntity {
 
     @Version

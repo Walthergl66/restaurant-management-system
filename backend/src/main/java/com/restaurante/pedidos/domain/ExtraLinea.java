@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
  * Extra congelado en una línea de pedido (nombre y precio de catálogo).
  */
 @Entity
-@Table(name = "pedido_linea_extras")
+@Table(name = "pedido_linea_extras", schema = "operaciones")
 public class ExtraLinea extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

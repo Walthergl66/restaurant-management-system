@@ -14,7 +14,7 @@ import java.time.Instant;
  * Perfil del cliente ligado a un usuario (RF-45). Tabla V9 clientes.
  */
 @Entity
-@Table(name = "clientes")
+@Table(name = "clientes", schema = "comercial")
 public class Cliente extends BaseEntity {
 
     @Column(name = "usuario_id", nullable = false, unique = true)

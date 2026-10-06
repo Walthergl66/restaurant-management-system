@@ -13,7 +13,7 @@ import java.time.Instant;
  * INSERCIÓN (RNF-10): no hay actualización ni borrado desde la aplicación.
  */
 @Entity
-@Table(name = "auditoria_eventos")
+@Table(name = "auditoria_eventos", schema = "auditoria")
 public class EventoAuditoria {
 
     @jakarta.persistence.Id

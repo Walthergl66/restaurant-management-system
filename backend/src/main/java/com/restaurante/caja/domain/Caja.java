@@ -21,7 +21,7 @@ import java.time.Instant;
  * clase. RNF-11: {@code @Version} optimista contra cierres simultáneos.
  */
 @Entity
-@Table(name = "cajas")
+@Table(name = "cajas", schema = "tesoreria")
 public class Caja extends AuditableEntity {
 
     @Version
