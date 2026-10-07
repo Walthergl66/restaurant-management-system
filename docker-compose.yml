@@ -1,4 +1,31 @@
 services:
+  # BD de desarrollo: PostgreSQL 16 en contenedor, datos persistentes en un
+  # volumen nombrado. En producción NO existe este servicio: el backend se
+  # apunta a una instancia externa con las variables DB_* (docker-compose.prod.yml).
+  postgres:
+    image: postgres:16-alpine
+    container_name: restaurante-postgres
+    # Mismas variables DB_* que lee application.yml: si definís el .env de la
+    # raíz (o las exportás), gobiernan ambos servicios; si no, se usa el
+    # usuario/contraseña/basedocumentados en database/README.md (restaurante).
+    environment:
+      POSTGRES_DB: ${DB_NAME:-restaurante}
+      POSTGRES_USER: ${DB_USER:-restaurante}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-restaurante}
+    ports:
+      # Publicada para psql/IntelliJ/backup.sh desde el host; si 5432 está
+      # ocupada (p. ej. un PostgreSQL nativo), cambiá DB_HOST_PORT.
+      - "${DB_HOST_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-restaurante} -d ${DB_NAME:-restaurante}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -9,7 +36,17 @@ services:
         required: false
       - path: .env
         required: false
+    # Sin esto el backend intenta llegar a su propio localhost (o a la BD de
+    # la red local que traiga backend/.env): dentro de compose la BD es el
+    # servicio postgres. DB_SSLMODE=disable porque el PG del contenedor no
+    # termina TLS (el default `require` de application.yml es para BD remotas).
     environment:
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-restaurante}
+      DB_USER: ${DB_USER:-restaurante}
+      DB_PASSWORD: ${DB_PASSWORD:-restaurante}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
       SERVER_PORT: 8080
       # Perfil explícito: la app ya no tiene perfil por defecto (a propósito),
       # así que se declara aquí en lugar de depender de heredar el de .env.
@@ -17,6 +54,11 @@ services:
       # Sin secreto la app se niega a arrancar (JwtProperties lo valida al
       # enlazar la configuración); generálo con `openssl rand -hex 64` en backend/.env.
       JWT_SECRET: ${JWT_SECRET:-}
+    # El backend espera a que la BD esté sana: así Flyway no compite con el
+    # arranque del contenedor y los reintentos del healthcheck no se gastan.
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     extra_hosts:
@@ -28,3 +70,7 @@ services:
       retries: 10
       start_period: 40s
     restart: unless-stopped
+
+# Los datos de la BD de dev sobreviven `docker compose down` (no `down -v`).
+volumes:
+  pgdata:
