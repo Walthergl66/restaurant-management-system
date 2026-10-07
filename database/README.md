@@ -26,6 +26,13 @@ DB_PASSWORD=restaurante
 
 Los scripts de este directorio (`backup.sh` y `restore.sh`) detectan y cargan automáticamente las variables desde `backend/.env`.
 
+### Cliente de PostgreSQL
+
+Ninguno de los dos scripts requiere PostgreSQL instalado en el host:
+- Si el contenedor `restaurante-postgres` (el del `docker compose up -d`) está corriendo, ejecutan el cliente pg **dentro** de ese contenedor.
+- Si no, usan el `pg_dump`/`psql`/`pg_restore` del host como fallback.
+- Con `DB_HOST=localhost` (default del stack Docker) el destino es la BD del compositor, por socket dentro del contenedor. Si `DB_HOST` es otra cosa, conectan por TCP a ese host remoto con las credenciales de `.env` (p. ej. para respaldar la BD de producción).
+
 ---
 
 ## 📦 Copias de Seguridad (Backups)
@@ -51,7 +58,7 @@ El script valida automáticamente que el archivo generado sea legible e imprime 
 
 ## 🔄 Restauración de Datos (Restore)
 
-> ⚠️ **ATENCIÓN:** El proceso de restauración recrea la base de datos de destino (`DROP DATABASE` y `CREATE DATABASE`). Todos los datos existentes en la base seleccionada serán reemplazados por los del volcado.
+> ⚠️ **ATENCIÓN:** El proceso de restauración recrea la base de datos de destino (`DROP DATABASE` —con `WITH (FORCE)` para cerrar conexiones activas, p. ej. el backend corriendo— y `CREATE DATABASE`). Todos los datos existentes en la base seleccionada serán reemplazados por los del volcado.
 
 ### Uso
 
