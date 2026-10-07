@@ -51,9 +51,9 @@ services:
       # Perfil explícito: la app ya no tiene perfil por defecto (a propósito),
       # así que se declara aquí en lugar de depender de heredar el de .env.
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
-      # Sin secreto la app se niega a arrancar (JwtProperties lo valida al
-      # enlazar la configuración); generálo con `openssl rand -hex 64` en backend/.env.
-      JWT_SECRET: ${JWT_SECRET:-}
+      # JWT_SECRET NO se declara acá: una línea en `environment:` con
+      # ${JWT_SECRET:-} (vacío si no está exportada) pisaría el valor real que
+      # llega del env_file backend/.env. El secreto sale solo de ahí.
     # El backend espera a que la BD esté sana: así Flyway no compite con el
     # arranque del contenedor y los reintentos del healthcheck no se gastan.
     depends_on:
