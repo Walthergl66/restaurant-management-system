@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-import { CartItem } from '../types';
-import { useCart } from '../store/CartContext';
+import type { CartItem } from '../features/carrito/types';
+import { useCart } from '../features/carrito/CartContext';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -22,10 +22,10 @@ interface CartItemRowProps {
 export function CartItemRow({ item }: CartItemRowProps) {
   const { updateQuantity, removeItem } = useCart();
   const extrasTotal = item.extras.reduce(
-    (sum, e) => sum + parseFloat(e.precio),
+    (sum, e) => sum + e.precio,
     0
   );
-  const unitPrice = parseFloat(item.producto.precio) + extrasTotal;
+  const unitPrice = item.producto.precio + extrasTotal;
   const totalPrice = unitPrice * item.cantidad;
 
   return (

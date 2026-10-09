@@ -1,24 +1,45 @@
 /**
- * Estación Burger — Pantalla de Perfil (con datos demo)
+ * Estación Burger — Pantalla de Perfil
+ *
+ * Usuario real desde la sesión (GET /api/v1/auth/me al login).
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
+import { useAuth } from '../../features/auth/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Header } from '../../components/Header';
 import logo from '../../../assets/EstacionLogo.jpeg';
 
-const demoUsuario = {
-  nombre: 'Carlos Mendoza',
-  username: 'carlosm',
-  rol: 'CLIENTE',
-};
-
 export default function ProfileScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { usuario, logout } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await logout();
+      router.replace('/login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inicial = (usuario?.nombre || usuario?.username || 'E')
+    .charAt(0)
+    .toUpperCase();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -30,26 +51,72 @@ export default function ProfileScreen() {
       >
         <View style={styles.userCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>C</Text>
+            <Text style={styles.avatarText}>{inicial}</Text>
           </View>
-          <Text style={styles.userName}>{demoUsuario.nombre}</Text>
-          <Text style={styles.userEmail}>@{demoUsuario.username}</Text>
+          <Text style={styles.userName}>{usuario?.nombre || 'Invitado'}</Text>
+          <Text style={styles.userEmail}>
+            @{usuario?.username || 'sin sesión'}
+          </Text>
+          {usuario?.rol && (
+            <View style={styles.rolBadge}>
+              <Text style={styles.rolText}>{usuario.rol}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mi cuenta</Text>
-          <ProfileRow icon="person-outline" label="Datos personales" />
-          <ProfileRow icon="location-outline" label="Direcciones" />
-          <ProfileRow icon="card-outline" label="Métodos de pago" />
-          <ProfileRow icon="notifications-outline" label="Notificaciones" />
+          <ProfileRow
+            icon="person-outline"
+            label="Datos personales"
+            value={usuario?.nombre}
+          />
+          <ProfileRow
+            icon="key-outline"
+            label="Permisos"
+            value={
+              usuario?.permisos
+                ? `${usuario.permisos.length} activos`
+                : undefined
+            }
+          />
+          <ProfileRow
+            icon="location-outline"
+            label="Direcciones"
+            onPress={() => {}}
+          />
+          <ProfileRow
+            icon="card-outline"
+            label="Métodos de pago"
+            onPress={() => {}}
+          />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Soporte</Text>
-          <ProfileRow icon="help-circle-outline" label="Ayuda" />
-          <ProfileRow icon="document-text-outline" label="Términos y condiciones" />
-          <ProfileRow icon="shield-checkmark-outline" label="Política de privacidad" />
+          <ProfileRow icon="help-circle-outline" label="Ayuda" onPress={() => {}} />
+          <ProfileRow
+            icon="document-text-outline"
+            label="Términos y condiciones"
+            onPress={() => {}}
+          />
+          <ProfileRow
+            icon="shield-checkmark-outline"
+            label="Política de privacidad"
+            onPress={() => {}}
+          />
         </View>
+
+        <Button
+          title="Cerrar sesión"
+          onPress={handleLogout}
+          variant="outline"
+          size="lg"
+          loading={loading}
+          icon={<Ionicons name="log-out-outline" size={20} color={colors.error} />}
+          style={styles.logoutButton}
+          textStyle={{ color: colors.error }}
+        />
 
         <Text style={styles.version}>Estación Burger v1.0.0</Text>
       </ScrollView>
@@ -60,9 +127,13 @@ export default function ProfileScreen() {
 function ProfileRow({
   icon,
   label,
+  value,
+  onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
+  value?: string;
+  onPress?: () => void;
 }) {
   return (
     <View style={styles.row}>
@@ -70,7 +141,13 @@ function ProfileRow({
         <Ionicons name={icon} size={22} color={colors.neonOrange} />
         <Text style={styles.rowLabel}>{label}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      {value ? (
+        <Text style={styles.rowValue} numberOfLines={1}>
+          {value}
+        </Text>
+      ) : (
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      )}
     </View>
   );
 }
@@ -120,6 +197,19 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
   },
+  rolBadge: {
+    marginTop: 10,
+    backgroundColor: colors.neonOrangeAlpha,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  rolText: {
+    color: colors.neonOrange,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
   section: {
     backgroundColor: colors.surface,
     borderRadius: 16,
@@ -154,6 +244,15 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 15,
     fontWeight: '500',
+  },
+  rowValue: {
+    color: colors.textMuted,
+    fontSize: 14,
+    maxWidth: '60%',
+  },
+  logoutButton: {
+    borderColor: colors.error,
+    marginTop: 8,
   },
   version: {
     color: colors.textMuted,

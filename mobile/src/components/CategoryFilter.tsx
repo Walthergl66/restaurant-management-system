@@ -12,10 +12,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-import { Categoria } from '../types';
+import type { CategoriaMenu } from '../features/menu/types';
 
 interface CategoryFilterProps {
-  categorias: Categoria[];
+  categorias: CategoriaMenu[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
 }

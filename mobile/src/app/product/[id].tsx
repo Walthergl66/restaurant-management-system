@@ -17,9 +17,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
-import { menuService } from '../../services/menu';
-import { useCart } from '../../store/CartContext';
-import { Producto, Extra } from '../../types';
+import { menuService } from '../../features/menu/menuService';
+import { useCart } from '../../features/carrito/CartContext';
+import type { ExtraMenu, ProductoMenu } from '../../features/menu/types';
 import { Button } from '../../components/ui/Button';
 
 const { width } = Dimensions.get('window');
@@ -30,9 +30,9 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { addItem } = useCart();
 
-  const [producto, setProducto] = useState<Producto | null>(null);
+  const [producto, setProducto] = useState<ProductoMenu | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
+  const [selectedExtras, setSelectedExtras] = useState<ExtraMenu[]>([]);
   const [cantidad, setCantidad] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +53,7 @@ export default function ProductDetailScreen() {
     }
   };
 
-  const toggleExtra = (extra: Extra) => {
+  const toggleExtra = (extra: ExtraMenu) => {
     setSelectedExtras(prev =>
       prev.find(e => e.id === extra.id)
         ? prev.filter(e => e.id !== extra.id)
@@ -85,10 +85,10 @@ export default function ProductDetailScreen() {
   }
 
   const extrasTotal = selectedExtras.reduce(
-    (sum, e) => sum + parseFloat(e.precio),
+    (sum, e) => sum + e.precio,
     0
   );
-  const unitPrice = parseFloat(producto.precio) + extrasTotal;
+  const unitPrice = producto.precio + extrasTotal;
   const totalPrice = unitPrice * cantidad;
 
   return (

@@ -1,0 +1,33 @@
+# ── Saltos de línea ──────────────────────────────────────────────
+# text=auto: Git normaliza todo texto a LF dentro del repositorio.
+* text=auto
+
+# Scripts de shell SIEMPRE en LF (Git Bash/MINGW falla con CRLF:
+#   /usr/bin/env: 'bash\r': No such file or directory)
+*.sh  text eol=lf
+*.bash text eol=lf
+
+# Código y config: LF explícito también en checkout (evita la
+# advertencia "LF will be replaced by CRLF" en Windows).
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.jsx  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.sql  text eol=lf
+*.java text eol=lf
+*.xml  text eol=lf
+*.properties text eol=lf
+
+# Binarios: nunca tocar
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.mp4  binary
+*.mov  binary
