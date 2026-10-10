@@ -16,14 +16,16 @@ import React, {
 import { authService } from './authService';
 import { authStorage } from '../../core/storage/authStorage';
 import { apiClient } from '../../core/api/apiClient';
-import type { UsuarioInfo } from './types';
+import type { RegistroRequest, UsuarioInfo } from './types';
 
 interface AuthContextType {
   usuario: UsuarioInfo | null;
   loading: boolean;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
-  registro: (username: string, nombre: string, password: string) => Promise<void>;
+  registro: (datos: RegistroRequest) => Promise<void>;
+  verificarEmail: (username: string, codigo: string) => Promise<void>;
+  reenviarVerificacion: (username: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
 }
@@ -63,10 +65,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsuario(auth.usuario);
   }, []);
 
-  /** Registro público: crea el cliente y deja la sesión iniciada (RF-45). */
-  const registro = useCallback(
-    async (username: string, nombre: string, password: string) => {
-      const auth = await authService.registro({ username, nombre, password });
+  /**
+   * Registro público (RF-45): crea la cuenta pendiente de verificar el correo.
+   * No inicia sesión; hay que confirmar el código en la pantalla de verificación.
+   */
+  const registro = useCallback(async (datos: RegistroRequest) => {
+    await authService.registro(datos);
+  }, []);
+
+  /** Verifica el correo con el código de 6 dígitos e inicia la sesión (RF-45). */
+  const verificarEmail = useCallback(
+    async (username: string, codigo: string) => {
+      const auth = await authService.verificarEmail(username, codigo);
       await authStorage.save({
         accessToken: auth.accessToken,
         refreshToken: auth.refreshToken,
@@ -76,6 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+
+  /** Reenvía el código de verificación al correo. */
+  const reenviarVerificacion = useCallback(async (username: string) => {
+    await authService.reenviarVerificacion(username);
+  }, []);
 
   const logout = useCallback(async () => {
     const stored = await authStorage.load();
@@ -114,6 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!usuario,
         login,
         registro,
+        verificarEmail,
+        reenviarVerificacion,
         logout,
         refreshSession,
       }}
