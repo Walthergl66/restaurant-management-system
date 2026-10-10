@@ -9,7 +9,9 @@ import type {
   ConfirmarPedidoRequest,
   CrearPedidoRequest,
   DireccionCliente,
+  MetodoPagoCliente,
   NuevaDireccionRequest,
+  NuevoMetodoPagoRequest,
   Page,
   PedidoCliente,
 } from './types';
@@ -21,6 +23,8 @@ const ENDPOINTS = {
   confirmar: (codigo: string) => `/clientes/pedidos/${codigo}/confirmar`,
   historial: '/clientes/historial',
   direcciones: '/clientes/direcciones',
+  metodosPago: '/clientes/metodos-pago',
+  metodoPago: (id: number) => `/clientes/metodos-pago/${id}`,
 } as const;
 
 export const pedidosService = {
@@ -72,5 +76,27 @@ export const pedidosService = {
       ENDPOINTS.direcciones,
       direccion
     );
+  },
+
+  /** Direcciones activas del cliente (RF-42). */
+  async getDirecciones(): Promise<DireccionCliente[]> {
+    return apiClient.get<DireccionCliente[]>(ENDPOINTS.direcciones);
+  },
+
+  /** Métodos de pago guardados del cliente (RF-45). */
+  async getMetodosPago(): Promise<MetodoPagoCliente[]> {
+    return apiClient.get<MetodoPagoCliente[]>(ENDPOINTS.metodosPago);
+  },
+
+  /** Guarda un método de pago (solo metadata, nunca PAN/CVV). */
+  async agregarMetodoPago(
+    metodo: NuevoMetodoPagoRequest
+  ): Promise<MetodoPagoCliente> {
+    return apiClient.post<MetodoPagoCliente>(ENDPOINTS.metodosPago, metodo);
+  },
+
+  /** Elimina (baja lógica) un método de pago guardado. */
+  async eliminarMetodoPago(id: number): Promise<void> {
+    await apiClient.delete(ENDPOINTS.metodoPago(id));
   },
 };
