@@ -8,6 +8,9 @@ import type {
   AuthResponse,
   LoginRequest,
   RefreshTokenRequest,
+  RegistroRequest,
+  RestablecerPasswordRequest,
+  SolicitarRecuperacionRequest,
   UsuarioInfo,
 } from './types';
 
@@ -16,6 +19,9 @@ const ENDPOINTS = {
   refresh: '/auth/refresh',
   logout: '/auth/logout',
   me: '/auth/me',
+  registro: '/auth/registro',
+  solicitarRecuperacion: '/auth/solicitar-recuperacion',
+  restablecerPassword: '/auth/restablecer-password',
 } as const;
 
 export const authService = {
@@ -27,6 +33,37 @@ export const authService = {
     );
     apiClient.setAccessToken(auth.accessToken);
     return auth;
+  },
+
+  /**
+   * Registro público de cliente (RF-45). El backend crea el usuario con
+   * rol CLIENTE y devuelve tokens, así que la sesión queda iniciada.
+   */
+  async registro(datos: RegistroRequest): Promise<AuthResponse> {
+    const auth = await apiClient.post<AuthResponse>(
+      ENDPOINTS.registro,
+      datos
+    );
+    apiClient.setAccessToken(auth.accessToken);
+    return auth;
+  },
+
+  /**
+   * Solicita el envío de un enlace/código de recuperación. Responde
+   * siempre 204 (no revela si el usuario existe).
+   */
+  async solicitarRecuperacion(username: string): Promise<void> {
+    const body: SolicitarRecuperacionRequest = { username };
+    await apiClient.post(ENDPOINTS.solicitarRecuperacion, body);
+  },
+
+  /** Restablece la contraseña con el token de un solo uso (RF-45). */
+  async restablecerPassword(
+    token: string,
+    nuevaPassword: string
+  ): Promise<void> {
+    const body: RestablecerPasswordRequest = { token, nuevaPassword };
+    await apiClient.post(ENDPOINTS.restablecerPassword, body);
   },
 
   /** Renueva el access token con el refresh token (rotación de familia). */
