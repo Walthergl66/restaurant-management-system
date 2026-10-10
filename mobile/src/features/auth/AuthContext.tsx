@@ -23,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
+  registro: (username: string, nombre: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
 }
@@ -62,6 +63,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsuario(auth.usuario);
   }, []);
 
+  /** Registro público: crea el cliente y deja la sesión iniciada (RF-45). */
+  const registro = useCallback(
+    async (username: string, nombre: string, password: string) => {
+      const auth = await authService.registro({ username, nombre, password });
+      await authStorage.save({
+        accessToken: auth.accessToken,
+        refreshToken: auth.refreshToken,
+        usuario: auth.usuario,
+      });
+      setUsuario(auth.usuario);
+    },
+    []
+  );
+
   const logout = useCallback(async () => {
     const stored = await authStorage.load();
     if (stored) {
@@ -98,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isAuthenticated: !!usuario,
         login,
+        registro,
         logout,
         refreshSession,
       }}
