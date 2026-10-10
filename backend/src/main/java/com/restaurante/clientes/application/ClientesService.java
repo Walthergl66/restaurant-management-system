@@ -4,6 +4,7 @@ import com.restaurante.catalogo.Catalogo;
 import com.restaurante.catalogo.ExtraParaPedido;
 import com.restaurante.catalogo.ProductoParaPedido;
 import com.restaurante.clientes.CarritoClienteSPI;
+import com.restaurante.clientes.ClientePerfilSPI;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
 import com.restaurante.clientes.MetodoPagoClienteSPI;
@@ -338,6 +339,19 @@ public class ClientesService implements Clientes {
                 .orElseThrow(() -> new NotFoundException("Método de pago no encontrado: " + metodoId));
         metodo.desactivar();
         metodoPagoRepository.save(metodo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClientePerfilSPI perfil(Long clienteId) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new NotFoundException("Cliente no encontrado: " + clienteId));
+        return new ClientePerfilSPI(
+                cliente.getId(),
+                cliente.getUsuarioId(),
+                cliente.getNombre(),
+                cliente.getCedula(),
+                cliente.getTelefono());
     }
 
     /**

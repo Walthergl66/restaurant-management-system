@@ -73,6 +73,9 @@ public interface Clientes {
     /** RF-45: desactiva un método de pago propio del cliente. */
     void eliminarMetodoPago(Long clienteId, Long metodoId);
 
+    /** RF-45: perfil del cliente (cédula, celular, nombre). */
+    ClientePerfilSPI perfil(Long clienteId);
+
     /** Resuelve el clienteId real (BD) a partir del username del JWT. */
     Long resolverClienteId(String username);
 }

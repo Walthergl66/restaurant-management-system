@@ -89,6 +89,14 @@ public class ClientesController {
         return clientes.pedidoSPIporCodigo(clienteIdActual(), codigo);
     }
 
+    /** RF-45: perfil del cliente autenticado (cédula, celular, nombre). */
+    @GetMapping("/perfil")
+    @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @Operation(summary = "Perfil del cliente autenticado")
+    public com.restaurante.clientes.ClientePerfilSPI perfil() {
+        return clientes.perfil(clienteIdActual());
+    }
+
     /** RF-45: historial del cliente paginado (A-10: page size máximo 100,
      *  orden descendente por id = últimos primero). */
     @GetMapping("/historial")
