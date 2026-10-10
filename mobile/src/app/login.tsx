@@ -95,7 +95,10 @@ export default function LoginScreen() {
             </View>
           )}
 
-          <TouchableOpacity style={styles.forgotButton}>
+          <TouchableOpacity
+            style={styles.forgotButton}
+            onPress={() => router.push('/recuperar')}
+          >
             <Text style={styles.forgotText}>¿Olvidé mi contraseña?</Text>
           </TouchableOpacity>
 
@@ -115,7 +118,7 @@ export default function LoginScreen() {
 
           <Button
             title="CREAR CUENTA"
-            onPress={() => {}}
+            onPress={() => router.push('/registro')}
             variant="outline"
             size="lg"
             style={styles.createButton}
