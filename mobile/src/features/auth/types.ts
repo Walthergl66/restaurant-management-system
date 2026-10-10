@@ -28,6 +28,24 @@ export interface LoginRequest {
   password: string;
 }
 
+/** RegistroRequest — POST /api/v1/auth/registro (RF-45). */
+export interface RegistroRequest {
+  username: string;
+  nombre: string;
+  password: string;
+}
+
+/** SolicitarRecuperacionRequest — POST /api/v1/auth/solicitar-recuperacion. */
+export interface SolicitarRecuperacionRequest {
+  username: string;
+}
+
+/** RestablecerPasswordRequest — POST /api/v1/auth/restablecer-password. */
+export interface RestablecerPasswordRequest {
+  token: string;
+  nuevaPassword: string;
+}
+
 /** RefreshTokenRequest — POST /api/v1/auth/refresh y /auth/logout. */
 export interface RefreshTokenRequest {
   refreshToken: string;
