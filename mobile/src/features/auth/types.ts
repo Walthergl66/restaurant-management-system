@@ -28,11 +28,31 @@ export interface LoginRequest {
   password: string;
 }
 
-/** RegistroRequest — POST /api/v1/auth/registro (RF-45). */
+/** RegistroRequest — POST /api/v1/auth/registro (RF-45). El correo es el username. */
 export interface RegistroRequest {
   username: string;
   nombre: string;
+  cedula: string;
+  celular: string;
   password: string;
+}
+
+/** RegistroPendienteResponse — alta creada, pendiente de verificar el correo. */
+export interface RegistroPendienteResponse {
+  username: string;
+  emailVerificado: boolean;
+  mensaje: string;
+}
+
+/** VerificarEmailRequest — POST /api/v1/auth/verificar-email (código de 6 dígitos). */
+export interface VerificarEmailRequest {
+  username: string;
+  codigo: string;
+}
+
+/** ReenviarVerificacionRequest — POST /api/v1/auth/reenviar-verificacion. */
+export interface ReenviarVerificacionRequest {
+  username: string;
 }
 
 /** SolicitarRecuperacionRequest — POST /api/v1/auth/solicitar-recuperacion. */
