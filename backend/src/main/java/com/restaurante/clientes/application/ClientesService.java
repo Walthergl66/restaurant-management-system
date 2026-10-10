@@ -31,8 +31,10 @@ import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.shared.outbox.EventoOutbox;
 import com.restaurante.shared.outbox.OutboxRepository;
+import com.restaurante.usuarios.ClienteAutoRegistrado;
 import com.restaurante.usuarios.Usuarios;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -336,6 +338,27 @@ public class ClientesService implements Clientes {
                 .orElseThrow(() -> new NotFoundException("Método de pago no encontrado: " + metodoId));
         metodo.desactivar();
         metodoPagoRepository.save(metodo);
+    }
+
+    /**
+     * Materializa el perfil del cliente con la cédula y el celular reales
+     * capturados en el auto-registro (RF-45). Se ejecuta en la MISMA
+     * transacción del registro: si la cédula o el celular ya están en uso, se
+     * lanza conflicto y el registro completo se revierte.
+     */
+    @EventListener
+    public void alRegistrarCliente(ClienteAutoRegistrado evento) {
+        if (clienteRepository.findByUsuarioId(evento.usuarioId()).isPresent()) {
+            return;
+        }
+        if (clienteRepository.findByCedula(evento.cedula()).isPresent()) {
+            throw new ConflictException("La cédula ya está registrada");
+        }
+        if (clienteRepository.findByTelefono(evento.celular()).isPresent()) {
+            throw new ConflictException("El celular ya está registrado");
+        }
+        clienteRepository.save(new Cliente(
+                evento.usuarioId(), evento.cedula(), evento.celular(), evento.nombre()));
     }
 
     /**
