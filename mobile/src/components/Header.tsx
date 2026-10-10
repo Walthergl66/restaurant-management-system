@@ -20,6 +20,7 @@ interface HeaderProps {
 
 export function Header({ title, nombre, showLogo = true, right }: HeaderProps) {
   const insets = useSafeAreaInsets();
+  const saludo = obtenerSaludo();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
@@ -29,7 +30,7 @@ export function Header({ title, nombre, showLogo = true, right }: HeaderProps) {
             <Image source={logo} style={styles.logo} resizeMode="cover" />
           )}
           <View style={styles.greetingContainer}>
-            <Text style={styles.greeting}>¡Buenas noches!</Text>
+            <Text style={styles.greeting}>{saludo}</Text>
             <Text style={styles.title}>
               {nombre ? `¡Hola, ${nombre}!` : '¡Hola!'}
             </Text>
@@ -39,6 +40,14 @@ export function Header({ title, nombre, showLogo = true, right }: HeaderProps) {
       </View>
     </View>
   );
+}
+
+/** Saludo según la hora del día. */
+function obtenerSaludo(): string {
+  const hora = new Date().getHours();
+  if (hora < 12) return '¡Buenos días!';
+  if (hora < 19) return '¡Buenas tardes!';
+  return '¡Buenas noches!';
 }
 
 const styles = StyleSheet.create({
