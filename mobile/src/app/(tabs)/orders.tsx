@@ -16,7 +16,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import type { PedidoCliente } from '../../features/pedidos/types';
@@ -29,6 +29,7 @@ const ESTADOS_ACTIVOS = ['BORRADOR', 'CONFIRMADO', 'EN_PREPARACION'];
 
 export default function OrdersScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const params = useLocalSearchParams<{ nuevo?: string }>();
   const [pedidos, setPedidos] = useState<PedidoCliente[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +101,10 @@ export default function OrdersScreen() {
       <FlatList
         data={pedidos}
         renderItem={({ item }) => (
-          <OrderCard pedido={item} onPress={() => {}} />
+          <OrderCard
+            pedido={item}
+            onPress={() => router.push(`/pedido/${item.codigo}`)}
+          />
         )}
         keyExtractor={item => item.codigo}
         contentContainerStyle={styles.listContent}

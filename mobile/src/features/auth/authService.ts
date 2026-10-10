@@ -8,7 +8,13 @@ import type {
   AuthResponse,
   LoginRequest,
   RefreshTokenRequest,
+  ReenviarVerificacionRequest,
+  RegistroPendienteResponse,
+  RegistroRequest,
+  RestablecerPasswordRequest,
+  SolicitarRecuperacionRequest,
   UsuarioInfo,
+  VerificarEmailRequest,
 } from './types';
 
 const ENDPOINTS = {
@@ -16,6 +22,11 @@ const ENDPOINTS = {
   refresh: '/auth/refresh',
   logout: '/auth/logout',
   me: '/auth/me',
+  registro: '/auth/registro',
+  verificarEmail: '/auth/verificar-email',
+  reenviarVerificacion: '/auth/reenviar-verificacion',
+  solicitarRecuperacion: '/auth/solicitar-recuperacion',
+  restablecerPassword: '/auth/restablecer-password',
 } as const;
 
 export const authService = {
@@ -27,6 +38,56 @@ export const authService = {
     );
     apiClient.setAccessToken(auth.accessToken);
     return auth;
+  },
+
+  /**
+   * Registro público de cliente (RF-45). Crea la cuenta con rol CLIENTE
+   * pendiente de verificar el correo; NO inicia sesión (no hay tokens hasta
+   * confirmar el código enviado al correo).
+   */
+  async registro(datos: RegistroRequest): Promise<RegistroPendienteResponse> {
+    return apiClient.post<RegistroPendienteResponse>(ENDPOINTS.registro, datos);
+  },
+
+  /**
+   * Verifica el correo con el código de 6 dígitos (RF-45). Si es válido el
+   * backend devuelve tokens y la sesión queda iniciada.
+   */
+  async verificarEmail(
+    username: string,
+    codigo: string
+  ): Promise<AuthResponse> {
+    const body: VerificarEmailRequest = { username, codigo };
+    const auth = await apiClient.post<AuthResponse>(
+      ENDPOINTS.verificarEmail,
+      body
+    );
+    apiClient.setAccessToken(auth.accessToken);
+    return auth;
+  },
+
+  /** Reenvía el código de verificación al correo (responde 204). */
+  async reenviarVerificacion(username: string): Promise<void> {
+    const body: ReenviarVerificacionRequest = { username };
+    await apiClient.post(ENDPOINTS.reenviarVerificacion, body);
+  },
+
+  /**
+   * Solicita el envío de un enlace/código de recuperación. Responde
+   * siempre 204 (no revela si el usuario existe).
+   */
+  async solicitarRecuperacion(username: string): Promise<void> {
+    const body: SolicitarRecuperacionRequest = { username };
+    await apiClient.post(ENDPOINTS.solicitarRecuperacion, body);
+  },
+
+  /** Restablece la contraseña con el token de un solo uso (RF-45). */
+  async restablecerPassword(
+    token: string,
+    nuevaPassword: string
+  ): Promise<void> {
+    const body: RestablecerPasswordRequest = { token, nuevaPassword };
+    await apiClient.post(ENDPOINTS.restablecerPassword, body);
   },
 
   /** Renueva el access token con el refresh token (rotación de familia). */

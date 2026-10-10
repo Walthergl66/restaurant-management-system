@@ -89,7 +89,9 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/registro",
+                                "/api/v1/auth/verificar-email", "/api/v1/auth/reenviar-verificacion",
+                                "/api/v1/auth/solicitar-recuperacion", "/api/v1/auth/restablecer-password").permitAll()
                         .requestMatchers("/api/v1/menu", "/api/v1/menu/**").permitAll()
                         .requestMatchers("/ws").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

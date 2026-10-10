@@ -70,6 +70,15 @@ export default function MenuScreen() {
         ?.productos ?? []
     : productos;
 
+  // Producto destacado del banner: el primero con imagen (o el primero).
+  const productoDestacado =
+    productos.find(p => p.imagenUrl) ?? productos[0] ?? null;
+  const categoriaDestacada = productoDestacado
+    ? menu?.categorias.find(c =>
+        c.productos.some(p => p.id === productoDestacado.id)
+      )?.nombre
+    : undefined;
+
   const renderProduct = ({ item }: { item: ProductoMenu }) => (
     <ProductCard
       producto={item}
@@ -115,58 +124,78 @@ export default function MenuScreen() {
         }
         ListHeaderComponent={
           <>
-            {/* Promo Card con imagen de fondo y overlay */}
-            <View style={styles.promoCard}>
-              {/* Imagen de fondo */}
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600' }}
-                style={styles.promoBgImage}
-                resizeMode="cover"
-              />
-              {/* Overlay degradado para legibilidad */}
-              <LinearGradient
-                colors={['rgba(10,10,10,0.6)', 'rgba(10,10,10,0.45)', 'rgba(26,10,18,0.65)']}
-                start={[0, 0]}
-                end={[1, 1]}
-                style={styles.promoOverlay}
-              />
-              {/* Borde neón */}
-              <LinearGradient
-                colors={['rgba(255,16,240,0.15)', 'rgba(255,140,0,0.08)']}
-                start={[0, 0]}
-                end={[1, 1]}
-                style={styles.promoBorder}
-              />
-
-              <View style={styles.promoContent}>
+            {/* Destacado del menú (datos reales) con imagen y overlay */}
+            {productoDestacado && (
+              <View style={styles.promoCard}>
+                {/* Imagen de fondo */}
+                <Image
+                  source={{
+                    uri:
+                      productoDestacado.imagenUrl ??
+                      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600',
+                  }}
+                  style={styles.promoBgImage}
+                  resizeMode="cover"
+                />
+                {/* Overlay degradado para legibilidad */}
                 <LinearGradient
-                  colors={[colors.neonPink, colors.neonPinkGlow]}
+                  colors={['rgba(10,10,10,0.6)', 'rgba(10,10,10,0.45)', 'rgba(26,10,18,0.65)']}
                   start={[0, 0]}
                   end={[1, 1]}
-                  style={styles.promoBadge}
-                >
-                  <Text style={styles.promoBadgeText}>PROMO ESTACIÓN</Text>
-                </LinearGradient>
-                <View style={styles.promoTextContainer}>
-                  <Text style={styles.promoTitle}>Combo Estación</Text>
-                  <Text style={styles.promoDesc}>Burger + Papas grandes + Bebida</Text>
-                  <View style={styles.promoPricing}>
-                    <Text style={styles.promoPrice}>$12.90</Text>
-                    <Text style={styles.promoOriginal}>$18.50</Text>
-                  </View>
-                </View>
-                <TouchableOpacity style={styles.promoButton}>
+                  style={styles.promoOverlay}
+                />
+                {/* Borde neón */}
+                <LinearGradient
+                  colors={['rgba(255,16,240,0.15)', 'rgba(255,140,0,0.08)']}
+                  start={[0, 0]}
+                  end={[1, 1]}
+                  style={styles.promoBorder}
+                />
+
+                <View style={styles.promoContent}>
                   <LinearGradient
-                    colors={[colors.neonOrange, colors.neonOrangeGlow]}
+                    colors={[colors.neonPink, colors.neonPinkGlow]}
                     start={[0, 0]}
-                    end={[1, 0]}
-                    style={styles.promoButtonGradient}
+                    end={[1, 1]}
+                    style={styles.promoBadge}
                   >
-                    <Text style={styles.promoButtonText}>Pedir</Text>
+                    <Text style={styles.promoBadgeText}>
+                      {(categoriaDestacada ?? 'Destacado').toUpperCase()}
+                    </Text>
                   </LinearGradient>
-                </TouchableOpacity>
+                  <View style={styles.promoTextContainer}>
+                    <Text style={styles.promoTitle} numberOfLines={1}>
+                      {productoDestacado.nombre}
+                    </Text>
+                    {productoDestacado.descripcion ? (
+                      <Text style={styles.promoDesc} numberOfLines={1}>
+                        {productoDestacado.descripcion}
+                      </Text>
+                    ) : null}
+                    <View style={styles.promoPricing}>
+                      <Text style={styles.promoPrice}>
+                        ${productoDestacado.precio.toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.promoButton}
+                    onPress={() =>
+                      router.push(`/product/${productoDestacado.id}`)
+                    }
+                  >
+                    <LinearGradient
+                      colors={[colors.neonOrange, colors.neonOrangeGlow]}
+                      start={[0, 0]}
+                      end={[1, 0]}
+                      style={styles.promoButtonGradient}
+                    >
+                      <Text style={styles.promoButtonText}>Pedir</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
             {/* Category Pills con glow */}
             <View style={styles.pillsContainer}>
@@ -222,7 +251,7 @@ export default function MenuScreen() {
             {/* Section Title */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Más Populares</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => setSelectedCategory(null)}>
                 <Text style={styles.seeAll}>Ver Todo</Text>
               </TouchableOpacity>
             </View>

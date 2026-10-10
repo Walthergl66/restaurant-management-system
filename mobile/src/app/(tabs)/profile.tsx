@@ -4,7 +4,7 @@
  * Usuario real desde la sesión (GET /api/v1/auth/me al login).
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,13 +19,31 @@ import { colors } from '../../theme/colors';
 import { useAuth } from '../../features/auth/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Header } from '../../components/Header';
-import logo from '../../../assets/EstacionLogo.jpeg';
+import { clientesService } from '../../features/clientes/clientesService';
+import type { ClientePerfil } from '../../features/clientes/clientesService';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { usuario, logout } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [perfil, setPerfil] = useState<ClientePerfil | null>(null);
+  const [perfilError, setPerfilError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let activo = true;
+    clientesService
+      .perfil()
+      .then((p) => {
+        if (activo) setPerfil(p);
+      })
+      .catch(() => {
+        if (activo) setPerfilError('No se pudo cargar el perfil');
+      });
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -37,9 +55,9 @@ export default function ProfileScreen() {
     }
   };
 
-  const inicial = (usuario?.nombre || usuario?.username || 'E')
-    .charAt(0)
-    .toUpperCase();
+  const nombre = perfil?.nombre || usuario?.nombre || 'Invitado';
+  const correo = usuario?.username || 'sin sesión';
+  const inicial = nombre.charAt(0).toUpperCase();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -53,10 +71,8 @@ export default function ProfileScreen() {
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{inicial}</Text>
           </View>
-          <Text style={styles.userName}>{usuario?.nombre || 'Invitado'}</Text>
-          <Text style={styles.userEmail}>
-            @{usuario?.username || 'sin sesión'}
-          </Text>
+          <Text style={styles.userName}>{nombre}</Text>
+          <Text style={styles.userEmail}>@{correo}</Text>
           {usuario?.rol && (
             <View style={styles.rolBadge}>
               <Text style={styles.rolText}>{usuario.rol}</Text>
@@ -65,12 +81,24 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mi cuenta</Text>
+          <Text style={styles.sectionTitle}>Datos personales</Text>
           <ProfileRow
-            icon="person-outline"
-            label="Datos personales"
-            value={usuario?.nombre}
+            icon="card-outline"
+            label="Cédula"
+            value={perfil?.cedula}
           />
+          <ProfileRow
+            icon="call-outline"
+            label="Celular"
+            value={perfil?.telefono}
+          />
+          {perfilError && (
+            <Text style={styles.perfilError}>{perfilError}</Text>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mi cuenta</Text>
           <ProfileRow
             icon="key-outline"
             label="Permisos"
@@ -83,27 +111,31 @@ export default function ProfileScreen() {
           <ProfileRow
             icon="location-outline"
             label="Direcciones"
-            onPress={() => {}}
+            onPress={() => router.push('/direcciones')}
           />
           <ProfileRow
             icon="card-outline"
             label="Métodos de pago"
-            onPress={() => {}}
+            onPress={() => router.push('/metodos-pago')}
           />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Soporte</Text>
-          <ProfileRow icon="help-circle-outline" label="Ayuda" onPress={() => {}} />
+          <ProfileRow
+            icon="help-circle-outline"
+            label="Ayuda"
+            onPress={() => router.push('/ayuda')}
+          />
           <ProfileRow
             icon="document-text-outline"
             label="Términos y condiciones"
-            onPress={() => {}}
+            onPress={() => router.push('/terminos')}
           />
           <ProfileRow
             icon="shield-checkmark-outline"
             label="Política de privacidad"
-            onPress={() => {}}
+            onPress={() => router.push('/privacidad')}
           />
         </View>
 
@@ -209,6 +241,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  perfilError: {
+    color: colors.textMuted,
+    fontSize: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   section: {
     backgroundColor: colors.surface,

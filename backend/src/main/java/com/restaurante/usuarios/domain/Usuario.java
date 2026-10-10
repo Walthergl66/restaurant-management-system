@@ -32,6 +32,14 @@ public class Usuario extends AuditableEntity {
     @Column(nullable = false)
     private boolean activo = true;
 
+    /**
+     * Correo verificado (RF-45). Los usuarios creados por administración y los
+     * preexistentes nacen verificados; el auto-registro de cliente nace en
+     * falso hasta confirmar el código enviado a su correo.
+     */
+    @Column(name = "email_verificado", nullable = false)
+    private boolean emailVerificado = true;
+
     @Column(name = "sesion_version", nullable = false)
     private long sesionVersion = 0;
 
@@ -63,6 +71,19 @@ public class Usuario extends AuditableEntity {
 
     public boolean isActivo() {
         return activo;
+    }
+
+    public boolean isEmailVerificado() {
+        return emailVerificado;
+    }
+
+    /** Marca la cuenta como pendiente de verificar el correo. */
+    public void requiereVerificacionEmail() {
+        this.emailVerificado = false;
+    }
+
+    public void marcarEmailVerificado() {
+        this.emailVerificado = true;
     }
 
     public Rol getRol() {

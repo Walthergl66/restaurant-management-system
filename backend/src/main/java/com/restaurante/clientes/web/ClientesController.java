@@ -3,10 +3,12 @@ package com.restaurante.clientes.web;
 import com.restaurante.clientes.CarritoClienteSPI;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
+import com.restaurante.clientes.MetodoPagoClienteSPI;
 import com.restaurante.clientes.PedidoClienteSPI;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -87,6 +89,14 @@ public class ClientesController {
         return clientes.pedidoSPIporCodigo(clienteIdActual(), codigo);
     }
 
+    /** RF-45: perfil del cliente autenticado (cédula, celular, nombre). */
+    @GetMapping("/perfil")
+    @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @Operation(summary = "Perfil del cliente autenticado")
+    public com.restaurante.clientes.ClientePerfilSPI perfil() {
+        return clientes.perfil(clienteIdActual());
+    }
+
     /** RF-45: historial del cliente paginado (A-10: page size máximo 100,
      *  orden descendente por id = últimos primero). */
     @GetMapping("/historial")
@@ -107,6 +117,39 @@ public class ClientesController {
     @Operation(summary = "Nueva dirección para domicilio")
     public DireccionClienteSPI nuevaDireccion(@Valid @RequestBody NuevaDireccionClienteRequest req) {
         return clientes.nuevaDireccion(clienteIdActual(), req);
+    }
+
+    /** RF-42: direcciones activas del cliente para elegir en el checkout. */
+    @GetMapping("/direcciones")
+    @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @Operation(summary = "Direcciones activas del cliente")
+    public List<DireccionClienteSPI> direcciones() {
+        return clientes.direcciones(clienteIdActual());
+    }
+
+    /** RF-45: métodos de pago guardados del cliente (metadata no sensible). */
+    @GetMapping("/metodos-pago")
+    @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @Operation(summary = "Métodos de pago guardados del cliente")
+    public List<MetodoPagoClienteSPI> metodosPago() {
+        return clientes.metodosPago(clienteIdActual());
+    }
+
+    @PostMapping("/metodos-pago")
+    @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Guardar un método de pago (solo metadata)")
+    public MetodoPagoClienteSPI nuevoMetodoPago(@Valid @RequestBody NuevoMetodoPagoClienteRequest req) {
+        return clientes.nuevoMetodoPago(clienteIdActual(), req.tipo(), req.alias(),
+                req.ultimos4(), req.predeterminado());
+    }
+
+    @DeleteMapping("/metodos-pago/{id}")
+    @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Eliminar un método de pago propio")
+    public void eliminarMetodoPago(@PathVariable Long id) {
+        clientes.eliminarMetodoPago(clienteIdActual(), id);
     }
 
     private Long clienteIdActual() {

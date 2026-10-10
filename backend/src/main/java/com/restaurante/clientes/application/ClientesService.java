@@ -4,20 +4,24 @@ import com.restaurante.catalogo.Catalogo;
 import com.restaurante.catalogo.ExtraParaPedido;
 import com.restaurante.catalogo.ProductoParaPedido;
 import com.restaurante.clientes.CarritoClienteSPI;
+import com.restaurante.clientes.ClientePerfilSPI;
 import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
+import com.restaurante.clientes.MetodoPagoClienteSPI;
 import com.restaurante.clientes.PedidoClienteConfirmado;
 import com.restaurante.clientes.PedidoClienteEventos;
 import com.restaurante.clientes.PedidoClienteSPI;
 import com.restaurante.clientes.domain.Cliente;
 import com.restaurante.clientes.domain.DireccionCliente;
 import com.restaurante.clientes.domain.EstadoPedidoCliente;
+import com.restaurante.clientes.domain.MetodoPagoCliente;
 import com.restaurante.clientes.domain.PedidoCliente;
 import com.restaurante.clientes.domain.PedidoClienteLinea;
 import com.restaurante.clientes.domain.PedidoClienteLineaExtra;
 import com.restaurante.clientes.domain.PedidoClienteTablet;
 import com.restaurante.clientes.infrastructure.ClienteRepository;
 import com.restaurante.clientes.infrastructure.DireccionClienteRepository;
+import com.restaurante.clientes.infrastructure.MetodoPagoClienteRepository;
 import com.restaurante.clientes.infrastructure.PedidoClienteRepository;
 import com.restaurante.clientes.web.ConfirmarPedidoClienteRequest;
 import com.restaurante.clientes.web.CrearPedidoClienteRequest;
@@ -28,8 +32,10 @@ import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.shared.outbox.EventoOutbox;
 import com.restaurante.shared.outbox.OutboxRepository;
+import com.restaurante.usuarios.ClienteAutoRegistrado;
 import com.restaurante.usuarios.Usuarios;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +50,7 @@ public class ClientesService implements Clientes {
     private final PedidoClienteRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final DireccionClienteRepository direccionRepository;
+    private final MetodoPagoClienteRepository metodoPagoRepository;
     private final Usuarios usuarios;
     private final Catalogo catalogo;
     private final ApplicationEventPublisher eventPublisher;
@@ -52,6 +59,7 @@ public class ClientesService implements Clientes {
     public ClientesService(PedidoClienteRepository pedidoRepository,
                            ClienteRepository clienteRepository,
                            DireccionClienteRepository direccionRepository,
+                           MetodoPagoClienteRepository metodoPagoRepository,
                            Usuarios usuarios,
                            Catalogo catalogo,
                            ApplicationEventPublisher eventPublisher,
@@ -59,6 +67,7 @@ public class ClientesService implements Clientes {
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.direccionRepository = direccionRepository;
+        this.metodoPagoRepository = metodoPagoRepository;
         this.usuarios = usuarios;
         this.catalogo = catalogo;
         this.eventPublisher = eventPublisher;
@@ -293,6 +302,79 @@ public class ClientesService implements Clientes {
         return toSPI(dir);
     }
 
+    /** RF-42: direcciones activas del cliente para elegir en el checkout. */
+    @Override
+    @Transactional(readOnly = true)
+    public List<DireccionClienteSPI> direcciones(Long clienteId) {
+        return direccionRepository.findByClienteIdAndActivaTrue(clienteId).stream()
+                .map(this::toSPI)
+                .toList();
+    }
+
+    /** RF-45: métodos de pago guardados del cliente. */
+    @Override
+    @Transactional(readOnly = true)
+    public List<MetodoPagoClienteSPI> metodosPago(Long clienteId) {
+        return metodoPagoRepository.findByClienteIdAndActivoTrue(clienteId).stream()
+                .map(this::toSPI)
+                .toList();
+    }
+
+    /** RF-45: guarda un método de pago (solo metadata no sensible). */
+    @Override
+    public MetodoPagoClienteSPI nuevoMetodoPago(Long clienteId, String tipo, String alias,
+                                                String ultimos4, Boolean predeterminado) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new NotFoundException("Cliente no encontrado: " + clienteId));
+        MetodoPagoCliente metodo = new MetodoPagoCliente(
+                cliente.getId(), tipo, alias, ultimos4, predeterminado);
+        metodoPagoRepository.save(metodo);
+        return toSPI(metodo);
+    }
+
+    /** RF-45: desactiva un método de pago propio (comprobando propiedad). */
+    @Override
+    public void eliminarMetodoPago(Long clienteId, Long metodoId) {
+        MetodoPagoCliente metodo = metodoPagoRepository.findByIdAndClienteId(metodoId, clienteId)
+                .orElseThrow(() -> new NotFoundException("Método de pago no encontrado: " + metodoId));
+        metodo.desactivar();
+        metodoPagoRepository.save(metodo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClientePerfilSPI perfil(Long clienteId) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new NotFoundException("Cliente no encontrado: " + clienteId));
+        return new ClientePerfilSPI(
+                cliente.getId(),
+                cliente.getUsuarioId(),
+                cliente.getNombre(),
+                cliente.getCedula(),
+                cliente.getTelefono());
+    }
+
+    /**
+     * Materializa el perfil del cliente con la cédula y el celular reales
+     * capturados en el auto-registro (RF-45). Se ejecuta en la MISMA
+     * transacción del registro: si la cédula o el celular ya están en uso, se
+     * lanza conflicto y el registro completo se revierte.
+     */
+    @EventListener
+    public void alRegistrarCliente(ClienteAutoRegistrado evento) {
+        if (clienteRepository.findByUsuarioId(evento.usuarioId()).isPresent()) {
+            return;
+        }
+        if (clienteRepository.findByCedula(evento.cedula()).isPresent()) {
+            throw new ConflictException("La cédula ya está registrada");
+        }
+        if (clienteRepository.findByTelefono(evento.celular()).isPresent()) {
+            throw new ConflictException("El celular ya está registrado");
+        }
+        clienteRepository.save(new Cliente(
+                evento.usuarioId(), evento.cedula(), evento.celular(), evento.nombre()));
+    }
+
     /**
      * Resuelve (o crea) el cliente del usuario autenticado (RF-42). La fila
      * del usuario se bloquea en escritura para todo el ciclo comprobar-crear:
@@ -445,6 +527,17 @@ public class ClientesService implements Clientes {
                 d.getObservaciones(),
                 d.getActiva(),
                 d.getCreadoAt());
+    }
+
+    private MetodoPagoClienteSPI toSPI(MetodoPagoCliente m) {
+        return new MetodoPagoClienteSPI(
+                m.getId(),
+                m.getClienteId(),
+                m.getTipo(),
+                m.getAlias(),
+                m.getUltimos4(),
+                Boolean.TRUE.equals(m.getPredeterminado()),
+                m.getCreadoAt());
     }
 
     private String validarMetodoPago(String mp) {

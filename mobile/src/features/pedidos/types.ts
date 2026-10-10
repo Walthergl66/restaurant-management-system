@@ -93,6 +93,25 @@ export interface DireccionCliente {
   creadoAt: string;
 }
 
+/** MetodoPagoClienteSPI — método de pago guardado (solo metadata). */
+export interface MetodoPagoCliente {
+  id: number;
+  clienteId: number;
+  tipo: string;
+  alias: string;
+  ultimos4: string | null;
+  predeterminado: boolean;
+  creadoAt: string;
+}
+
+/** NuevoMetodoPagoClienteRequest — alta de un método de pago guardado. */
+export interface NuevoMetodoPagoRequest {
+  tipo: string;
+  alias: string;
+  ultimos4?: string;
+  predeterminado?: boolean;
+}
+
 /** Page<T> de Spring Data (respuesta paginada del historial). */
 export interface Page<T> {
   content: T[];

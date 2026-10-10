@@ -21,6 +21,7 @@ import { colors } from '../theme/colors';
 import { useAuth } from '../features/auth/AuthContext';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { ApiError } from '../core/api/apiError';
 import logo from '../../assets/EstacionLogo.jpeg';
 
 export default function LoginScreen() {
@@ -43,8 +44,19 @@ export default function LoginScreen() {
     try {
       await login(username.trim(), password);
       router.replace('/(tabs)');
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+    } catch (err) {
+      if (
+        err instanceof ApiError &&
+        err.type === 'urn:problem:restaurante:correo-no-verificado'
+      ) {
+        // La cuenta existe pero falta verificar el correo: llevar al paso 2.
+        router.push({
+          pathname: '/verificar',
+          params: { correo: username.trim().toLowerCase() },
+        });
+        return;
+      }
+      setError(err instanceof ApiError ? err.message : 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -95,7 +107,10 @@ export default function LoginScreen() {
             </View>
           )}
 
-          <TouchableOpacity style={styles.forgotButton}>
+          <TouchableOpacity
+            style={styles.forgotButton}
+            onPress={() => router.push('/recuperar')}
+          >
             <Text style={styles.forgotText}>¿Olvidé mi contraseña?</Text>
           </TouchableOpacity>
 
@@ -115,7 +130,7 @@ export default function LoginScreen() {
 
           <Button
             title="CREAR CUENTA"
-            onPress={() => {}}
+            onPress={() => router.push('/registro')}
             variant="outline"
             size="lg"
             style={styles.createButton}

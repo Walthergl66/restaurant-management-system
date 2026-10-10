@@ -60,6 +60,22 @@ public interface Clientes {
     /** RF-42: nueva dirección para domicilio. */
     DireccionClienteSPI nuevaDireccion(Long clienteId, NuevaDireccionClienteRequest request);
 
+    /** RF-42: direcciones activas del cliente para elegir en el checkout. */
+    List<DireccionClienteSPI> direcciones(Long clienteId);
+
+    /** RF-45: métodos de pago guardados del cliente (metadata no sensible). */
+    List<MetodoPagoClienteSPI> metodosPago(Long clienteId);
+
+    /** RF-45: guarda un método de pago del cliente (solo metadata). */
+    MetodoPagoClienteSPI nuevoMetodoPago(Long clienteId, String tipo, String alias,
+                                         String ultimos4, Boolean predeterminado);
+
+    /** RF-45: desactiva un método de pago propio del cliente. */
+    void eliminarMetodoPago(Long clienteId, Long metodoId);
+
+    /** RF-45: perfil del cliente (cédula, celular, nombre). */
+    ClientePerfilSPI perfil(Long clienteId);
+
     /** Resuelve el clienteId real (BD) a partir del username del JWT. */
     Long resolverClienteId(String username);
 }

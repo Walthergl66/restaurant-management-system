@@ -3,6 +3,7 @@ package com.restaurante.shared.web;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.DomainException;
+import com.restaurante.shared.domain.exception.EmailNoVerificadoException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.shared.domain.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,6 +57,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ProblemDetail> handleBusinessRule(BusinessRuleException ex, HttpServletRequest request) {
         return build(HttpStatus.UNPROCESSABLE_ENTITY, "regla-de-negocio", ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(EmailNoVerificadoException.class)
+    public ResponseEntity<ProblemDetail> handleEmailNoVerificado(EmailNoVerificadoException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "correo-no-verificado", ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(DomainException.class)
