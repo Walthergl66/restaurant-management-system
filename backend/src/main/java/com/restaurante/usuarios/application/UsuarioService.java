@@ -5,6 +5,7 @@ import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.usuarios.Usuarios;
 import com.restaurante.usuarios.domain.Rol;
+import com.restaurante.usuarios.domain.RolCodigo;
 import com.restaurante.usuarios.domain.Usuario;
 import com.restaurante.usuarios.infrastructure.PermisoRepository;
 import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
@@ -64,6 +65,28 @@ public class UsuarioService implements Usuarios {
                 request.nombre().trim(),
                 rol);
         return UsuarioAdminResponse.from(usuarioRepository.save(usuario));
+    }
+
+    /**
+     * Auto-registro público de un cliente (RF-45): crea el usuario con el rol
+     * CLIENTE. El clienteId de negocio se resuelve de forma perezosa en el
+     * módulo clientes (resolverClienteId) al primer uso de la app.
+     */
+    public Usuario registrarCliente(String username, String rawPassword, String nombre) {
+        String limpio = username == null ? null : username.trim();
+        if (limpio == null || limpio.isBlank()) {
+            throw new BusinessRuleException("El nombre de usuario es obligatorio");
+        }
+        if (usuarioRepository.existsByUsername(limpio)) {
+            throw new ConflictException("Ya existe un usuario con el nombre '" + limpio + "'");
+        }
+        Rol rol = rolRepository.findByCodigo(RolCodigo.CLIENTE)
+                .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + RolCodigo.CLIENTE));
+        if (!rol.isActivo()) {
+            throw new BusinessRuleException("El rol está desactivado");
+        }
+        Usuario usuario = new Usuario(limpio, passwordEncoder.encode(rawPassword), nombre.trim(), rol);
+        return usuarioRepository.save(usuario);
     }
 
     @Transactional(readOnly = true)
