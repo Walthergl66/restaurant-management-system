@@ -15,7 +15,7 @@ import { CartProvider } from '../features/carrito/CartContext';
 import { colors } from '../theme/colors';
 
 /** Rutas públicas de autenticación (no requieren sesión). */
-const RUTAS_AUTH = ['login', 'registro', 'recuperar'];
+const RUTAS_AUTH = ['login', 'registro', 'recuperar', 'verificar'];
 
 function RootNavigator() {
   const { loading, isAuthenticated } = useAuth();
@@ -56,6 +56,10 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="registro"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="verificar"
         options={{ headerShown: false, presentation: 'modal' }}
       />
       <Stack.Screen

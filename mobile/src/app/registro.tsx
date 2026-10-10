@@ -1,8 +1,9 @@
 /**
  * Estación Burger — Registro de cliente (RF-45)
  *
- * Crea la cuenta pública (rol CLIENTE) y deja la sesión iniciada.
- * Estética consistente con el login neón.
+ * Captura nombre, cédula, celular, correo y contraseña segura (con medidor de
+ * rango). Al crear la cuenta NO inicia sesión: navega a la verificación del
+ * correo, que es donde se emiten los tokens. Estética neón del login.
  */
 
 import React, { useState } from 'react';
@@ -22,6 +23,14 @@ import { colors } from '../theme/colors';
 import { useAuth } from '../features/auth/AuthContext';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { PasswordStrength } from '../features/auth/PasswordStrength';
+import {
+  esCedulaValida,
+  esCelularValido,
+  esCorreoValido,
+  evaluarPassword,
+} from '../features/auth/validation';
+import { ApiError, firstFieldErrorMessage } from '../core/api/apiError';
 
 export default function RegistroScreen() {
   const router = useRouter();
@@ -29,23 +38,39 @@ export default function RegistroScreen() {
   const { registro } = useAuth();
 
   const [nombre, setNombre] = useState('');
-  const [username, setUsername] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [cedula, setCedula] = useState('');
+  const [celular, setCelular] = useState('');
   const [password, setPassword] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleRegistro = async () => {
-    if (!nombre.trim() || !username.trim() || !password) {
+    if (
+      !nombre.trim() ||
+      !correo.trim() ||
+      !cedula.trim() ||
+      !celular.trim() ||
+      !password
+    ) {
       setError('Completa todos los campos');
       return;
     }
-    if (username.trim().length < 3) {
-      setError('El usuario debe tener al menos 3 caracteres');
+    if (!esCorreoValido(correo)) {
+      setError('Ingresa un correo válido');
       return;
     }
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    if (!esCedulaValida(cedula)) {
+      setError('La cédula ecuatoriana no es válida');
+      return;
+    }
+    if (!esCelularValido(celular)) {
+      setError('El celular debe tener 10 dígitos y empezar con 09');
+      return;
+    }
+    if (!evaluarPassword(password).cumple) {
+      setError('La contraseña no cumple los requisitos de seguridad');
       return;
     }
     if (password !== confirmar) {
@@ -56,10 +81,23 @@ export default function RegistroScreen() {
     setError(null);
     setLoading(true);
     try {
-      await registro(username.trim(), nombre.trim(), password);
-      router.replace('/(tabs)');
-    } catch (err: any) {
-      setError(err.message || 'Error al crear la cuenta');
+      await registro({
+        username: correo.trim().toLowerCase(),
+        nombre: nombre.trim(),
+        cedula: cedula.trim(),
+        celular: celular.trim(),
+        password,
+      });
+      router.replace({
+        pathname: '/verificar',
+        params: { correo: correo.trim().toLowerCase() },
+      });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(firstFieldErrorMessage(err.fieldErrors) ?? err.message);
+      } else {
+        setError('Error al crear la cuenta');
+      }
     } finally {
       setLoading(false);
     }
@@ -105,14 +143,35 @@ export default function RegistroScreen() {
           />
 
           <Input
-            label="USUARIO"
-            placeholder="carlos.estacion"
-            value={username}
-            onChangeText={setUsername}
-            icon="at-outline"
+            label="CORREO"
+            placeholder="carlos@correo.com"
+            value={correo}
+            onChangeText={setCorreo}
+            icon="mail-outline"
+            keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             maxLength={50}
+          />
+
+          <Input
+            label="CÉDULA"
+            placeholder="1710034065"
+            value={cedula}
+            onChangeText={setCedula}
+            icon="card-outline"
+            keyboardType="number-pad"
+            maxLength={10}
+          />
+
+          <Input
+            label="CELULAR"
+            placeholder="0991234567"
+            value={celular}
+            onChangeText={setCelular}
+            icon="call-outline"
+            keyboardType="phone-pad"
+            maxLength={10}
           />
 
           <Input
@@ -124,6 +183,8 @@ export default function RegistroScreen() {
             isPassword
             maxLength={72}
           />
+
+          <PasswordStrength password={password} />
 
           <Input
             label="CONFIRMAR CONTRASEÑA"
