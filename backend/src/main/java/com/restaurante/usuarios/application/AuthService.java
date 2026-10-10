@@ -1,9 +1,12 @@
 package com.restaurante.usuarios.application;
 
+import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.shared.domain.exception.UnauthorizedException;
+import com.restaurante.usuarios.domain.RecuperacionPassword;
 import com.restaurante.usuarios.domain.RefreshToken;
 import com.restaurante.usuarios.domain.Usuario;
+import com.restaurante.usuarios.infrastructure.RecuperacionPasswordRepository;
 import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
 import com.restaurante.usuarios.infrastructure.UsuarioRepository;
 import com.restaurante.usuarios.infrastructure.security.JwtProperties;
@@ -11,11 +14,15 @@ import com.restaurante.usuarios.infrastructure.security.JwtService;
 import com.restaurante.usuarios.web.dto.AuthResponse;
 import com.restaurante.usuarios.web.dto.LoginRequest;
 import com.restaurante.usuarios.web.dto.UsuarioInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -25,22 +32,33 @@ import java.util.UUID;
 @Transactional
 public class AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
+    /** Vigencia del token de recuperación de contraseña. */
+    private static final Duration VIGENCIA_RECUPERACION = Duration.ofMinutes(30);
+
     private final UsuarioRepository usuarioRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RecuperacionPasswordRepository recuperacionRepository;
     private final RefreshTokenFamiliaRevoker familiaRevoker;
+    private final UsuarioService usuarioService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
 
     public AuthService(UsuarioRepository usuarioRepository,
                        RefreshTokenRepository refreshTokenRepository,
+                       RecuperacionPasswordRepository recuperacionRepository,
                        RefreshTokenFamiliaRevoker familiaRevoker,
+                       UsuarioService usuarioService,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        JwtProperties jwtProperties) {
         this.usuarioRepository = usuarioRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.recuperacionRepository = recuperacionRepository;
         this.familiaRevoker = familiaRevoker;
+        this.usuarioService = usuarioService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
@@ -53,6 +71,56 @@ public class AuthService {
             throw new UnauthorizedException("Usuario o contraseña incorrectos");
         }
         return emitirTokens(usuario);
+    }
+
+    /**
+     * Registro público de un cliente (RF-45). Crea el usuario con rol CLIENTE y
+     * lo deja con sesión iniciada (mismo contrato que el login). Recibe datos
+     * sueltos para no acoplar application a los DTO de web (guarda ArchUnit).
+     */
+    public AuthResponse registro(String username, String nombre, String password) {
+        Usuario usuario = usuarioService.registrarCliente(username, password, nombre);
+        return emitirTokens(usuario);
+    }
+
+    /**
+     * RF-45: solicita un token de recuperación. No revela si el usuario existe
+     * (respuesta uniforme). No hay servicio de correo en este alcance, así que
+     * el token se registra en el log del servidor para entrega manual; en
+     * producción se reemplaza por el envío por email.
+     */
+    public void solicitarRecuperacion(String username) {
+        Optional<Usuario> posible = usuarioRepository.findByUsernameAndActivoTrue(username);
+        if (posible.isEmpty()) {
+            return;
+        }
+        Usuario usuario = posible.get();
+        String token = UUID.randomUUID().toString();
+        RecuperacionPassword recuperacion = new RecuperacionPassword(
+                usuario.getId(), RecuperacionPassword.hash(token), Instant.now().plus(VIGENCIA_RECUPERACION));
+        recuperacionRepository.save(recuperacion);
+        log.warn("Recuperación de contraseña solicitada para '{}'. Token válido {} min (entrega manual): {}",
+                username, VIGENCIA_RECUPERACION.toMinutes(), token);
+    }
+
+    /**
+     * RF-45: restablece la contraseña con un token de un solo uso válido. Al
+     * cambiarla se revocan todas las sesiones activas (refresh + versión).
+     */
+    public void restablecerPassword(String token, String nuevaPassword) {
+        RecuperacionPassword recuperacion = recuperacionRepository
+                .findByTokenHash(RecuperacionPassword.hash(token))
+                .orElseThrow(() -> new BusinessRuleException("Token de recuperación inválido"));
+        if (recuperacion.isUsado() || recuperacion.isExpirado()) {
+            throw new BusinessRuleException("El token de recuperación está vencido o ya fue usado");
+        }
+        Usuario usuario = usuarioRepository.findById(recuperacion.getUsuarioId())
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        usuario.cambiarPasswordHash(passwordEncoder.encode(nuevaPassword));
+        usuario.incrementarSesionVersion();
+        refreshTokenRepository.revocarActivasDe(usuario.getId());
+        recuperacion.marcarUsado();
+        recuperacionRepository.save(recuperacion);
     }
 
     public AuthResponse refresh(String rawToken) {
