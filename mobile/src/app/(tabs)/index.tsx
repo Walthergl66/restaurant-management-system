@@ -20,29 +20,34 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
-import { menuService } from '../../services/menu';
-import { Producto, Categoria } from '../../types';
+import { menuService } from '../../features/menu/menuService';
+import type { MenuDto, ProductoMenu } from '../../features/menu/types';
 import { ProductCard } from '../../components/ProductCard';
 import { Header } from '../../components/Header';
-import { useCart } from '../../store/CartContext';
+import { useCart } from '../../features/carrito/CartContext';
+import { useAuth } from '../../features/auth/AuthContext';
 
 export default function MenuScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { totalItems } = useCart();
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const { usuario } = useAuth();
+  const [menu, setMenu] = useState<MenuDto | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const categorias = menu?.categorias ?? [];
+  const productos = menu
+    ? menu.categorias.flatMap(categoria => categoria.productos)
+    : [];
+
   const loadMenu = useCallback(async () => {
     try {
       setError(null);
       const data = await menuService.getMenu();
-      setProductos(data.productos);
-      setCategorias(data.categorias);
+      setMenu(data);
     } catch (err: any) {
       setError(err.message || 'Error al cargar el menú');
     } finally {
@@ -60,11 +65,12 @@ export default function MenuScreen() {
     loadMenu();
   }, [loadMenu]);
 
-  const filteredProducts = selectedCategory
-    ? productos.filter(p => p.categoriaId === selectedCategory)
+  const filteredProducts: ProductoMenu[] = selectedCategory
+    ? menu?.categorias.find(c => c.id === selectedCategory)
+        ?.productos ?? []
     : productos;
 
-  const renderProduct = ({ item }: { item: Producto }) => (
+  const renderProduct = ({ item }: { item: ProductoMenu }) => (
     <ProductCard
       producto={item}
       onPress={() => router.push(`/product/${item.id}`)}
@@ -89,7 +95,7 @@ export default function MenuScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Header title="Estación Burger" />
+      <Header title="Estación Burger" nombre={usuario?.nombre} />
 
       <FlatList
         data={filteredProducts}

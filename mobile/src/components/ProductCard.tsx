@@ -14,13 +14,13 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-import { Producto } from '../types';
-import { useCart } from '../store/CartContext';
+import type { ProductoMenu } from '../features/menu/types';
+import { useCart } from '../features/carrito/CartContext';
 
 const CARD_WIDTH = 160;
 
 interface ProductCardProps {
-  producto: Producto;
+  producto: ProductoMenu;
   onPress: () => void;
 }
 

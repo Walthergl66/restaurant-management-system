@@ -4,8 +4,8 @@
 
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider } from '../store/AuthContext';
-import { CartProvider } from '../store/CartContext';
+import { AuthProvider } from '../features/auth/AuthContext';
+import { CartProvider } from '../features/carrito/CartContext';
 import { colors } from '../theme/colors';
 
 export default function RootLayout() {

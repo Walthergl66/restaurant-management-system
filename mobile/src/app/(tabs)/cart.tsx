@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
-import { useCart } from '../../store/CartContext';
+import { useCart } from '../../features/carrito/CartContext';
 import { CartItemRow } from '../../components/CartItemRow';
 import { Button } from '../../components/ui/Button';
 import { Header } from '../../components/Header';
@@ -70,9 +70,7 @@ export default function CartScreen() {
         </View>
         <Button
           title="Proceder al pago"
-          onPress={() => {
-            // TODO: Navegar a checkout
-          }}
+          onPress={() => router.push('/checkout')}
           size="lg"
           icon={<Ionicons name="arrow-forward" size={20} color={colors.background} />}
         />

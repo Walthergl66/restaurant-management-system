@@ -12,11 +12,13 @@ import logo from '../../assets/EstacionLogo.jpeg';
 
 interface HeaderProps {
   title?: string;
+  /** Nombre del usuario para el saludo (desde /auth/me). */
+  nombre?: string;
   showLogo?: boolean;
   right?: React.ReactNode;
 }
 
-export function Header({ title, showLogo = true, right }: HeaderProps) {
+export function Header({ title, nombre, showLogo = true, right }: HeaderProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -28,7 +30,9 @@ export function Header({ title, showLogo = true, right }: HeaderProps) {
           )}
           <View style={styles.greetingContainer}>
             <Text style={styles.greeting}>¡Buenas noches!</Text>
-            <Text style={styles.title}>¡Hola, Carlos!</Text>
+            <Text style={styles.title}>
+              {nombre ? `¡Hola, ${nombre}!` : '¡Hola!'}
+            </Text>
           </View>
         </View>
         {right && <View style={styles.right}>{right}</View>}

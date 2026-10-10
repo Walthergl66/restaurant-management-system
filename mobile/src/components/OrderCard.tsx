@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-import { PedidoCliente } from '../types';
+import type { PedidoCliente } from '../features/pedidos/types';
 
 interface OrderCardProps {
   pedido: PedidoCliente;
