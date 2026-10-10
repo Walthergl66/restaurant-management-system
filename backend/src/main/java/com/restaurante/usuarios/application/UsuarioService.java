@@ -3,6 +3,7 @@ package com.restaurante.usuarios.application;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
+import com.restaurante.usuarios.ClienteAutoRegistrado;
 import com.restaurante.usuarios.Usuarios;
 import com.restaurante.usuarios.domain.Rol;
 import com.restaurante.usuarios.domain.RolCodigo;
@@ -16,6 +17,7 @@ import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
 import com.restaurante.usuarios.web.dto.RolDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,17 +39,20 @@ public class UsuarioService implements Usuarios {
     private final PermisoRepository permisoRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           RolRepository rolRepository,
                           PermisoRepository permisoRepository,
                           RefreshTokenRepository refreshTokenRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          ApplicationEventPublisher eventPublisher) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.permisoRepository = permisoRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     public UsuarioAdminResponse crear(CrearUsuarioRequest request) {
@@ -69,10 +74,12 @@ public class UsuarioService implements Usuarios {
 
     /**
      * Auto-registro público de un cliente (RF-45): crea el usuario con el rol
-     * CLIENTE. El clienteId de negocio se resuelve de forma perezosa en el
-     * módulo clientes (resolverClienteId) al primer uso de la app.
+     * CLIENTE, pendiente de verificar el correo, y publica (en la misma
+     * transacción) el evento para que el módulo clientes materialice el perfil
+     * con la cédula y el celular reales capturados en el registro.
      */
-    public Usuario registrarCliente(String username, String rawPassword, String nombre) {
+    public Usuario registrarCliente(String username, String rawPassword, String nombre,
+                                    String cedula, String celular) {
         String limpio = username == null ? null : username.trim();
         if (limpio == null || limpio.isBlank()) {
             throw new BusinessRuleException("El nombre de usuario es obligatorio");
@@ -86,7 +93,11 @@ public class UsuarioService implements Usuarios {
             throw new BusinessRuleException("El rol está desactivado");
         }
         Usuario usuario = new Usuario(limpio, passwordEncoder.encode(rawPassword), nombre.trim(), rol);
-        return usuarioRepository.save(usuario);
+        usuario.requiereVerificacionEmail();
+        Usuario guardado = usuarioRepository.save(usuario);
+        eventPublisher.publishEvent(new ClienteAutoRegistrado(
+                guardado.getId(), nombre.trim(), cedula.trim(), celular.trim()));
+        return guardado;
     }
 
     @Transactional(readOnly = true)

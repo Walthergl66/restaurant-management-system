@@ -3,11 +3,14 @@ package com.restaurante.usuarios.web;
 import com.restaurante.usuarios.application.AuthService;
 import com.restaurante.usuarios.web.dto.AuthResponse;
 import com.restaurante.usuarios.web.dto.LoginRequest;
+import com.restaurante.usuarios.web.dto.ReenviarVerificacionRequest;
 import com.restaurante.usuarios.web.dto.RefreshTokenRequest;
+import com.restaurante.usuarios.web.dto.RegistroPendienteResponse;
 import com.restaurante.usuarios.web.dto.RegistroRequest;
 import com.restaurante.usuarios.web.dto.RestablecerPasswordRequest;
 import com.restaurante.usuarios.web.dto.SolicitarRecuperacionRequest;
 import com.restaurante.usuarios.web.dto.UsuarioInfo;
+import com.restaurante.usuarios.web.dto.VerificarEmailRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -44,11 +47,27 @@ public class AuthController {
     }
 
     @PostMapping("/registro")
-    @Operation(summary = "Auto-registro público de un cliente (RF-45); inicia sesión")
-    public ResponseEntity<AuthResponse> registro(@Valid @RequestBody RegistroRequest request) {
-        AuthResponse respuesta = authService.registro(
-                request.username(), request.nombre(), request.password());
-        return ResponseEntity.created(URI.create("/api/v1/auth/me")).body(respuesta);
+    @Operation(summary = "Auto-registro público de un cliente (RF-45); queda pendiente de verificar el correo")
+    public ResponseEntity<RegistroPendienteResponse> registro(@Valid @RequestBody RegistroRequest request) {
+        authService.registro(request.username(), request.nombre(), request.password(),
+                request.cedula(), request.celular());
+        RegistroPendienteResponse respuesta = new RegistroPendienteResponse(
+                request.username(), false,
+                "Te enviamos un código de verificación a tu correo");
+        return ResponseEntity.created(URI.create("/api/v1/auth/verificar-email")).body(respuesta);
+    }
+
+    @PostMapping("/verificar-email")
+    @Operation(summary = "Verifica el correo con el código (RF-45) e inicia sesión")
+    public AuthResponse verificarEmail(@Valid @RequestBody VerificarEmailRequest request) {
+        return authService.verificarEmail(request.username(), request.codigo());
+    }
+
+    @PostMapping("/reenviar-verificacion")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Reenvía el código de verificación al correo (RF-45)")
+    public void reenviarVerificacion(@Valid @RequestBody ReenviarVerificacionRequest request) {
+        authService.reenviarVerificacion(request.username());
     }
 
     @PostMapping("/refresh")

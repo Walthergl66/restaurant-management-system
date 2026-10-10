@@ -1,14 +1,18 @@
 package com.restaurante.usuarios.application;
 
 import com.restaurante.shared.domain.exception.BusinessRuleException;
+import com.restaurante.shared.domain.exception.EmailNoVerificadoException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.shared.domain.exception.UnauthorizedException;
+import com.restaurante.usuarios.EmisorCorreo;
 import com.restaurante.usuarios.domain.RecuperacionPassword;
 import com.restaurante.usuarios.domain.RefreshToken;
 import com.restaurante.usuarios.domain.Usuario;
+import com.restaurante.usuarios.domain.VerificacionEmail;
 import com.restaurante.usuarios.infrastructure.RecuperacionPasswordRepository;
 import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
 import com.restaurante.usuarios.infrastructure.UsuarioRepository;
+import com.restaurante.usuarios.infrastructure.VerificacionEmailRepository;
 import com.restaurante.usuarios.infrastructure.security.JwtProperties;
 import com.restaurante.usuarios.infrastructure.security.JwtService;
 import com.restaurante.usuarios.web.dto.AuthResponse;
@@ -20,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -37,9 +42,16 @@ public class AuthService {
     /** Vigencia del token de recuperación de contraseña. */
     private static final Duration VIGENCIA_RECUPERACION = Duration.ofMinutes(30);
 
+    /** Vigencia del código de verificación de correo. */
+    private static final Duration VIGENCIA_VERIFICACION = Duration.ofMinutes(30);
+
+    private static final SecureRandom CODIGO_RANDOM = new SecureRandom();
+
     private final UsuarioRepository usuarioRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RecuperacionPasswordRepository recuperacionRepository;
+    private final VerificacionEmailRepository verificacionRepository;
+    private final EmisorCorreo emisorCorreo;
     private final RefreshTokenFamiliaRevoker familiaRevoker;
     private final UsuarioService usuarioService;
     private final PasswordEncoder passwordEncoder;
@@ -49,6 +61,8 @@ public class AuthService {
     public AuthService(UsuarioRepository usuarioRepository,
                        RefreshTokenRepository refreshTokenRepository,
                        RecuperacionPasswordRepository recuperacionRepository,
+                       VerificacionEmailRepository verificacionRepository,
+                       EmisorCorreo emisorCorreo,
                        RefreshTokenFamiliaRevoker familiaRevoker,
                        UsuarioService usuarioService,
                        PasswordEncoder passwordEncoder,
@@ -57,6 +71,8 @@ public class AuthService {
         this.usuarioRepository = usuarioRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.recuperacionRepository = recuperacionRepository;
+        this.verificacionRepository = verificacionRepository;
+        this.emisorCorreo = emisorCorreo;
         this.familiaRevoker = familiaRevoker;
         this.usuarioService = usuarioService;
         this.passwordEncoder = passwordEncoder;
@@ -70,17 +86,63 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
             throw new UnauthorizedException("Usuario o contraseña incorrectos");
         }
+        if (!usuario.isEmailVerificado()) {
+            throw new EmailNoVerificadoException("Debes verificar tu correo antes de iniciar sesión");
+        }
         return emitirTokens(usuario);
     }
 
     /**
-     * Registro público de un cliente (RF-45). Crea el usuario con rol CLIENTE y
-     * lo deja con sesión iniciada (mismo contrato que el login). Recibe datos
+     * Registro público de un cliente (RF-45): crea el usuario con rol CLIENTE
+     * pendiente de verificar el correo y le envía un código. No inicia sesión:
+     * hasta confirmar el código la cuenta no puede autenticarse. Recibe datos
      * sueltos para no acoplar application a los DTO de web (guarda ArchUnit).
      */
-    public AuthResponse registro(String username, String nombre, String password) {
-        Usuario usuario = usuarioService.registrarCliente(username, password, nombre);
+    public void registro(String username, String nombre, String password,
+                         String cedula, String celular) {
+        Usuario usuario = usuarioService.registrarCliente(username, password, nombre, cedula, celular);
+        enviarCodigoVerificacion(usuario);
+    }
+
+    /**
+     * Verifica el correo con el código de un solo uso (RF-45) y, si es válido,
+     * activa la cuenta y deja la sesión iniciada (mismo contrato que el login).
+     */
+    public AuthResponse verificarEmail(String username, String codigo) {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessRuleException("El código de verificación es inválido"));
+        if (usuario.isEmailVerificado()) {
+            throw new BusinessRuleException("El correo de esta cuenta ya está verificado");
+        }
+        VerificacionEmail verificacion = verificacionRepository
+                .findTopByUsuarioIdAndUsadoFalseOrderByIdDesc(usuario.getId())
+                .orElseThrow(() -> new BusinessRuleException("No hay una verificación pendiente para este correo"));
+        if (verificacion.isExpirado() || !verificacion.coincide(codigo)) {
+            throw new BusinessRuleException("El código de verificación es inválido o expiró");
+        }
+        verificacion.marcarUsado();
+        verificacionRepository.save(verificacion);
+        usuario.marcarEmailVerificado();
         return emitirTokens(usuario);
+    }
+
+    /**
+     * Reenvía el código de verificación (RF-45). No revela si la cuenta existe
+     * (respuesta uniforme) ni reenvía si el correo ya está verificado.
+     */
+    public void reenviarVerificacion(String username) {
+        Optional<Usuario> posible = usuarioRepository.findByUsernameAndActivoTrue(username);
+        if (posible.isEmpty() || posible.get().isEmailVerificado()) {
+            return;
+        }
+        enviarCodigoVerificacion(posible.get());
+    }
+
+    private void enviarCodigoVerificacion(Usuario usuario) {
+        String codigo = String.format("%06d", CODIGO_RANDOM.nextInt(1_000_000));
+        verificacionRepository.save(new VerificacionEmail(
+                usuario.getId(), VerificacionEmail.hash(codigo), Instant.now().plus(VIGENCIA_VERIFICACION)));
+        emisorCorreo.enviarCodigoVerificacion(usuario.getUsername(), codigo);
     }
 
     /**
