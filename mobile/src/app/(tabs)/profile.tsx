@@ -83,27 +83,31 @@ export default function ProfileScreen() {
           <ProfileRow
             icon="location-outline"
             label="Direcciones"
-            onPress={() => {}}
+            onPress={() => router.push('/direcciones')}
           />
           <ProfileRow
             icon="card-outline"
             label="Métodos de pago"
-            onPress={() => {}}
+            onPress={() => router.push('/metodos-pago')}
           />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Soporte</Text>
-          <ProfileRow icon="help-circle-outline" label="Ayuda" onPress={() => {}} />
+          <ProfileRow
+            icon="help-circle-outline"
+            label="Ayuda"
+            onPress={() => router.push('/ayuda')}
+          />
           <ProfileRow
             icon="document-text-outline"
             label="Términos y condiciones"
-            onPress={() => {}}
+            onPress={() => router.push('/terminos')}
           />
           <ProfileRow
             icon="shield-checkmark-outline"
             label="Política de privacidad"
-            onPress={() => {}}
+            onPress={() => router.push('/privacidad')}
           />
         </View>
 
