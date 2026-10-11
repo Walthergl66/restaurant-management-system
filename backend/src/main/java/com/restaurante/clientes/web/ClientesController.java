@@ -102,7 +102,7 @@ public class ClientesController {
     @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
     @Operation(summary = "Actualizar perfil del cliente")
     public com.restaurante.clientes.ClientePerfilSPI actualizarPerfil(
-            @Valid @RequestBody com.restaurante.clientes.web.dto.ActualizarPerfilRequest request) {
+            @Valid @RequestBody com.restaurante.clientes.ActualizarPerfilRequest request) {
         return clientes.actualizarPerfil(clienteIdActual(), request);
     }
 
