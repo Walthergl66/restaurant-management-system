@@ -20,6 +20,9 @@ public interface Usuarios {
     /** Cambia el correo (username) de un usuario y lo marca como pendiente de verificar. */
     void cambiarCorreo(Long usuarioId, String nuevoCorreo);
 
+    /** Usuario por ID (para módulos que solo tienen el usuarioId). */
+    Optional<UsuarioResumen> porId(Long id);
+
     record UsuarioResumen(Long id, String username, String nombre, String rolCodigo, boolean activo) {
     }
 }
