@@ -356,7 +356,7 @@ public class ClientesService implements Clientes {
 
     @Override
     @Transactional
-    public ClientePerfilSPI actualizarPerfil(Long clienteId, com.restaurante.clientes.web.dto.ActualizarPerfilRequest request) {
+    public ClientePerfilSPI actualizarPerfil(Long clienteId, com.restaurante.clientes.ActualizarPerfilRequest request) {
         Cliente cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new NotFoundException("Cliente no encontrado: " + clienteId));
 
