@@ -176,7 +176,24 @@ public class UsuarioService implements Usuarios {
     @Override
     @Transactional
     public Optional<UsuarioResumen> porUsernameBloqueado(String username) {
-        return usuarioRepository.findBloqueadoPorUsername(username).map(this::resumen);
+        return usuarioRepository.findBloqueadoPorUsername(username).map(this::resumo);
+    }
+
+    @Override
+    @Transactional
+    public void cambiarCorreo(Long usuarioId, String nuevoCorreo) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado: " + usuarioId));
+        String limpio = nuevoCorreo == null ? null : nuevoCorreo.trim().toLowerCase();
+        if (limpio == null || limpio.isBlank()) {
+            throw new BusinessRuleException("El correo no puede estar vacío");
+        }
+        if (!limpio.equals(usuario.getUsername())) {
+            if (usuarioRepository.existsByUsername(limpio)) {
+                throw new ConflictException("Ya existe un usuario con el correo '" + limpio + "'");
+            }
+            usuario.cambiarCorreo(limpio);
+        }
     }
 
     private UsuarioResumen resumen(Usuario u) {
