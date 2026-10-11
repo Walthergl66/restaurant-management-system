@@ -68,6 +68,7 @@ export default function LoginForm() {
             src="/logo.png"
             alt="Estación Burger"
             fill
+            sizes="200px"
             style={{ objectFit:'contain', filter:'drop-shadow(0 0 24px rgba(245,166,35,.4))' }}
             priority
           />
@@ -108,7 +109,7 @@ export default function LoginForm() {
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
           <div style={{ position:'relative', width:80, height:80 }}>
-            <Image src="/logo.png" alt="Estación Burger" fill style={{ objectFit:'contain' }} priority/>
+            <Image src="/logo.png" alt="Estación Burger" fill sizes="80px" style={{ objectFit:'contain' }} priority/>
           </div>
         </div>
 
