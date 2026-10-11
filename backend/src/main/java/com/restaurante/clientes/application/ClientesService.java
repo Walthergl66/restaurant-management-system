@@ -365,11 +365,10 @@ public class ClientesService implements Clientes {
         }
 
         if (request.correo() != null && !request.correo().isBlank()) {
-            var usuario = usuarios.porUsername(cliente.getUsuarioId())
+            var usuario = usuarios.porId(cliente.getUsuarioId())
                     .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-            if (!usuario.getUsername().equalsIgnoreCase(request.correo().trim())) {
-                usuario.cambiarCorreo(request.correo());
-                usuarios.guardar(usuario);
+            if (!usuario.username().equalsIgnoreCase(request.correo().trim())) {
+                usuarios.cambiarCorreo(cliente.getUsuarioId(), request.correo());
             }
         }
 
