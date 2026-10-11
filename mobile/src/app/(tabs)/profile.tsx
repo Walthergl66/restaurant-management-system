@@ -1,16 +1,21 @@
 /**
- * Estación Burger — Pantalla de Perfil
+ * Estación Burger — Pantalla de Perfil (RF-45)
  *
- * Usuario real desde la sesión (GET /api/v1/auth/me al login).
+ * Información personal editable: celular y correo (correo requiere
+ * re-verificación). Nombre y cédula son de solo lectura.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
+  TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -21,29 +26,37 @@ import { Button } from '../../components/ui/Button';
 import { Header } from '../../components/Header';
 import { clientesService } from '../../features/clientes/clientesService';
 import type { ClientePerfil } from '../../features/clientes/clientesService';
+import { ApiError } from '../../core/api/apiError';
+import { esCelularValido, esCorreoValido } from '../../features/auth/validation';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { usuario, logout } = useAuth();
+
   const [loading, setLoading] = useState(false);
   const [perfil, setPerfil] = useState<ClientePerfil | null>(null);
   const [perfilError, setPerfilError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let activo = true;
-    clientesService
-      .perfil()
-      .then((p) => {
-        if (activo) setPerfil(p);
-      })
-      .catch(() => {
-        if (activo) setPerfilError('No se pudo cargar el perfil');
-      });
-    return () => {
-      activo = false;
-    };
+  const [editandoCelular, setEditandoCelular] = useState(false);
+  const [editandoCorreo, setEditandoCorreo] = useState(false);
+  const [celularDraft, setCelularDraft] = useState('');
+  const [correoDraft, setCorreoDraft] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  const cargar = useCallback(async () => {
+    try {
+      setPerfilError(null);
+      const p = await clientesService.perfil();
+      setPerfil(p);
+    } catch {
+      setPerfilError('No se pudo cargar el perfil');
+    }
   }, []);
+
+  useEffect(() => {
+    void cargar();
+  }, [cargar]);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -55,104 +68,252 @@ export default function ProfileScreen() {
     }
   };
 
+  const iniciarEdicionCelular = () => {
+    setCelularDraft(perfil?.telefono ?? '');
+    setEditandoCelular(true);
+    setEditandoCorreo(false);
+  };
+
+  const iniciarEdicionCorreo = () => {
+    setCorreoDraft(usuario?.username ?? '');
+    setEditandoCorreo(true);
+    setEditandoCelular(false);
+  };
+
+  const cancelarEdicion = () => {
+    setEditandoCelular(false);
+    setEditandoCorreo(false);
+  };
+
+  const guardarCelular = async () => {
+    if (!esCelularValido(celularDraft)) {
+      setPerfilError('El celular debe tener 10 dígitos y empezar con 09');
+      return;
+    }
+    setGuardando(true);
+    try {
+      const p = await clientesService.actualizarPerfil({
+        celular: celularDraft.trim(),
+        correo: usuario?.username ?? '',
+      });
+      setPerfil(p);
+      setEditandoCelular(false);
+      setPerfilError(null);
+    } catch (err) {
+      setPerfilError(err instanceof ApiError ? err.message : 'No se pudo actualizar');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const guardarCorreo = async () => {
+    if (!esCorreoValido(correoDraft)) {
+      setPerfilError('Ingresa un correo válido');
+      return;
+    }
+    setGuardando(true);
+    try {
+      await clientesService.actualizarPerfil({
+        celular: perfil?.telefono ?? '',
+        correo: correoDraft.trim().toLowerCase(),
+      });
+      setEditandoCorreo(false);
+      setPerfilError(null);
+      await cargar();
+    } catch (err) {
+      setPerfilError(err instanceof ApiError ? err.message : 'No se pudo actualizar');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const nombre = perfil?.nombre || usuario?.nombre || 'Invitado';
   const correo = usuario?.username || 'sin sesión';
   const inicial = nombre.charAt(0).toUpperCase();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Header title="Perfil" />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={[styles.wrapper, { paddingTop: insets.top }]}>
+        <Header title="Perfil" />
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.userCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{inicial}</Text>
-          </View>
-          <Text style={styles.userName}>{nombre}</Text>
-          <Text style={styles.userEmail}>@{correo}</Text>
-          {usuario?.rol && (
-            <View style={styles.rolBadge}>
-              <Text style={styles.rolText}>{usuario.rol}</Text>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.userCard}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{inicial}</Text>
             </View>
-          )}
-        </View>
+            <Text style={styles.userName}>{nombre}</Text>
+            <Text style={styles.userEmail}>@{correo}</Text>
+            {usuario?.rol && (
+              <View style={styles.rolBadge}>
+                <Text style={styles.rolText}>{usuario.rol}</Text>
+              </View>
+            )}
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Datos personales</Text>
-          <ProfileRow
-            icon="card-outline"
-            label="Cédula"
-            value={perfil?.cedula}
-          />
-          <ProfileRow
-            icon="call-outline"
-            label="Celular"
-            value={perfil?.telefono}
-          />
-          {perfilError && (
-            <Text style={styles.perfilError}>{perfilError}</Text>
-          )}
-        </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información personal</Text>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mi cuenta</Text>
-          <ProfileRow
-            icon="key-outline"
-            label="Permisos"
-            value={
-              usuario?.permisos
-                ? `${usuario.permisos.length} activos`
-                : undefined
-            }
-          />
-          <ProfileRow
-            icon="location-outline"
-            label="Direcciones"
-            onPress={() => router.push('/direcciones')}
-          />
-          <ProfileRow
-            icon="card-outline"
-            label="Métodos de pago"
-            onPress={() => router.push('/metodos-pago')}
-          />
-        </View>
+            <View style={styles.row}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="person-outline" size={22} color={colors.neonOrange} />
+                <Text style={styles.rowLabel}>Nombre</Text>
+              </View>
+              <Text style={styles.rowValue} numberOfLines={1}>
+                {nombre}
+              </Text>
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Soporte</Text>
-          <ProfileRow
-            icon="help-circle-outline"
-            label="Ayuda"
-            onPress={() => router.push('/ayuda')}
-          />
-          <ProfileRow
-            icon="document-text-outline"
-            label="Términos y condiciones"
-            onPress={() => router.push('/terminos')}
-          />
-          <ProfileRow
-            icon="shield-checkmark-outline"
-            label="Política de privacidad"
-            onPress={() => router.push('/privacidad')}
-          />
-        </View>
+            <View style={styles.row}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="card-outline" size={22} color={colors.neonOrange} />
+                <Text style={styles.rowLabel}>Cédula</Text>
+              </View>
+              <Text style={styles.rowValue} numberOfLines={1}>
+                {perfil?.cedula ?? '—'}
+              </Text>
+            </View>
 
-        <Button
-          title="Cerrar sesión"
-          onPress={handleLogout}
-          variant="outline"
-          size="lg"
-          loading={loading}
-          icon={<Ionicons name="log-out-outline" size={20} color={colors.error} />}
-          style={styles.logoutButton}
-          textStyle={{ color: colors.error }}
-        />
+            {editandoCelular ? (
+              <View style={styles.editRow}>
+                <View style={styles.rowLeft}>
+                  <Ionicons name="call-outline" size={22} color={colors.neonOrange} />
+                  <TextInput
+                    style={styles.editInput}
+                    value={celularDraft}
+                    onChangeText={setCelularDraft}
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    placeholder="0991234567"
+                    placeholderTextColor={colors.textMuted}
+                    autoFocus
+                  />
+                </View>
+                <View style={styles.editActions}>
+                  <TouchableOpacity onPress={guardarCelular} disabled={guardando}>
+                    <Ionicons name="checkmark" size={22} color={colors.success} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={cancelarEdicion}>
+                    <Ionicons name="close" size={22} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.row} onPress={iniciarEdicionCelular}>
+                <View style={styles.rowLeft}>
+                  <Ionicons name="call-outline" size={22} color={colors.neonOrange} />
+                  <Text style={styles.rowLabel}>Celular</Text>
+                </View>
+                <View style={styles.rowRight}>
+                  <Text style={styles.rowValue} numberOfLines={1}>
+                    {perfil?.telefono ?? '—'}
+                  </Text>
+                  <Ionicons name="pencil" size={14} color={colors.textMuted} />
+                </View>
+              </TouchableOpacity>
+            )}
 
-        <Text style={styles.version}>Estación Burger v1.0.0</Text>
-      </ScrollView>
-    </View>
+            {editandoCorreo ? (
+              <View style={styles.editRow}>
+                <View style={styles.rowLeft}>
+                  <Ionicons name="mail-outline" size={22} color={colors.neonOrange} />
+                  <TextInput
+                    style={styles.editInput}
+                    value={correoDraft}
+                    onChangeText={setCorreoDraft}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    maxLength={50}
+                    placeholder="correo@ejemplo.com"
+                    placeholderTextColor={colors.textMuted}
+                    autoFocus
+                  />
+                </View>
+                <View style={styles.editActions}>
+                  <TouchableOpacity onPress={guardarCorreo} disabled={guardando}>
+                    <Ionicons name="checkmark" size={22} color={colors.success} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={cancelarEdicion}>
+                    <Ionicons name="close" size={22} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.row} onPress={iniciarEdicionCorreo}>
+                <View style={styles.rowLeft}>
+                  <Ionicons name="mail-outline" size={22} color={colors.neonOrange} />
+                  <Text style={styles.rowLabel}>Correo</Text>
+                </View>
+                <View style={styles.rowRight}>
+                  <Text style={styles.rowValue} numberOfLines={1}>
+                    {correo}
+                  </Text>
+                  <Ionicons name="pencil" size={14} color={colors.textMuted} />
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mi cuenta</Text>
+            <ProfileRow
+              icon="key-outline"
+              label="Permisos"
+              value={usuario?.permisos ? `${usuario.permisos.length} activos` : undefined}
+            />
+            <ProfileRow
+              icon="location-outline"
+              label="Direcciones"
+              onPress={() => router.push('/direcciones')}
+            />
+            <ProfileRow
+              icon="card-outline"
+              label="Métodos de pago"
+              onPress={() => router.push('/metodos-pago')}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Soporte</Text>
+            <ProfileRow
+              icon="help-circle-outline"
+              label="Ayuda"
+              onPress={() => router.push('/ayuda')}
+            />
+            <ProfileRow
+              icon="document-text-outline"
+              label="Términos y condiciones"
+              onPress={() => router.push('/terminos')}
+            />
+            <ProfileRow
+              icon="shield-checkmark-outline"
+              label="Política de privacidad"
+              onPress={() => router.push('/privacidad')}
+            />
+          </View>
+
+          <Button
+            title="Cerrar sesión"
+            onPress={handleLogout}
+            variant="outline"
+            size="lg"
+            loading={loading}
+            icon={<Ionicons name="log-out-outline" size={20} color={colors.error} />}
+            style={styles.logoutButton}
+            textStyle={{ color: colors.error }}
+          />
+
+          <Text style={styles.version}>Estación Burger v1.0.0</Text>
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -168,7 +329,7 @@ function ProfileRow({
   onPress?: () => void;
 }) {
   return (
-    <View style={styles.row}>
+    <TouchableOpacity style={styles.row} onPress={onPress} disabled={!onPress}>
       <View style={styles.rowLeft}>
         <Ionicons name={icon} size={22} color={colors.neonOrange} />
         <Text style={styles.rowLabel}>{label}</Text>
@@ -180,7 +341,7 @@ function ProfileRow({
       ) : (
         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -188,6 +349,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  wrapper: {
+    flex: 1,
   },
   content: {
     padding: 16,
@@ -242,12 +406,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  perfilError: {
-    color: colors.textMuted,
-    fontSize: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
   section: {
     backgroundColor: colors.surface,
     borderRadius: 16,
@@ -277,6 +435,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   rowLabel: {
     color: colors.textPrimary,
@@ -286,7 +450,32 @@ const styles = StyleSheet.create({
   rowValue: {
     color: colors.textMuted,
     fontSize: 14,
-    maxWidth: '60%',
+    maxWidth: '55%',
+    textAlign: 'right',
+  },
+  editRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder,
+  },
+  editInput: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontSize: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.neonOrange,
+  },
+  editActions: {
+    flexDirection: 'row',
+    gap: 16,
+    marginLeft: 12,
   },
   logoutButton: {
     borderColor: colors.error,

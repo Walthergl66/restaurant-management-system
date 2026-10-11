@@ -61,6 +61,13 @@ public class Cliente extends BaseEntity {
         actualizadoAt = Instant.now();
     }
 
+    public void cambiarTelefono(String telefono) {
+        if (telefono == null || telefono.isBlank()) {
+            throw new com.restaurante.shared.domain.exception.BusinessRuleException("El celular no puede estar vacío");
+        }
+        this.telefono = telefono.trim();
+    }
+
     public Long getUsuarioId() { return usuarioId; }
     public String getCedula() { return cedula; }
     public String getTelefono() { return telefono; }

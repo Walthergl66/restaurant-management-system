@@ -76,6 +76,9 @@ public interface Clientes {
     /** RF-45: perfil del cliente (cédula, celular, nombre). */
     ClientePerfilSPI perfil(Long clienteId);
 
+    /** RF-45: actualiza celular y/o correo (correo requiere re-verificación). */
+    ClientePerfilSPI actualizarPerfil(Long clienteId, com.restaurante.clientes.ActualizarPerfilRequest request);
+
     /** Resuelve el clienteId real (BD) a partir del username del JWT. */
     Long resolverClienteId(String username);
 }

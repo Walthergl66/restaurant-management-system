@@ -124,6 +124,19 @@ public class Usuario extends AuditableEntity {
         this.passwordHash = passwordHash;
     }
 
+    /**
+     * Cambia el correo (username) y marca la cuenta como pendiente de
+     * verificar: el cliente debe confirmar el código enviado al nuevo correo
+     * antes de poder iniciar sesión (RF-45).
+     */
+    public void cambiarCorreo(String nuevoCorreo) {
+        if (nuevoCorreo == null || nuevoCorreo.isBlank()) {
+            throw new BusinessRuleException("El correo no puede estar vacío");
+        }
+        this.username = nuevoCorreo.trim().toLowerCase();
+        this.emailVerificado = false;
+    }
+
     public void asignarRol(Rol rol) {
         if (rol == null || !rol.isActivo()) {
             throw new BusinessRuleException("El rol asignado debe estar activo");

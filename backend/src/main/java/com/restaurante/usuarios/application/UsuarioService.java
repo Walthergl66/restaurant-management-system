@@ -146,7 +146,6 @@ public class UsuarioService implements Usuarios {
     public void eliminar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-        // Desactivación lógica: el historial y la auditoría exigen conservar el registro.
         usuario.desactivar();
         invalidarSesiones(usuario);
     }
@@ -170,16 +169,39 @@ public class UsuarioService implements Usuarios {
     @Override
     @Transactional(readOnly = true)
     public Optional<UsuarioResumen> porUsername(String username) {
-        return usuarioRepository.findByUsername(username).map(this::resumen);
+        return usuarioRepository.findByUsername(username).map(u -> resumo(u));
     }
 
     @Override
     @Transactional
     public Optional<UsuarioResumen> porUsernameBloqueado(String username) {
-        return usuarioRepository.findBloqueadoPorUsername(username).map(this::resumen);
+        return usuarioRepository.findBloqueadoPorUsername(username).map(u -> resumo(u));
     }
 
-    private UsuarioResumen resumen(Usuario u) {
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UsuarioResumen> porId(Long id) {
+        return usuarioRepository.findById(id).map(u -> resumo(u));
+    }
+
+    @Override
+    @Transactional
+    public void cambiarCorreo(Long usuarioId, String nuevoCorreo) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado: " + usuarioId));
+        String limpio = nuevoCorreo == null ? null : nuevoCorreo.trim().toLowerCase();
+        if (limpio == null || limpio.isBlank()) {
+            throw new BusinessRuleException("El correo no puede estar vacío");
+        }
+        if (!limpio.equals(usuario.getUsername())) {
+            if (usuarioRepository.existsByUsername(limpio)) {
+                throw new ConflictException("Ya existe un usuario con el correo '" + limpio + "'");
+            }
+            usuario.cambiarCorreo(limpio);
+        }
+    }
+
+    private UsuarioResumen resumo(Usuario u) {
         return new UsuarioResumen(
                 u.getId(),
                 u.getUsername(),
