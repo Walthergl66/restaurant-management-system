@@ -97,6 +97,15 @@ public class ClientesController {
         return clientes.perfil(clienteIdActual());
     }
 
+    /** RF-45: actualiza celular y/o correo (correo requiere re-verificación). */
+    @PatchMapping("/perfil")
+    @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")
+    @Operation(summary = "Actualizar perfil del cliente")
+    public com.restaurante.clientes.ClientePerfilSPI actualizarPerfil(
+            @Valid @RequestBody com.restaurante.clientes.web.dto.ActualizarPerfilRequest request) {
+        return clientes.actualizarPerfil(clienteIdActual(), request);
+    }
+
     /** RF-45: historial del cliente paginado (A-10: page size máximo 100,
      *  orden descendente por id = últimos primero). */
     @GetMapping("/historial")
