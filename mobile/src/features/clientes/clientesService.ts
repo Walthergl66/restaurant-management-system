@@ -13,6 +13,11 @@ export interface ClientePerfil {
   telefono: string;
 }
 
+export interface ActualizarPerfil {
+  celular: string;
+  correo: string;
+}
+
 const ENDPOINTS = {
   perfil: '/clientes/perfil',
 } as const;
@@ -21,6 +26,11 @@ export const clientesService = {
   /** Perfil del cliente autenticado (cédula, celular, nombre). */
   async perfil(): Promise<ClientePerfil> {
     return apiClient.get<ClientePerfil>(ENDPOINTS.perfil);
+  },
+
+  /** Actualiza celular y/o correo (correo requiere re-verificación). */
+  async actualizarPerfil(datos: ActualizarPerfil): Promise<ClientePerfil> {
+    return apiClient.patch<ClientePerfil>(ENDPOINTS.perfil, datos);
   },
 };
 
