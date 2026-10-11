@@ -354,6 +354,33 @@ public class ClientesService implements Clientes {
                 cliente.getTelefono());
     }
 
+    @Override
+    @Transactional
+    public ClientePerfilSPI actualizarPerfil(Long clienteId, com.restaurante.clientes.web.dto.ActualizarPerfilRequest request) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new NotFoundException("Cliente no encontrado: " + clienteId));
+
+        if (request.celular() != null && !request.celular().isBlank()) {
+            cliente.cambiarTelefono(request.celular());
+        }
+
+        if (request.correo() != null && !request.correo().isBlank()) {
+            var usuario = usuarios.porUsername(cliente.getUsuarioId())
+                    .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+            if (!usuario.getUsername().equalsIgnoreCase(request.correo().trim())) {
+                usuario.cambiarCorreo(request.correo());
+                usuarios.guardar(usuario);
+            }
+        }
+
+        return new ClientePerfilSPI(
+                cliente.getId(),
+                cliente.getUsuarioId(),
+                cliente.getNombre(),
+                cliente.getCedula(),
+                cliente.getTelefono());
+    }
+
     /**
      * Materializa el perfil del cliente con la cédula y el celular reales
      * capturados en el auto-registro (RF-45). Se ejecuta en la MISMA
