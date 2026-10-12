@@ -22,14 +22,8 @@ export interface Mesa {
   id: number; numero: number; capacidad: number; ubicacion?: string | null
   estado: EstadoMesa; activo: boolean
 }
-export interface Categoria { id: number; nombre: string; descripcion?: string | null; orden: number; activo: boolean }
-export interface Extra { id: number; nombre: string; descripcion?: string | null; precio: number; activo: boolean }
-export interface Producto {
-  id: number; nombre: string; descripcion?: string | null; imagenUrl?: string | null; precio: number
-  categoriaId?: number | null; categoriaNombre?: string | null
-  areaId?: number | null; areaNombre?: string | null
-  activo: boolean; extras: Extra[]; ingredientes: string[]
-}
+export type { Categoria, Extra, Producto } from '@/features/catalogo/types'
+
 export interface CajaResponse {
   id: number; estado: EstadoCaja; aperturaInicial: number
   cierreEsperado?: number | null; cierreReal?: number | null; diferencia?: number | null
