@@ -9,11 +9,4 @@ export type { EstadoCaja, CajaResponse, MovimientoResponse } from '@/features/ca
 export type { EstadoAnulacion, AnulacionResponse } from '@/features/anulaciones/types'
 export type { UsuarioAdminResponse, RolDto } from '@/features/usuarios/types'
 export type { EventoAuditoria } from '@/features/auditoria/types'
-
-export interface ReporteVentas {
-  total: number; numeroVentas: number
-  porMetodo: { metodo: string; total: number }[]
-  porDia: { fecha: string; total: number }[]
-  porProducto: { productoId: string; nombre: string; cantidad: number; monto: number }[]
-}
-export interface ResumenFinanzas { ingresos: number; egresos: number; resultado: number }
+export type { ReporteVentas, ResumenFinanzas } from '@/features/reportes/types'
