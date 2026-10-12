@@ -4,6 +4,8 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { Check, X } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
+import { errMsg } from '@/lib/utils'
+import { useAuthStore, hasPermiso } from '@/store/authStore'
 import type { AnulacionResponse, EstadoAnulacion } from '@/types'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -17,6 +19,8 @@ const CFG: Record<EstadoAnulacion, { label: string; badge: string }> = {
 
 export default function AnulacionesPage() {
   const [filtro, setFiltro] = useState<EstadoAnulacion | 'TODOS'>('TODOS')
+  const user = useAuthStore(s => s.user)
+  const puedeAprobar = hasPermiso(user, 'anulaciones:aprobar')
 
   const { data: anulaciones = [], isLoading } = useQuery<AnulacionResponse[]>({
     queryKey: ['anulaciones', filtro],
@@ -32,13 +36,13 @@ export default function AnulacionesPage() {
   const aprobar = useMutation({
     mutationFn: (id: number) => api.patch(`/anulaciones/${id}/aprobar`),
     onSuccess: () => { toast.success('Aprobada'); queryClient.invalidateQueries({ queryKey: ['anulaciones'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   const rechazar = useMutation({
     mutationFn: (id: number) => api.patch(`/anulaciones/${id}/rechazar`),
     onSuccess: () => { toast.success('Rechazada'); queryClient.invalidateQueries({ queryKey: ['anulaciones'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   const pendientes = anulaciones.filter(a => a.estado === 'SOLICITADA').length
@@ -91,9 +95,9 @@ export default function AnulacionesPage() {
                       </td>
                       <td><span className={`badge ${CFG[a.estado]?.badge}`}>{CFG[a.estado]?.label}</span></td>
                       <td style={{ fontSize: 12, color: 'var(--muted)' }}>{a.solicitadoPor}</td>
-                      <td style={{ fontSize: 11, color: 'var(--muted)' }}>{a.creadoAt ? format(new Date(a.creadoAt), 'dd/MM/yy HH:mm', { locale: es }) : '—'}</td>
+                      <td style={{ fontSize: 11, color: 'var(--muted)' }}>{a.resueltaAt ? format(new Date(a.resueltaAt), 'dd/MM/yy HH:mm', { locale: es }) : '—'}</td>
                       <td>
-                        {a.estado === 'SOLICITADA' && (
+                        {a.estado === 'SOLICITADA' && puedeAprobar && (
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
                               onClick={() => aprobar.mutate(a.id)}
