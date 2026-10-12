@@ -1,13 +1,13 @@
 import Image from 'next/image'
+import logo from '../../../public/Estacion-Burger-Logo.png'
 
 export default function Logo({ size = 70 }: { size?: number }) {
   return (
     <Image
-      src="/logo.png"
+      src={logo}
       alt="Estación Burger"
       width={size}
-      height={size}
-      style={{ objectFit: 'contain' }}
+      style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
       priority
     />
   )

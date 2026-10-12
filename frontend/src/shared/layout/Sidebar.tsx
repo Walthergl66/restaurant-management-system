@@ -46,11 +46,10 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{
-        background: 'var(--bg)', border: '1px solid var(--border)',
-        borderRadius: 14, display: 'flex', flexDirection: 'column',
+        display: 'flex', flexDirection: 'column',
         alignItems: 'center', padding: '12px 8px', marginBottom: 16,
       }}>
-        <Logo size={64} />
+        <Logo size={128} />
         <p style={{ color: 'var(--yellow)', fontWeight: 800, fontSize: 11, letterSpacing: 3, marginTop: 4 }}>ESTACIÓN</p>
         <p style={{ color: 'var(--fuchsia)', fontWeight: 800, fontSize: 10, letterSpacing: 2 }}>BURGER</p>
       </div>

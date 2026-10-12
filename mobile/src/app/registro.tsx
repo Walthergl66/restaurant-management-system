@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -35,6 +36,9 @@ import { ApiError, firstFieldErrorMessage } from '../core/api/apiError';
 export default function RegistroScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width, height, fontScale } = useWindowDimensions();
+  const shortScreen = height - insets.top - insets.bottom < 680;
+  const pairedFields = width >= 360 && fontScale <= 1.2;
   const { registro } = useAuth();
 
   const [nombre, setNombre] = useState('');
@@ -111,28 +115,32 @@ export default function RegistroScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + 24 },
+          { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8 },
         ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
+        <View style={styles.content}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
+            accessibilityLabel="Volver"
           >
             <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
+          <Text style={styles.title}>CREAR CUENTA</Text>
         </View>
 
-        <View style={styles.intro}>
-          <Text style={styles.title}>CREAR CUENTA</Text>
+        {!shortScreen && <View style={styles.intro}>
           <Text style={styles.subtitle}>
             Regístrate para pedir y seguir tus pedidos
           </Text>
-        </View>
+        </View>}
 
         <View style={styles.form}>
           <Input
+            compact
             label="NOMBRE"
             placeholder="Tu nombre"
             value={nombre}
@@ -143,6 +151,7 @@ export default function RegistroScreen() {
           />
 
           <Input
+            compact
             label="CORREO"
             placeholder="carlos@correo.com"
             value={correo}
@@ -154,27 +163,35 @@ export default function RegistroScreen() {
             maxLength={50}
           />
 
+          <View style={pairedFields ? styles.fieldRow : undefined}>
+          <View style={pairedFields ? styles.fieldColumn : undefined}>
           <Input
+            compact
             label="CÉDULA"
             placeholder="1710034065"
             value={cedula}
             onChangeText={setCedula}
-            icon="card-outline"
+            icon={pairedFields ? undefined : 'card-outline'}
             keyboardType="number-pad"
             maxLength={10}
           />
-
+          </View>
+          <View style={pairedFields ? styles.fieldColumn : undefined}>
           <Input
+            compact
             label="CELULAR"
             placeholder="0991234567"
             value={celular}
             onChangeText={setCelular}
-            icon="call-outline"
+            icon={pairedFields ? undefined : 'call-outline'}
             keyboardType="phone-pad"
             maxLength={10}
           />
+          </View>
+          </View>
 
           <Input
+            compact
             label="CONTRASEÑA"
             placeholder="••••••••"
             value={password}
@@ -184,9 +201,10 @@ export default function RegistroScreen() {
             maxLength={72}
           />
 
-          <PasswordStrength password={password} />
+          <PasswordStrength password={password} compact />
 
           <Input
+            compact
             label="CONFIRMAR CONTRASEÑA"
             placeholder="••••••••"
             value={confirmar}
@@ -207,7 +225,7 @@ export default function RegistroScreen() {
             title="CREAR CUENTA"
             onPress={handleRegistro}
             loading={loading}
-            size="lg"
+            size="md"
             style={styles.submitButton}
           />
 
@@ -219,6 +237,7 @@ export default function RegistroScreen() {
               ¿Ya tienes cuenta? Inicia sesión
             </Text>
           </TouchableOpacity>
+        </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -232,12 +251,19 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
   header: {
     flexDirection: 'row',
-    marginBottom: 16,
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
   },
   backButton: {
     width: 44,
@@ -250,14 +276,14 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   intro: {
-    marginBottom: 32,
+    marginBottom: 12,
   },
   title: {
     color: colors.neonOrange,
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: '900',
     letterSpacing: 1,
-    marginBottom: 8,
+    flexShrink: 1,
     textShadowColor: colors.neonOrange,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
@@ -268,6 +294,14 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  fieldColumn: {
+    flex: 1,
+    minWidth: 0,
   },
   errorContainer: {
     flexDirection: 'row',
@@ -283,11 +317,13 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     borderRadius: 14,
-    marginTop: 8,
+    marginTop: 4,
   },
   loginLink: {
     alignSelf: 'center',
-    marginTop: 24,
+    minHeight: 44,
+    justifyContent: 'center',
+    marginTop: 4,
   },
   loginLinkText: {
     color: colors.neonPink,

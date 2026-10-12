@@ -8,7 +8,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-import logo from '../../assets/EstacionLogo.jpeg';
+import logo from '../../public/Estacion-Burger-Logo.png';
 
 interface HeaderProps {
   title?: string;
@@ -27,7 +27,7 @@ export function Header({ title, nombre, showLogo = true, right }: HeaderProps) {
       <View style={styles.content}>
         <View style={styles.left}>
           {showLogo && (
-            <Image source={logo} style={styles.logo} resizeMode="cover" />
+            <Image source={logo} style={styles.logo} resizeMode="contain" accessibilityLabel="Estación Burger" />
           )}
           <View style={styles.greetingContainer}>
             <Text style={styles.greeting}>{saludo}</Text>
@@ -64,18 +64,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   left: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
   logo: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: colors.neonOrange,
+    width: 88,
+    height: 50,
+    flexShrink: 0,
   },
   greetingContainer: {
+    flex: 1,
+    minWidth: 0,
     gap: 2,
   },
   greeting: {

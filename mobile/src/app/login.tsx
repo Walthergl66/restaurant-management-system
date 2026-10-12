@@ -13,8 +13,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
@@ -22,11 +23,16 @@ import { useAuth } from '../features/auth/AuthContext';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { ApiError } from '../core/api/apiError';
-import logo from '../../assets/EstacionLogo.jpeg';
+import logo from '../../public/Estacion-Burger-Logo.png';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const [viewport, setViewport] = useState({ width, height });
+  // Usa la vista disponible dentro del área segura, también en modales de iOS.
+  const compact = viewport.height < 740;
+  const logoHeight = Math.min(compact ? 100 : 130, (viewport.width - 40) * 937 / 1678);
+  const logoWidth = logoHeight * 1678 / 937;
   const { login } = useAuth();
 
   const [username, setUsername] = useState('');
@@ -63,25 +69,42 @@ export default function LoginScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.container} edges={['top', 'right', 'bottom', 'left']}>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      onLayout={({ nativeEvent: { layout } }) => {
+        setViewport(previous => previous.width === layout.width && previous.height === layout.height
+          ? previous
+          : { width: layout.width, height: layout.height });
+      }}
     >
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top + 40 },
-        ]}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
+        automaticallyAdjustKeyboardInsets={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
-        <View style={styles.header}>
-          <Image source={logo} style={styles.logo} resizeMode="cover" />
-          <Text style={styles.welcome}>¡BIENVENIDO!</Text>
+        <View style={styles.content}>
+        <View style={[styles.header, compact && styles.headerCompact]}>
+          <View style={[styles.logoFrame, { width: logoWidth, height: logoHeight }]}>
+            <Image
+              source={logo}
+              style={styles.logo}
+              resizeMode="contain"
+              accessibilityLabel="Estación Burger"
+            />
+          </View>
+          <Text style={[styles.welcome, compact && styles.welcomeCompact]}>¡BIENVENIDO!</Text>
           <Text style={styles.tagline}>Sabor extremo con el flow del neón</Text>
         </View>
 
         <View style={styles.form}>
           <Input
+            compact={compact}
             label="EMAIL O USUARIO"
             placeholder="carlos.estacion@burger.com"
             value={username}
@@ -92,6 +115,7 @@ export default function LoginScreen() {
           />
 
           <Input
+            compact={compact}
             label="CONTRASEÑA"
             placeholder="••••••••"
             value={password}
@@ -108,7 +132,7 @@ export default function LoginScreen() {
           )}
 
           <TouchableOpacity
-            style={styles.forgotButton}
+            style={[styles.forgotButton, compact && styles.forgotButtonCompact]}
             onPress={() => router.push('/recuperar')}
           >
             <Text style={styles.forgotText}>¿Olvidé mi contraseña?</Text>
@@ -118,11 +142,11 @@ export default function LoginScreen() {
             title="INICIAR SESIÓN"
             onPress={handleLogin}
             loading={loading}
-            size="lg"
+            size={compact ? 'md' : 'lg'}
             style={styles.loginButton}
           />
 
-          <View style={styles.divider}>
+          <View style={[styles.divider, compact && styles.dividerCompact]}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>o</Text>
             <View style={styles.dividerLine} />
@@ -132,12 +156,14 @@ export default function LoginScreen() {
             title="CREAR CUENTA"
             onPress={() => router.push('/registro')}
             variant="outline"
-            size="lg"
+            size={compact ? 'md' : 'lg'}
             style={styles.createButton}
           />
         </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -148,23 +174,37 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 420,
+    flexShrink: 0,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
+  },
+  headerCompact: {
+    marginBottom: 12,
+  },
+  logoFrame: {
+    flexShrink: 0,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
   logo: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    marginBottom: 24,
-    shadowColor: colors.neonOrange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 10,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
   },
   welcome: {
     color: colors.neonOrange,
@@ -180,9 +220,16 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
     letterSpacing: 0.3,
+    textAlign: 'center',
+  },
+  welcomeCompact: {
+    fontSize: 26,
+    lineHeight: 32,
   },
   form: {
     width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
   errorContainer: {
     flexDirection: 'row',
@@ -197,8 +244,12 @@ const styles = StyleSheet.create({
   },
   forgotButton: {
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 24,
+    minHeight: 44,
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  forgotButtonCompact: {
+    marginBottom: 4,
   },
   forgotText: {
     color: colors.neonPink,
@@ -207,12 +258,14 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     borderRadius: 14,
-    paddingVertical: 18,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 24,
+  },
+  dividerCompact: {
+    marginVertical: 12,
   },
   dividerLine: {
     flex: 1,
@@ -226,7 +279,6 @@ const styles = StyleSheet.create({
   },
   createButton: {
     borderRadius: 14,
-    paddingVertical: 18,
     borderColor: colors.neonPink,
   },
 });

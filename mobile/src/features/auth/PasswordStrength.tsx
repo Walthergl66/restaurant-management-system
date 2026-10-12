@@ -17,6 +17,7 @@ import {
 
 interface PasswordStrengthProps {
   password: string;
+  compact?: boolean;
 }
 
 const COLOR_NIVEL: Record<NivelPassword, string> = {
@@ -25,20 +26,20 @@ const COLOR_NIVEL: Record<NivelPassword, string> = {
   fuerte: colors.success,
 };
 
-const CRITERIOS: { clave: keyof ReturnType<typeof evaluarPassword>['criterios']; texto: string }[] = [
-  { clave: 'longitud', texto: 'Al menos 8 caracteres' },
-  { clave: 'minuscula', texto: 'Una letra minúscula' },
-  { clave: 'mayuscula', texto: 'Una letra mayúscula' },
-  { clave: 'numero', texto: 'Un número' },
-  { clave: 'simbolo', texto: 'Un símbolo (!@#…)' },
+const CRITERIOS: { clave: keyof ReturnType<typeof evaluarPassword>['criterios']; texto: string; breve: string }[] = [
+  { clave: 'longitud', texto: 'Al menos 8 caracteres', breve: '8+ caracteres' },
+  { clave: 'minuscula', texto: 'Una letra minúscula', breve: 'Minúscula' },
+  { clave: 'mayuscula', texto: 'Una letra mayúscula', breve: 'Mayúscula' },
+  { clave: 'numero', texto: 'Un número', breve: 'Número' },
+  { clave: 'simbolo', texto: 'Un símbolo (!@#…)', breve: 'Símbolo (!@#…)' },
 ];
 
-export function PasswordStrength({ password }: PasswordStrengthProps) {
+export function PasswordStrength({ password, compact = false }: PasswordStrengthProps) {
   const evaluacion = evaluarPassword(password);
   const color = COLOR_NIVEL[evaluacion.nivel];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, compact && styles.containerCompact]}>
       <View style={styles.barRow}>
         <View style={styles.barTrack}>
           <View
@@ -53,8 +54,8 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
         </Text>
       </View>
 
-      <View style={styles.criterios}>
-        {CRITERIOS.map(({ clave, texto }) => {
+      <View style={[styles.criterios, compact && styles.criteriosCompact]}>
+        {CRITERIOS.map(({ clave, texto, breve }) => {
           const ok = evaluacion.criterios[clave];
           return (
             <View key={clave} style={styles.criterio}>
@@ -64,7 +65,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
                 color={ok ? colors.success : colors.textMuted}
               />
               <Text style={[styles.criterioText, ok && styles.criterioOk]}>
-                {texto}
+                {compact ? breve : texto}
               </Text>
             </View>
           );
@@ -78,6 +79,14 @@ const styles = StyleSheet.create({
   container: {
     marginTop: -8,
     marginBottom: 16,
+  },
+  containerCompact: {
+    marginTop: 0,
+    marginBottom: 8,
+  },
+  criteriosCompact: {
+    gap: 4,
+    marginTop: 4,
   },
   barRow: {
     flexDirection: 'row',

@@ -19,6 +19,7 @@ interface InputProps extends TextInputProps {
   error?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   isPassword?: boolean;
+  compact?: boolean;
 }
 
 export function Input({
@@ -26,6 +27,7 @@ export function Input({
   error,
   icon,
   isPassword,
+  compact = false,
   style,
   ...props
 }: InputProps) {
@@ -33,11 +35,12 @@ export function Input({
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+    <View style={[styles.container, compact && styles.containerCompact]}>
+      {label && <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
+          compact && styles.inputContainerCompact,
           focused && styles.inputContainerFocused,
           error && styles.inputContainerError,
         ]}
@@ -51,7 +54,7 @@ export function Input({
           />
         )}
         <TextInput
-          style={[styles.input, style]}
+          style={[styles.input, compact && styles.inputCompact, style]}
           placeholderTextColor={colors.textMuted}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -79,6 +82,23 @@ export function Input({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
+  },
+  containerCompact: {
+    marginBottom: 8,
+  },
+  labelCompact: {
+    fontSize: 11,
+    lineHeight: 14,
+    marginBottom: 4,
+  },
+  inputContainerCompact: {
+    minHeight: 44,
+    paddingHorizontal: 12,
+  },
+  inputCompact: {
+    minWidth: 0,
+    paddingVertical: 10,
+    lineHeight: 20,
   },
   label: {
     color: colors.textSecondary,

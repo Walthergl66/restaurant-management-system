@@ -4,11 +4,11 @@
     "slug": "estacion-burger",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./public/brand-icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0A0A0A",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./public/Estacion-Burger-Logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0A"
     },
@@ -20,13 +20,11 @@
       "package": "com.estacionburger.app",
       "adaptiveIcon": {
         "backgroundColor": "#0A0A0A",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./public/brand-adaptive.png"
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./public/brand-favicon.png"
     },
     "extra": {
       "apiUrl": "http://localhost:8080/api/v1"
