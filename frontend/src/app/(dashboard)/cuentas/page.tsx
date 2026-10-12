@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { DollarSign, X, Check } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
-import { fmt } from '@/lib/utils'
+import { fmt, errMsg, METODOS_PAGO } from '@/lib/utils'
 import type { CuentaResponse } from '@/types'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -12,6 +12,7 @@ import { es } from 'date-fns/locale'
 
 export default function CuentasPage() {
   const [cobrar, setCobrar] = useState<CuentaResponse | null>(null)
+  const [adicion, setAdicion] = useState<CuentaResponse | null>(null)
 
   const { data: cuentas = [], isLoading } = useQuery<CuentaResponse[]>({
     queryKey: ['cuentas'],
@@ -25,7 +26,7 @@ export default function CuentasPage() {
   const cerrar = useMutation({
     mutationFn: (id: number) => api.patch(`/cuentas/${id}/cerrar`),
     onSuccess: () => { toast.success('Cuenta cerrada'); queryClient.invalidateQueries({ queryKey: ['cuentas'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   const abiertas = cuentas.filter(c => c.estado === 'ABIERTA')
@@ -62,11 +63,16 @@ export default function CuentasPage() {
                 {abiertas.map(c => (
                   <div key={c.id} style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:14, padding:16, display:'flex', flexDirection:'column', gap:8 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <span style={{ fontWeight:700, fontSize:14 }}>{c.mesaNombre}</span>
+                      <span style={{ fontWeight:700, fontSize:14 }}>Mesa {c.numeroMesa}</span>
                       <span className="badge badge-abierta">Abierta</span>
                     </div>
                     <p style={{ fontSize:24, fontWeight:900, color:'var(--yellow)' }}>{fmt(c.total)}</p>
-                    <p style={{ fontSize:11, color:'var(--muted)' }}>Desde {c.creadoAt ? format(new Date(c.creadoAt),'HH:mm',{locale:es}) : '—'}</p>
+                    <p style={{ fontSize:11, color:'var(--muted)' }}>
+                      {c.pedidos?.length ?? 0} pedido(s) desde {c.createdAt ? format(new Date(c.createdAt),'HH:mm',{locale:es}) : '—'}
+                    </p>
+                    <button className="btn-ghost" style={{ justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setAdicion(c)}>
+                      + Adición
+                    </button>
                     <div style={{ display:'flex', gap:6 }}>
                       <button className="btn-fuchsia" style={{ flex:1, justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setCobrar(c)}>
                         <DollarSign size={12}/> Cobrar
@@ -96,9 +102,9 @@ export default function CuentasPage() {
                 {cerradas.map(c => (
                   <tr key={c.id}>
                     <td style={{ color:'var(--muted)' }}>#{c.id}</td>
-                    <td style={{ fontWeight:600 }}>{c.mesaNombre}</td>
+                    <td style={{ fontWeight:600 }}>Mesa {c.numeroMesa}</td>
                     <td style={{ color:'var(--yellow)', fontWeight:700 }}>{fmt(c.total)}</td>
-                    <td style={{ fontSize:12, color:'var(--muted)' }}>{c.creadoAt ? format(new Date(c.creadoAt),'dd/MM/yy HH:mm',{locale:es}) : '—'}</td>
+                    <td style={{ fontSize:12, color:'var(--muted)' }}>{c.updatedAt ? format(new Date(c.updatedAt),'dd/MM/yy HH:mm',{locale:es}) : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -108,6 +114,47 @@ export default function CuentasPage() {
       </div>
 
       {cobrar && <CobrarModal cuenta={cobrar} onClose={() => setCobrar(null)} />}
+      {adicion && <AdicionModal cuenta={adicion} onClose={() => setAdicion(null)} />}
+    </div>
+  )
+}
+
+function AdicionModal({ cuenta, onClose }: { cuenta: CuentaResponse; onClose: () => void }) {
+  const [notas, setNotas] = useState('')
+
+  const m = useMutation({
+    mutationFn: () => {
+      const codigo = `ADI-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+      return api.post(`/cuentas/${cuenta.id}/adiciones`, { codigo, notas: notas || null })
+    },
+    onSuccess: (res) => {
+      toast.success(`Adición ${res.data.pedidoCodigo} creada — agrega ítems al pedido`)
+      queryClient.invalidateQueries({ queryKey: ['cuentas'] })
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+      onClose()
+    },
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
+  })
+
+  return (
+    <div className="overlay">
+      <div style={{ width:'100%', maxWidth:360, background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:24 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:16 }}>
+          <h2 style={{ fontWeight:700, fontSize:16 }}>Adición — Mesa {cuenta.numeroMesa}</h2>
+          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--muted)' }}><X size={18}/></button>
+        </div>
+        <p style={{ fontSize:12, color:'var(--muted)', marginBottom:14 }}>
+          Se crea un pedido nuevo en borrador ligado a esta cuenta. Luego agrega los ítems desde la pantalla de Pedidos.
+        </p>
+        <label style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:6 }}>NOTAS (opcional)</label>
+        <textarea value={notas} onChange={e => setNotas(e.target.value)} className="input" rows={2} style={{ resize:'none' }} />
+        <div style={{ display:'flex', gap:8, marginTop:20 }}>
+          <button className="btn-yellow" style={{ flex:1, justifyContent:'center' }} onClick={() => m.mutate()} disabled={m.isPending}>
+            <Check size={14}/> {m.isPending ? 'Creando…' : 'Crear adición'}
+          </button>
+          <button className="btn-ghost" onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -118,15 +165,15 @@ function CobrarModal({ cuenta, onClose }: { cuenta: CuentaResponse; onClose: () 
 
   const m = useMutation({
     mutationFn: () => api.post(`/cuentas/${cuenta.id}/cobros`, { pagos: [{ metodo, monto: parseFloat(monto) }], documento: null }),
-    onSuccess: () => { toast.success('Pago registrado'); queryClient.invalidateQueries({ queryKey: ['cuentas'] }); onClose() },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onSuccess: () => { toast.success('Pago registrado'); queryClient.invalidateQueries({ queryKey: ['cuentas'] }); queryClient.invalidateQueries({ queryKey: ['cajas'] }); onClose() },
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   return (
     <div className="overlay">
       <div style={{ width:'100%', maxWidth:360, background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:24 }}>
         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:16 }}>
-          <h2 style={{ fontWeight:700, fontSize:16 }}>Cobrar — {cuenta.mesaNombre}</h2>
+          <h2 style={{ fontWeight:700, fontSize:16 }}>Cobrar — Mesa {cuenta.numeroMesa}</h2>
           <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--muted)' }}><X size={18}/></button>
         </div>
         <p style={{ fontSize:32, fontWeight:900, color:'var(--yellow)', marginBottom:20 }}>{fmt(cuenta.total)}</p>
@@ -134,7 +181,7 @@ function CobrarModal({ cuenta, onClose }: { cuenta: CuentaResponse; onClose: () 
           <div>
             <label style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:6 }}>MÉTODO DE PAGO</label>
             <select value={metodo} onChange={e => setMetodo(e.target.value)} className="input">
-              {['EFECTIVO','TARJETA_DEBITO','TARJETA_CREDITO','TRANSFERENCIA','QR'].map(x => <option key={x}>{x}</option>)}
+              {METODOS_PAGO.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
             </select>
           </div>
           <div>
