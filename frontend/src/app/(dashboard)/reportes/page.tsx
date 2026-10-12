@@ -17,13 +17,23 @@ export default function ReportesPage() {
 
   const { data: rep, isLoading } = useQuery<ReporteVentas>({
     queryKey: ['reportes','ventas',desde,hasta],
-    queryFn: async () => { const { data } = await api.get('/reportes/ventas',{ params:{ desde,hasta } }); return data },
+    queryFn: async () => {
+      const desdeIso = new Date(`${desde}T00:00:00`).toISOString()
+      const hastaIso = new Date(`${hasta}T23:59:59`).toISOString()
+      const { data } = await api.get('/reportes/ventas',{ params:{ desde: desdeIso, hasta: hastaIso } }); return data
+    },
   })
 
   const { data: fin } = useQuery<ResumenFinanzas>({
     queryKey: ['finanzas',desde,hasta],
-    queryFn: async () => { const { data } = await api.get('/finanzas/resumen',{ params:{ desde,hasta } }); return data },
+    queryFn: async () => {
+      const desdeIso = new Date(`${desde}T00:00:00`).toISOString()
+      const hastaIso = new Date(`${hasta}T23:59:59`).toISOString()
+      const { data } = await api.get('/finanzas/resumen',{ params:{ desde: desdeIso, hasta: hastaIso } }); return data
+    },
   })
+
+  const ticketPromedio = rep && rep.numeroVentas > 0 ? rep.total / rep.numeroVentas : 0
 
   const RANGOS = [{ label:'Hoy',d:0 },{ label:'7 días',d:6 },{ label:'30 días',d:29 }]
 
@@ -55,10 +65,10 @@ export default function ReportesPage() {
             {/* kpis */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))', gap:12 }}>
               {[
-                { label:'Total ventas',   value: fmt(rep?.totalVentas),              color:'var(--yellow)'  },
-                { label:'Total pedidos',  value: String(rep?.totalPedidos??0),        color:'var(--fuchsia)' },
-                { label:'Ticket promedio',value: fmt(rep?.ticketPromedio),            color:'var(--yellow)'  },
-                { label:'Resultado neto', value: fmt(fin?.resultado),                 color:(fin?.resultado??0)>=0?'var(--success)':'var(--error)' },
+                { label:'Total ventas',   value: fmt(rep?.total),                 color:'var(--yellow)'  },
+                { label:'Total pedidos',  value: String(rep?.numeroVentas??0),     color:'var(--fuchsia)' },
+                { label:'Ticket promedio',value: fmt(ticketPromedio),              color:'var(--yellow)'  },
+                { label:'Resultado neto', value: fmt(fin?.resultado),              color:(fin?.resultado??0)>=0?'var(--success)':'var(--error)' },
               ].map(k => (
                 <div key={k.label} className="card">
                   <p style={{ fontSize:11, color:'var(--muted)', marginBottom:4 }}>{k.label}</p>
@@ -76,10 +86,10 @@ export default function ReportesPage() {
                   : (
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={rep.porDia} barSize={22} margin={{ top:4,right:4,bottom:0,left:-20 }}>
-                        <XAxis dataKey="fecha" tickFormatter={v => format(new Date(v+'T00:00:00'),'dd/MM',{locale:es})} tick={{ fill:'var(--muted)',fontSize:11 }} axisLine={false} tickLine={false}/>
+                        <XAxis dataKey="fecha" tickFormatter={v => format(new Date(String(v).length > 10 ? v : v + 'T00:00:00'),'dd/MM',{locale:es})} tick={{ fill:'var(--muted)',fontSize:11 }} axisLine={false} tickLine={false}/>
                         <YAxis tick={{ fill:'var(--muted)',fontSize:11 }} axisLine={false} tickLine={false}/>
                         <Tooltip contentStyle={{ background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:8,color:'#fff',fontSize:12 }} formatter={(v) => [fmt(Number(v)),'Ventas']}/>
-                        <Bar dataKey="monto" radius={[5,5,0,0]}>
+                        <Bar dataKey="total" radius={[5,5,0,0]}>
                           {rep.porDia.map((_,i) => <Cell key={i} fill={i%2===0?'var(--yellow)':'var(--fuchsia)'}/>)}
                         </Bar>
                       </BarChart>
@@ -95,7 +105,7 @@ export default function ReportesPage() {
                   : (
                     <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
-                        <Pie data={rep.porMetodo.map(m => ({ name:m.metodo, value:m.monto }))} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={3}>
+                        <Pie data={rep.porMetodo.map(m => ({ name:m.metodo, value:m.total }))} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={3}>
                           {rep.porMetodo.map((_,i) => <Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
                         </Pie>
                         <Tooltip contentStyle={{ background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:8,color:'#fff',fontSize:12 }} formatter={(v) => [fmt(Number(v))]}/>
@@ -112,16 +122,16 @@ export default function ReportesPage() {
               <div style={{ padding:'14px 20px', borderBottom:'1px solid var(--border)' }}>
                 <h2 style={{ fontWeight:700, fontSize:15 }}>Top productos del período</h2>
               </div>
-              {!rep?.topProductos?.length
+              {!rep?.porProducto?.length
                 ? <p style={{ padding:20, fontSize:13, color:'var(--dim)' }}>Sin datos</p>
                 : (
                   <table className="tbl">
                     <thead><tr>{['#','Producto','Unidades','Total'].map(h => <th key={h}>{h}</th>)}</tr></thead>
                     <tbody>
-                      {rep.topProductos.map((p,i) => (
+                      {rep.porProducto.map((p,i) => (
                         <tr key={i}>
                           <td style={{ fontWeight:800, fontSize:12, color:i<3?'var(--yellow)':'var(--muted)' }}>{String(i+1).padStart(2,'0')}</td>
-                          <td style={{ fontWeight:600 }}>{p.productoNombre}</td>
+                          <td style={{ fontWeight:600 }}>{p.nombre}</td>
                           <td style={{ color:'var(--muted)' }}>{p.cantidad} uds.</td>
                           <td style={{ color:'var(--yellow)', fontWeight:700 }}>{fmt(p.monto)}</td>
                         </tr>
