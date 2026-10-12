@@ -18,7 +18,7 @@ import { colors } from '../theme/colors';
 const RUTAS_AUTH = ['login', 'registro', 'recuperar', 'verificar'];
 
 function RootNavigator() {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, usuario } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -26,12 +26,19 @@ function RootNavigator() {
     if (loading) return;
 
     const enAuth = RUTAS_AUTH.includes(segments[0] as string);
+    const enCliente = segments[0] === '(tabs)';
+    const enMesero = segments[0] === '(waiter)';
+    const esMesero = usuario?.rol === 'MESERO' || usuario?.permisos?.includes('pedidos:crear');
     if (!isAuthenticated && !enAuth) {
       router.replace('/login');
     } else if (isAuthenticated && enAuth) {
+      router.replace(esMesero ? '/(waiter)' : '/(tabs)');
+    } else if (isAuthenticated && esMesero && enCliente) {
+      router.replace('/(waiter)');
+    } else if (isAuthenticated && !esMesero && enMesero) {
       router.replace('/(tabs)');
     }
-  }, [loading, isAuthenticated, segments, router]);
+  }, [loading, isAuthenticated, usuario, segments, router]);
 
   if (loading) {
     return (
@@ -50,6 +57,7 @@ function RootNavigator() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(waiter)" options={{ headerShown: false }} />
       <Stack.Screen
         name="login"
         options={{ headerShown: false, presentation: 'modal' }}
