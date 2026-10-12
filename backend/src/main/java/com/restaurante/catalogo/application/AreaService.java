@@ -3,6 +3,7 @@ package com.restaurante.catalogo.application;
 import com.restaurante.catalogo.domain.Area;
 import com.restaurante.catalogo.infrastructure.AreaRepository;
 import com.restaurante.catalogo.web.dto.AreaRequest;
+import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
 import com.restaurante.catalogo.web.dto.AreaResponse;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
@@ -25,9 +26,7 @@ public class AreaService {
     }
 
     public AreaResponse crear(AreaRequest request) {
-        if (areaRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ConflictException("Ya existe un área llamada '" + request.nombre() + "'");
-        }
+        validarNombreDisponible(request.nombre(), null);
         Area area = new Area(request.nombre());
         area.cambiarDescripcion(request.descripcion());
         return AreaResponse.from(areaRepository.save(area));
@@ -51,9 +50,31 @@ public class AreaService {
     public AreaResponse actualizar(Long id, AreaRequest request) {
         Area area = areaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Área no encontrada"));
+        validarNombreDisponible(request.nombre(), id);
         area.cambiarNombre(request.nombre());
         area.cambiarDescripcion(request.descripcion());
         return AreaResponse.from(area);
+    }
+
+    public AreaResponse cambiarHabilitacion(Long id, HabilitacionCatalogoRequest request) {
+        Area area = areaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Registro de catálogo no encontrado"));
+        if (request.habilitada()) {
+            validarNombreDisponible(area.getNombre(), id);
+            area.activar();
+        } else {
+            area.desactivar();
+        }
+        return AreaResponse.from(area);
+    }
+
+    private void validarNombreDisponible(String nombre, Long id) {
+        boolean duplicado = id == null
+                ? areaRepository.existsByNombreIgnoreCase(nombre.trim())
+                : areaRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);
+        if (duplicado) {
+            throw new ConflictException("Ya existe un área con ese nombre. Si está inactivo, reactiva el registro existente.");
+        }
     }
 
     public void eliminar(Long id) {

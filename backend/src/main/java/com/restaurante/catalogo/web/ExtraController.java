@@ -2,6 +2,7 @@ package com.restaurante.catalogo.web;
 
 import com.restaurante.catalogo.application.ExtraService;
 import com.restaurante.catalogo.web.dto.ExtraRequest;
+import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
 import com.restaurante.catalogo.web.dto.ExtraResponse;
 import com.restaurante.usuarios.PermisoCodigo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,6 +66,14 @@ public class ExtraController {
     public ExtraResponse actualizar(@PathVariable Long id,
                                     @Valid @RequestBody ExtraRequest request) {
         return extraService.actualizar(id, request);
+    }
+
+    @PatchMapping("/{id}/habilitacion")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.CATALOGO_GESTIONAR + "')")
+    @Operation(summary = "Activa o desactiva el registro conservando su identidad")
+    public ExtraResponse cambiarHabilitacion(@PathVariable Long id,
+                                               @Valid @RequestBody HabilitacionCatalogoRequest request) {
+        return extraService.cambiarHabilitacion(id, request);
     }
 
     @DeleteMapping("/{id}")

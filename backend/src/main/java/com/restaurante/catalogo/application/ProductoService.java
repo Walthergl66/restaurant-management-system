@@ -12,6 +12,7 @@ import com.restaurante.catalogo.infrastructure.CategoriaRepository;
 import com.restaurante.catalogo.infrastructure.ExtraRepository;
 import com.restaurante.catalogo.infrastructure.ProductoRepository;
 import com.restaurante.catalogo.web.dto.ProductoRequest;
+import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
 import com.restaurante.catalogo.web.dto.ProductoResponse;
 import com.restaurante.shared.domain.Money;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
@@ -49,9 +50,7 @@ public class ProductoService implements Catalogo {
     }
 
     public ProductoResponse crear(ProductoRequest request) {
-        if (productoRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ConflictException("Ya existe un producto llamado '" + request.nombre() + "'");
-        }
+        validarNombreDisponible(request.nombre(), null);
         Producto producto = new Producto(request.nombre(), Money.of(request.precio()));
         aplicarCampos(producto, request);
         return ProductoResponse.from(productoRepository.save(producto));
@@ -71,9 +70,31 @@ public class ProductoService implements Catalogo {
 
     public ProductoResponse actualizar(Long id, ProductoRequest request) {
         Producto producto = cargar(id);
+        validarNombreDisponible(request.nombre(), id);
         producto.cambiarNombre(request.nombre());
         aplicarCampos(producto, request);
         return ProductoResponse.from(producto);
+    }
+
+    public ProductoResponse cambiarHabilitacion(Long id, HabilitacionCatalogoRequest request) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Registro de catálogo no encontrado"));
+        if (request.habilitada()) {
+            validarNombreDisponible(producto.getNombre(), id);
+            producto.activar();
+        } else {
+            producto.desactivar();
+        }
+        return ProductoResponse.from(producto);
+    }
+
+    private void validarNombreDisponible(String nombre, Long id) {
+        boolean duplicado = id == null
+                ? productoRepository.existsByNombreIgnoreCase(nombre.trim())
+                : productoRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);
+        if (duplicado) {
+            throw new ConflictException("Ya existe un producto con ese nombre. Si está inactivo, reactiva el registro existente.");
+        }
     }
 
     public void eliminar(Long id) {

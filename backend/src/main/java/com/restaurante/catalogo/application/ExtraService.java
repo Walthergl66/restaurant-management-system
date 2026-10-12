@@ -3,6 +3,7 @@ package com.restaurante.catalogo.application;
 import com.restaurante.catalogo.domain.Extra;
 import com.restaurante.catalogo.infrastructure.ExtraRepository;
 import com.restaurante.catalogo.web.dto.ExtraRequest;
+import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
 import com.restaurante.catalogo.web.dto.ExtraResponse;
 import com.restaurante.shared.domain.Money;
 import com.restaurante.shared.domain.exception.ConflictException;
@@ -26,9 +27,7 @@ public class ExtraService {
     }
 
     public ExtraResponse crear(ExtraRequest request) {
-        if (extraRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ConflictException("Ya existe un extra llamado '" + request.nombre() + "'");
-        }
+        validarNombreDisponible(request.nombre(), null);
         Extra extra = new Extra(request.nombre(), Money.of(request.precio()));
         extra.cambiarDescripcion(request.descripcion());
         return ExtraResponse.from(extraRepository.save(extra));
@@ -52,10 +51,32 @@ public class ExtraService {
     public ExtraResponse actualizar(Long id, ExtraRequest request) {
         Extra extra = extraRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Extra no encontrado"));
+        validarNombreDisponible(request.nombre(), id);
         extra.cambiarNombre(request.nombre());
         extra.cambiarDescripcion(request.descripcion());
         extra.cambiarPrecio(Money.of(request.precio()));
         return ExtraResponse.from(extra);
+    }
+
+    public ExtraResponse cambiarHabilitacion(Long id, HabilitacionCatalogoRequest request) {
+        Extra extra = extraRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Registro de catálogo no encontrado"));
+        if (request.habilitada()) {
+            validarNombreDisponible(extra.getNombre(), id);
+            extra.activar();
+        } else {
+            extra.desactivar();
+        }
+        return ExtraResponse.from(extra);
+    }
+
+    private void validarNombreDisponible(String nombre, Long id) {
+        boolean duplicado = id == null
+                ? extraRepository.existsByNombreIgnoreCase(nombre.trim())
+                : extraRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);
+        if (duplicado) {
+            throw new ConflictException("Ya existe un extra con ese nombre. Si está inactivo, reactiva el registro existente.");
+        }
     }
 
     public void eliminar(Long id) {

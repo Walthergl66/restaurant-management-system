@@ -3,6 +3,7 @@ package com.restaurante.catalogo.application;
 import com.restaurante.catalogo.domain.Categoria;
 import com.restaurante.catalogo.infrastructure.CategoriaRepository;
 import com.restaurante.catalogo.web.dto.CategoriaRequest;
+import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
 import com.restaurante.catalogo.web.dto.CategoriaResponse;
 import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
@@ -25,9 +26,7 @@ public class CategoriaService {
     }
 
     public CategoriaResponse crear(CategoriaRequest request) {
-        if (categoriaRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ConflictException("Ya existe una categoría llamada '" + request.nombre() + "'");
-        }
+        validarNombreDisponible(request.nombre(), null);
         Categoria categoria = new Categoria(request.nombre(), request.orden());
         categoria.cambiarDescripcion(request.descripcion());
         return CategoriaResponse.from(categoriaRepository.save(categoria));
@@ -56,10 +55,32 @@ public class CategoriaService {
     public CategoriaResponse actualizar(Long id, CategoriaRequest request) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Categoría no encontrada"));
+        validarNombreDisponible(request.nombre(), id);
         categoria.cambiarNombre(request.nombre());
         categoria.cambiarDescripcion(request.descripcion());
         categoria.cambiarOrden(request.orden());
         return CategoriaResponse.from(categoria);
+    }
+
+    public CategoriaResponse cambiarHabilitacion(Long id, HabilitacionCatalogoRequest request) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Registro de catálogo no encontrado"));
+        if (request.habilitada()) {
+            validarNombreDisponible(categoria.getNombre(), id);
+            categoria.activar();
+        } else {
+            categoria.desactivar();
+        }
+        return CategoriaResponse.from(categoria);
+    }
+
+    private void validarNombreDisponible(String nombre, Long id) {
+        boolean duplicado = id == null
+                ? categoriaRepository.existsByNombreIgnoreCase(nombre.trim())
+                : categoriaRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);
+        if (duplicado) {
+            throw new ConflictException("Ya existe una categoría con ese nombre. Si está inactiva, reactiva el registro existente.");
+        }
     }
 
     public void eliminar(Long id) {

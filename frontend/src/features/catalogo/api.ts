@@ -1,6 +1,14 @@
 'use client'
 import api from '@/shared/api/client'
-import type { Producto, Categoria, ProductoPayload } from './types'
+export type CatalogoRecurso = 'productos' | 'categorias' | 'areas' | 'extras'
+
+export async function cambiarHabilitacionCatalogo(recurso: CatalogoRecurso, id: number, habilitada: boolean): Promise<void> {
+  await api.patch(`/${recurso}/${id}/habilitacion`, { habilitada })
+}
+import type {
+  Area, AreaPayload, Categoria, CategoriaPayload, Extra, ExtraPayload,
+  Producto, ProductoPayload,
+} from './types'
 
 export async function listarProductos(): Promise<Producto[]> {
   const { data } = await api.get('/productos')
@@ -9,6 +17,16 @@ export async function listarProductos(): Promise<Producto[]> {
 
 export async function listarCategorias(): Promise<Categoria[]> {
   const { data } = await api.get('/categorias')
+  return Array.isArray(data) ? data : data.content ?? []
+}
+
+export async function listarAreas(): Promise<Area[]> {
+  const { data } = await api.get('/areas')
+  return Array.isArray(data) ? data : data.content ?? []
+}
+
+export async function listarExtras(): Promise<Extra[]> {
+  const { data } = await api.get('/extras')
   return Array.isArray(data) ? data : data.content ?? []
 }
 
@@ -25,3 +43,21 @@ export async function actualizarProducto(id: number, body: ProductoPayload): Pro
 export async function eliminarProducto(id: number): Promise<void> {
   await api.delete(`/productos/${id}`)
 }
+
+export const crearCategoria = async (body: CategoriaPayload): Promise<Categoria> =>
+  (await api.post('/categorias', body)).data
+export const actualizarCategoria = async (id: number, body: CategoriaPayload): Promise<Categoria> =>
+  (await api.put(`/categorias/${id}`, body)).data
+export const eliminarCategoria = async (id: number): Promise<void> => { await api.delete(`/categorias/${id}`) }
+
+export const crearArea = async (body: AreaPayload): Promise<Area> =>
+  (await api.post('/areas', body)).data
+export const actualizarArea = async (id: number, body: AreaPayload): Promise<Area> =>
+  (await api.put(`/areas/${id}`, body)).data
+export const eliminarArea = async (id: number): Promise<void> => { await api.delete(`/areas/${id}`) }
+
+export const crearExtra = async (body: ExtraPayload): Promise<Extra> =>
+  (await api.post('/extras', body)).data
+export const actualizarExtra = async (id: number, body: ExtraPayload): Promise<Extra> =>
+  (await api.put(`/extras/${id}`, body)).data
+export const eliminarExtra = async (id: number): Promise<void> => { await api.delete(`/extras/${id}`) }
