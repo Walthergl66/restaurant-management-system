@@ -6,6 +6,7 @@
 .classpath
 .project
 .DS_Store
+.playwright-mcp 
 
 # --- Entorno / secretos ---
 .env
