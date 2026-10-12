@@ -9,14 +9,22 @@
  */
 
 import { API_BASE_URL } from '../../config/environment';
+import { authStorage } from '../storage/authStorage';
 import { ApiError, problemDetailToApiError } from './apiError';
 
 class ApiClient {
   private baseUrl: string;
   private accessToken: string | null = null;
+  private refreshPromise: Promise<string | null> | null = null;
+  private onSessionExpired?: () => void;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
+  }
+
+  /** Registra un callback que se invoca cuando la sesión expira definitivamente. */
+  setOnSessionExpired(callback: () => void) {
+    this.onSessionExpired = callback;
   }
 
   /** Guarda el access token activo (null lo quita). */
@@ -24,7 +32,68 @@ class ApiClient {
     this.accessToken = token;
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  /** Refresca el token de acceso de forma atómica y compartida para evitar condiciones de carrera. */
+  private async refreshAccessToken(): Promise<string | null> {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = (async () => {
+      try {
+        const stored = await authStorage.load();
+        if (!stored || !stored.refreshToken) {
+          this.handleSessionExpired();
+          return null;
+        }
+
+        const refreshUrl = `${this.baseUrl}/auth/refresh`;
+        const response = await fetch(refreshUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: stored.refreshToken }),
+        });
+
+        if (!response.ok) {
+          this.handleSessionExpired();
+          return null;
+        }
+
+        const data = (await response.json()) as {
+          accessToken: string;
+          refreshToken: string;
+          usuario?: (typeof stored)['usuario'];
+        };
+
+        this.setAccessToken(data.accessToken);
+        await authStorage.save({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          usuario: data.usuario ?? stored.usuario,
+        });
+
+        return data.accessToken;
+      } catch {
+        this.handleSessionExpired();
+        return null;
+      } finally {
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
+  }
+
+  private handleSessionExpired() {
+    this.setAccessToken(null);
+    void authStorage.clear();
+    this.onSessionExpired?.();
+  }
+
+  async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    isRetry = false
+  ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     const headers: Record<string, string> = {
@@ -47,6 +116,17 @@ class ApiClient {
     }
 
     if (!response.ok) {
+      if (
+        response.status === 401 &&
+        !endpoint.startsWith('/auth/') &&
+        !isRetry
+      ) {
+        const nuevoToken = await this.refreshAccessToken();
+        if (nuevoToken) {
+          return this.request<T>(endpoint, options, true);
+        }
+      }
+
       const body = await response.json().catch(() => ({}));
       throw problemDetailToApiError(response.status, body);
     }

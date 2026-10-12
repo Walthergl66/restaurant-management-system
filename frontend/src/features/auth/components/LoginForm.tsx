@@ -2,7 +2,8 @@
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '../store'
+import { errMsg } from '@/shared/lib/utils'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 
@@ -22,8 +23,8 @@ export default function LoginForm() {
       await login(username, password)
       toast.success('Bienvenido')
       router.push('/dashboard')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.mensaje ?? 'Credenciales incorrectas')
+    } catch (err: unknown) {
+      toast.error(errMsg(err, 'Credenciales incorrectas'))
     } finally {
       setLoading(false)
     }
@@ -68,6 +69,7 @@ export default function LoginForm() {
             src="/logo.png"
             alt="Estación Burger"
             fill
+            sizes="200px"
             style={{ objectFit:'contain', filter:'drop-shadow(0 0 24px rgba(245,166,35,.4))' }}
             priority
           />
@@ -108,7 +110,7 @@ export default function LoginForm() {
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
           <div style={{ position:'relative', width:80, height:80 }}>
-            <Image src="/logo.png" alt="Estación Burger" fill style={{ objectFit:'contain' }} priority/>
+            <Image src="/logo.png" alt="Estación Burger" fill sizes="80px" style={{ objectFit:'contain' }} priority/>
           </div>
         </div>
 

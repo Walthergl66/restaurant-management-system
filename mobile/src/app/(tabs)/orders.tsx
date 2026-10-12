@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import type { PedidoCliente } from '../../features/pedidos/types';
 import { pedidosService } from '../../features/pedidos/pedidosService';
+import { useAuth } from '../../features/auth/AuthContext';
 import { OrderCard } from '../../components/OrderCard';
 import { Header } from '../../components/Header';
 
@@ -31,12 +32,18 @@ export default function OrdersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ nuevo?: string }>();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [pedidos, setPedidos] = useState<PedidoCliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadHistorial = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       setError(null);
       const page = await pedidosService.getHistorial(0, 20);
@@ -47,19 +54,26 @@ export default function OrdersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    loadHistorial();
-  }, [loadHistorial]);
+    if (!authLoading) {
+      if (isAuthenticated) {
+        loadHistorial();
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [authLoading, isAuthenticated, loadHistorial]);
 
   // Sondeo mientras haya pedidos en curso (RF-43: el push real es WebSocket)
   useEffect(() => {
+    if (!isAuthenticated) return;
     const hayActivos = pedidos.some(p => ESTADOS_ACTIVOS.includes(p.estado));
     if (!hayActivos) return;
     const timer = setInterval(loadHistorial, 15000);
     return () => clearInterval(timer);
-  }, [pedidos, loadHistorial]);
+  }, [pedidos, loadHistorial, isAuthenticated]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

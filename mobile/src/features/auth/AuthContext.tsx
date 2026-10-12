@@ -37,6 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    apiClient.setOnSessionExpired(() => {
+      setUsuario(null);
+    });
     void restoreSession();
   }, []);
 
