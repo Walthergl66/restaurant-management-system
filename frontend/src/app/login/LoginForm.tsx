@@ -3,6 +3,7 @@ import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuthStore } from '@/store/authStore'
+import { errMsg } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 
@@ -22,8 +23,8 @@ export default function LoginForm() {
       await login(username, password)
       toast.success('Bienvenido')
       router.push('/dashboard')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.mensaje ?? 'Credenciales incorrectas')
+    } catch (err: unknown) {
+      toast.error(errMsg(err, 'Credenciales incorrectas'))
     } finally {
       setLoading(false)
     }
