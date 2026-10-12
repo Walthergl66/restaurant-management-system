@@ -63,7 +63,7 @@ export default function LoginForm() {
         <div style={{ position:'absolute', top:'20%', left:'50%', transform:'translateX(-50%)', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.12) 0%, transparent 70%)', pointerEvents:'none' }}/>
         <div style={{ position:'absolute', bottom:'15%', left:'50%', transform:'translateX(-50%)', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.1) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
-        <div style={{ width:200, marginBottom:28 }}>
+        <div style={{ width:320, maxWidth:'100%', marginBottom:28 }}>
           <Image
             src="/Estacion-Burger-Logo.png"
             alt="Estación Burger"
@@ -78,21 +78,8 @@ export default function LoginForm() {
           ESTACIÓN BURGER
         </h2>
         <p style={{ fontSize:13, color:'var(--muted)', marginTop:8, textAlign:'center', lineHeight:1.5 }}>
-          Sistema de gestión integral<br/>para tu restaurante
+          Sistema Gestion y Administracion<br/>
         </p>
-
-        <div style={{ marginTop:40, display:'flex', flexDirection:'column', gap:10, width:'100%', maxWidth:220 }}>
-          {[
-            { dot:'var(--yellow)',  text:'Dashboard en tiempo real' },
-            { dot:'var(--fuchsia)', text:'Gestión de pedidos y cocina' },
-            { dot:'var(--success)', text:'Control de caja y reportes' },
-          ].map(({ dot, text }) => (
-            <div key={text} style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <span style={{ width:8, height:8, borderRadius:'50%', background:dot, flexShrink:0, boxShadow:`0 0 6px ${dot}` }}/>
-              <span style={{ fontSize:12, color:'var(--muted)' }}>{text}</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* ── right panel: form ── */}
@@ -108,7 +95,7 @@ export default function LoginForm() {
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
-          <div style={{ width:80 }}>
+          <div style={{ width:140, maxWidth:'100%' }}>
             <Image
               src="/Estacion-Burger-Logo.png"
               alt="Estación Burger"
@@ -124,7 +111,7 @@ export default function LoginForm() {
           ¡BIENVENIDO!
         </h1>
         <p style={{ fontSize:13, color:'var(--muted)', textAlign:'center', marginBottom:36 }}>
-          Sabor extremo con el flow de neón.
+          Sabor extremo con el flow de ESTACION BURGER.
         </p>
 
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:20 }}>
@@ -189,10 +176,6 @@ export default function LoginForm() {
               : <><LogIn size={16}/> INICIAR SESIÓN</>
             }
           </button>
-
-          <p style={{ fontSize:11, color:'var(--dim)', textAlign:'center', marginTop:8 }}>
-            ¿No tienes acceso? Contacta al administrador del sistema.
-          </p>
         </form>
 
         <p style={{ fontSize:11, color:'var(--dim)', textAlign:'center', marginTop:40 }}>
