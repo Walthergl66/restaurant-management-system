@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { Plus, Search, Pencil, Trash2, X, Check } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
+import { errMsg } from '@/lib/utils'
 import type { Producto, Categoria } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -32,7 +33,7 @@ export default function ProductosPage() {
   const eliminar = useMutation({
     mutationFn: (id: number) => api.delete(`/productos/${id}`),
     onSuccess: () => { toast.success('Eliminado'); queryClient.invalidateQueries({ queryKey: ['productos'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   const filtered = productos.filter(p => {
@@ -75,10 +76,10 @@ export default function ProductosPage() {
         : (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:14 }}>
             {filtered.map(p => (
-              <div key={p.id} style={{ background:'var(--surface)', border:`1px solid ${p.disponible ? 'var(--border)' : 'rgba(239,68,68,.3)'}`, borderRadius:16, padding:16, display:'flex', flexDirection:'column', gap:8, opacity: p.activo ? 1 : .55 }}>
+              <div key={p.id} style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16, padding:16, display:'flex', flexDirection:'column', gap:8, opacity: p.activo ? 1 : .55 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
                   <span style={{ fontSize:10, background:'var(--surface-2)', color:'var(--muted)', borderRadius:20, padding:'2px 8px' }}>{p.categoriaNombre ?? '—'}</span>
-                  {!p.disponible && <span className="badge badge-cancelado">Agotado</span>}
+                  {!p.activo && <span className="badge badge-cancelado">Inactivo</span>}
                 </div>
                 <p style={{ fontSize:14, fontWeight:700 }}>{p.nombre}</p>
                 {p.descripcion && <p style={{ fontSize:12, color:'var(--muted)', overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{p.descripcion}</p>}
@@ -103,15 +104,24 @@ function ProductoModal({ categorias, editing, onClose }: { categorias: Categoria
   const [descripcion, setDescripcion] = useState(editing?.descripcion ?? '')
   const [precio,      setPrecio]      = useState(editing?.precio?.toString() ?? '')
   const [categoriaId, setCategoriaId] = useState<number>(editing?.categoriaId ?? (categorias[0]?.id ?? 0))
-  const [disponible,  setDisponible]  = useState(editing?.disponible ?? true)
+  const [ingredientes, setIngredientes] = useState((editing?.ingredientes ?? []).join(', '))
 
   const mutation = useMutation({
     mutationFn: () => {
-      const body = { nombre, descripcion, precio: parseFloat(precio), categoriaId, disponible }
+      const body = {
+        nombre,
+        descripcion: descripcion || null,
+        imagenUrl: editing?.imagenUrl ?? null,
+        precio: parseFloat(precio),
+        categoriaId: categoriaId || null,
+        areaId: editing?.areaId ?? null,
+        extraIds: (editing?.extras ?? []).map(e => e.id),
+        ingredientes: ingredientes.split(',').map(s => s.trim()).filter(Boolean),
+      }
       return editing ? api.put(`/productos/${editing.id}`, body) : api.post('/productos', body)
     },
     onSuccess: () => { toast.success(editing ? 'Actualizado' : 'Creado'); queryClient.invalidateQueries({ queryKey: ['productos'] }); onClose() },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   return (
@@ -132,12 +142,9 @@ function ProductoModal({ categorias, editing, onClose }: { categorias: Categoria
               </select>
             </Field>
           </div>
-          <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
-            <div onClick={() => setDisponible(!disponible)} style={{ width:40, height:22, borderRadius:11, background: disponible ? 'var(--yellow)' : 'var(--surface-3)', position:'relative', transition:'background .2s', cursor:'pointer' }}>
-              <span style={{ position:'absolute', top:3, width:16, height:16, background:'#fff', borderRadius:'50%', transition:'transform .2s', transform: disponible ? 'translateX(21px)' : 'translateX(3px)' }}/>
-            </div>
-            <span style={{ fontSize:13, color:'var(--muted)' }}>Disponible</span>
-          </label>
+          <Field label="INGREDIENTES (separados por coma)">
+            <input value={ingredientes} onChange={e => setIngredientes(e.target.value)} placeholder="pan, carne, queso" className="input"/>
+          </Field>
         </div>
         <div style={{ display:'flex', gap:8, marginTop:20 }}>
           <button className="btn-yellow" style={{ flex:1, justifyContent:'center' }} onClick={() => mutation.mutate()} disabled={mutation.isPending || !nombre || !precio}>
