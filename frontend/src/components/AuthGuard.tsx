@@ -1,16 +1,23 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 
+const emptySubscribe = () => () => {}
+
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, fetchMe } = useAuthStore()
   const router = useRouter()
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace('/login')
-  }, [isAuthenticated, router])
+    if (localStorage.getItem('access_token')) fetchMe()
+  }, [fetchMe])
 
-  if (!isAuthenticated) return null
+  useEffect(() => {
+    if (mounted && !isAuthenticated) router.replace('/login')
+  }, [mounted, isAuthenticated, router])
+
+  if (!mounted || !isAuthenticated) return null
   return <>{children}</>
 }
