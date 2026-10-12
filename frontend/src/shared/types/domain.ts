@@ -8,11 +8,8 @@ export type { EstadoCuenta, CuentaLinea, CuentaPedido, CuentaAnulacion, CuentaRe
 export type { EstadoCaja, CajaResponse, MovimientoResponse } from '@/features/caja/types'
 export type { EstadoAnulacion, AnulacionResponse } from '@/features/anulaciones/types'
 export type { UsuarioAdminResponse, RolDto } from '@/features/usuarios/types'
+export type { EventoAuditoria } from '@/features/auditoria/types'
 
-export interface EventoAuditoria {
-  id: number; usuario: string; tipo: string; entidad: string
-  entidadId?: string | null; detalle?: string | null; fecha: string
-}
 export interface ReporteVentas {
   total: number; numeroVentas: number
   porMetodo: { metodo: string; total: number }[]
