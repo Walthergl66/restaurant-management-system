@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { ArrowLeft, Check, X } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
-import { fmt, ESTADO_PEDIDO } from '@/lib/utils'
+import { fmt, ESTADO_PEDIDO, errMsg } from '@/lib/utils'
 import type { PedidoResponse } from '@/types'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -23,13 +23,13 @@ export default function PedidoDetallePage() {
   const confirmar = useMutation({
     mutationFn: () => api.post(`/pedidos/${codigo}/confirmar`, null, { headers: { 'Idempotency-Key': `web-${codigo}-${Date.now()}` } }),
     onSuccess: () => { toast.success('Confirmado'); queryClient.invalidateQueries({ queryKey: ['pedido', codigo] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error al confirmar')),
   })
 
   const cancelar = useMutation({
     mutationFn: () => api.delete(`/pedidos/${codigo}`),
-    onSuccess: () => { toast.success('Cancelado'); router.push('/pedidos') },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onSuccess: () => { toast.success('Anulado'); router.push('/pedidos') },
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error al anular')),
   })
 
   if (isLoading) return <p style={{ color:'var(--dim)', padding:32 }}>Cargando…</p>
@@ -48,12 +48,12 @@ export default function PedidoDetallePage() {
             <p style={{ fontSize:11, color:'var(--muted)', textTransform:'uppercase', letterSpacing:1 }}>Código</p>
             <h1 style={{ fontSize:26, fontWeight:900, color:'var(--fuchsia)', marginTop:2 }}>#{pedido.codigo}</h1>
             <p style={{ fontSize:13, color:'var(--muted)', marginTop:4 }}>
-              Mesa: <span style={{ color:'var(--text)', fontWeight:600 }}>{pedido.mesaNombre ?? 'Sin mesa'}</span>
-              {pedido.creadoPor && <> · Por <span style={{ color:'var(--text)', fontWeight:600 }}>{pedido.creadoPor}</span></>}
+              Mesa: <span style={{ color:'var(--text)', fontWeight:600 }}>{pedido.mesaId != null ? `Mesa ${pedido.mesaId}` : 'Sin mesa'}</span>
+              {pedido.notas && <> · <span style={{ color:'var(--text)', fontWeight:600 }}>{pedido.notas}</span></>}
             </p>
-            {pedido.creadoAt && (
+            {pedido.createdAt && (
               <p style={{ fontSize:12, color:'var(--dim)', marginTop:2 }}>
-                {format(new Date(pedido.creadoAt), "EEEE d 'de' MMMM · HH:mm", { locale: es })}
+                {format(new Date(pedido.createdAt), "EEEE d 'de' MMMM · HH:mm", { locale: es })}
               </p>
             )}
           </div>
@@ -68,7 +68,7 @@ export default function PedidoDetallePage() {
               <Check size={14}/> Confirmar
             </button>
             <button className="btn-ghost" style={{ color:'var(--error)' }} onClick={() => cancelar.mutate()} disabled={cancelar.isPending}>
-              <X size={14}/> Cancelar
+              <X size={14}/> Anular
             </button>
           </div>
         )}
@@ -83,8 +83,18 @@ export default function PedidoDetallePage() {
               {pedido.lineas.map(l => (
                 <div key={l.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 0', borderBottom:'1px solid var(--border)' }}>
                   <div>
-                    <p style={{ fontSize:14, fontWeight:600 }}>{l.productoNombre}</p>
-                    {l.anotaciones && <p style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>{l.anotaciones}</p>}
+                    <p style={{ fontSize:14, fontWeight:600 }}>{l.nombreProducto}</p>
+                    {!!l.extras?.length && (
+                      <p style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>
+                        Extras: {l.extras.map(e => e.nombre).join(', ')}
+                      </p>
+                    )}
+                    {!!l.ingredientesRemovidos?.length && (
+                      <p style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>
+                        Sin: {l.ingredientesRemovidos.join(', ')}
+                      </p>
+                    )}
+                    {l.observaciones && <p style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>{l.observaciones}</p>}
                   </div>
                   <div style={{ textAlign:'right' }}>
                     <p style={{ fontSize:12, color:'var(--muted)' }}>{l.cantidad} × {fmt(l.precioUnitario)}</p>
