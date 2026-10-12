@@ -1,11 +1,3 @@
-export interface UsuarioInfo {
-  id: number; username: string; nombre: string; activo: boolean; rol: string; permisos: string[]
-}
-export interface AuthResponse {
-  accessToken: string; refreshToken: string; expiresInSeconds: number; tokenType: string; usuario: UsuarioInfo
-}
-export type UserInfo = UsuarioInfo
-
 export type EstadoPedido = 'BORRADOR'|'CONFIRMADO'|'EN_PREPARACION'|'LISTO'|'ENTREGADO'|'ANULADO'
 export type EstadoMesa   = 'LIBRE'|'OCUPADA'|'RESERVADA'|'INACTIVA'
 export type EstadoCaja   = 'ABIERTA'|'CERRADA'
