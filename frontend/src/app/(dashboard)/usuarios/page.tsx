@@ -4,10 +4,9 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, X, Check, Shield } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
+import { errMsg } from '@/lib/utils'
 import type { UsuarioAdminResponse, RolDto } from '@/types'
 import toast from 'react-hot-toast'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 export default function UsuariosPage() {
   const [showForm, setShowForm] = useState(false)
@@ -30,7 +29,7 @@ export default function UsuariosPage() {
   const eliminar = useMutation({
     mutationFn: (id: number) => api.delete(`/usuarios/${id}`),
     onSuccess: () => { toast.success('Usuario desactivado'); queryClient.invalidateQueries({ queryKey: ['usuarios'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   return (
@@ -60,21 +59,19 @@ export default function UsuariosPage() {
             : (
               <table className="tbl">
                 <thead>
-                  <tr>{['Usuario', 'Nombre', 'Email', 'Rol', 'Estado', 'Creado', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr>
+                  <tr>{['Usuario', 'Nombre', 'Rol', 'Estado', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {usuarios.map(u => (
                     <tr key={u.id}>
                       <td style={{ fontWeight: 700, color: 'var(--yellow)' }}>{u.username}</td>
-                      <td>{u.nombre} {u.apellido}</td>
-                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{u.email}</td>
+                      <td>{u.nombre}</td>
                       <td>
                         <span style={{ fontSize: 11, background: 'rgba(245,166,35,.15)', color: 'var(--yellow)', borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>
                           {u.rol}
                         </span>
                       </td>
                       <td><span className={`badge ${u.activo ? 'badge-abierta' : 'badge-cerrada'}`}>{u.activo ? 'Activo' : 'Inactivo'}</span></td>
-                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{u.creadoAt ? format(new Date(u.creadoAt), 'dd/MM/yy', { locale: es }) : '—'}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button className="btn-ghost" style={{ padding: '6px 8px' }} onClick={() => { setEditing(u); setShowForm(true) }}><Pencil size={13} /></button>
@@ -94,7 +91,7 @@ export default function UsuariosPage() {
             <div key={r.id} className="card">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <Shield size={16} color="var(--yellow)" />
-                <h3 style={{ fontWeight: 700, fontSize: 14 }}>{r.nombre}</h3>
+                <h3 style={{ fontWeight: 700, fontSize: 14 }}>{r.codigo}</h3>
                 <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>{r.permisos.length} permisos</span>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
@@ -118,26 +115,25 @@ export default function UsuariosPage() {
 function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminResponse | null; roles: RolDto[]; onClose: () => void }) {
   const [username, setUsername] = useState(editing?.username ?? '')
   const [nombre,   setNombre]   = useState(editing?.nombre ?? '')
-  const [apellido, setApellido] = useState(editing?.apellido ?? '')
-  const [email,    setEmail]    = useState(editing?.email ?? '')
   const [password, setPassword] = useState('')
-  const [rol,      setRol]      = useState(editing?.rol ?? roles[0]?.nombre ?? '')
+  const [activo,   setActivo]   = useState(editing?.activo ?? true)
+  const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? roles[0]?.codigo ?? '')
 
   const mutation = useMutation({
     mutationFn: (): Promise<unknown> => editing
-      ? api.put(`/usuarios/${editing.id}`, { nombre, apellido, email, rol })
-      : api.post('/usuarios', { username, nombre, apellido, email, password, rol }),
+      ? api.put(`/usuarios/${editing.id}`, { nombre, rolCodigo, activo })
+      : api.post('/usuarios', { username, nombre, password, rolCodigo }),
     onSuccess: () => {
       toast.success(editing ? 'Usuario actualizado' : 'Usuario creado')
       queryClient.invalidateQueries({ queryKey: ['usuarios'] })
       onClose()
     },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   const fields = editing
-    ? [{ label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }, { label: 'APELLIDO', value: apellido, set: setApellido, type: 'text' }, { label: 'EMAIL', value: email, set: setEmail, type: 'email' }]
-    : [{ label: 'USUARIO', value: username, set: setUsername, type: 'text' }, { label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }, { label: 'APELLIDO', value: apellido, set: setApellido, type: 'text' }, { label: 'EMAIL', value: email, set: setEmail, type: 'email' }, { label: 'CONTRASEÑA', value: password, set: setPassword, type: 'password' }]
+    ? [{ label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }]
+    : [{ label: 'USUARIO', value: username, set: setUsername, type: 'text' }, { label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }, { label: 'CONTRASEÑA', value: password, set: setPassword, type: 'password' }]
 
   return (
     <div className="overlay">
@@ -155,13 +151,19 @@ function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminRespon
           ))}
           <div>
             <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>ROL</label>
-            <select value={rol} onChange={e => setRol(e.target.value)} className="input">
-              {roles.map(r => <option key={r.id} value={r.nombre}>{r.nombre}</option>)}
+            <select value={rolCodigo} onChange={e => setRolCodigo(e.target.value)} className="input">
+              {roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
             </select>
           </div>
+          {editing && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--muted)', cursor: 'pointer' }}>
+              <input type="checkbox" checked={activo} onChange={e => setActivo(e.target.checked)} />
+              Activo
+            </label>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={() => mutation.mutate()} disabled={mutation.isPending || !nombre || (!editing && !username)}>
             <Check size={14} /> {mutation.isPending ? 'Guardando…' : 'Guardar'}
           </button>
           <button className="btn-ghost" onClick={onClose}>Cancelar</button>
