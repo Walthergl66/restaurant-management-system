@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -34,7 +35,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
     }
 
     @Test
-    void creaBorradorOcupaMesaPersonalizaYResume() throws Exception {
+    void creaBorradorEnMesaHabilitadaPersonalizaYResume() throws Exception {
         long mesaId = crearMesa();
         long productoId = crearProducto("Pollo a la Plancha", "12.50");
         long extraId = crearExtra("Extra Queso", "1.50");
@@ -63,7 +64,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                         .header("Authorization", "Bearer " + administradorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        assertTrue(mesa.contains("\"estado\":\"OCUPADA\""), "La mesa debe quedar ocupada: " + mesa);
+        assertTrue(mesa.contains("\"activo\":true"), "La mesa debe continuar habilitada: " + mesa);
 
         mockMvc.perform(delete("/api/v1/pedidos/" + codigo)
                         .header("Authorization", "Bearer " + meseroToken))
@@ -143,7 +144,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
     }
 
     @Test
-    void cancelarBorradorLiberaLaMesa() throws Exception {
+    void cancelarBorradorNoCambiaLaHabilitacionDeLaMesa() throws Exception {
         long mesaId = crearMesa();
         long productoId = crearProducto("Encebollado", "5.00");
         String codigo = crearBorrador(mesaId);
@@ -161,7 +162,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                         .header("Authorization", "Bearer " + administradorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        assertTrue(mesa.contains("\"estado\":\"LIBRE\""), "La mesa debe quedar libre: " + mesa);
+        assertTrue(mesa.contains("\"activo\":true"), "La mesa debe continuar habilitada: " + mesa);
     }
 
     @Test
@@ -196,6 +197,44 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                                 {"codigo":"PED-COCINA","mesaId":%d}
                                 """.formatted(mesaId)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void rechazaMesaDeshabilitadaYPermiteVariosPedidosEnMesaHabilitada() throws Exception {
+        long mesaId = crearMesa();
+
+        mockMvc.perform(patch("/api/v1/mesas/" + mesaId + "/habilitacion")
+                        .header("Authorization", "Bearer " + administradorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"habilitada":false}
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/pedidos")
+                        .header("Authorization", "Bearer " + meseroToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"codigo":"PED-MESA-DESHABILITADA","mesaId":%d}
+                                """.formatted(mesaId)))
+                .andExpect(status().isUnprocessableEntity());
+
+        mockMvc.perform(patch("/api/v1/mesas/" + mesaId + "/habilitacion")
+                        .header("Authorization", "Bearer " + administradorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"habilitada":true}
+                                """))
+                .andExpect(status().isOk());
+
+        crearBorrador(mesaId, "PED-MISMA-MESA-1");
+        crearBorrador(mesaId, "PED-MISMA-MESA-2");
+
+        mockMvc.perform(get("/api/v1/mesas/" + mesaId)
+                        .header("Authorization", "Bearer " + administradorToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activo").value(true))
+                .andExpect(jsonPath("$.estado").value("LIBRE"));
     }
 
     @Test

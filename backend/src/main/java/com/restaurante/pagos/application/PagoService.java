@@ -34,7 +34,7 @@ import java.util.List;
  * Cobro de cuentas (RF-26, RF-27, RF-31). El cobro es mixto: una lista de
  * pagos (uno por método) cuya suma debe cubrir exactamente el total de la
  * cuenta. En una sola transacción registra los pagos, los ingresos en la caja
- * abierta, emite el comprobante y cierra la cuenta (liberando la mesa).
+ * abierta, emite el comprobante y cierra la cuenta.
  */
 @Service
 @Transactional

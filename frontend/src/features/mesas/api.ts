@@ -1,6 +1,6 @@
 'use client'
 import api from '@/shared/api/client'
-import type { Mesa, MesaPayload, EstadoMesa } from './types'
+import type { Mesa, MesaPayload } from './types'
 
 export async function listarMesas(): Promise<Mesa[]> {
   const { data } = await api.get('/mesas', { params: { soloActivas: false } })
@@ -17,17 +17,9 @@ export async function actualizarMesa(id: number, body: MesaPayload): Promise<Mes
   return data
 }
 
-export async function cambiarEstadoMesa(id: number, estado: EstadoMesa): Promise<Mesa> {
-  const { data } = await api.patch(`/mesas/${id}/estado`, { estado })
-  return data
-}
-
 export async function cambiarHabilitacionMesa(id: number, habilitada: boolean): Promise<Mesa | void> {
-  if (!habilitada) {
-    await eliminarMesa(id)
-    return
-  }
-  return cambiarEstadoMesa(id, 'LIBRE')
+  const { data } = await api.patch(`/mesas/${id}/habilitacion`, { habilitada })
+  return data
 }
 
 export async function eliminarMesa(id: number): Promise<void> {

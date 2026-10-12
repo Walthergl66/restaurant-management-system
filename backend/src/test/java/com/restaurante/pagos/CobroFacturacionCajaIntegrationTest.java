@@ -117,7 +117,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         mockMvc.perform(get("/api/v1/cuentas/" + cuentaId)
                         .header("Authorization", "Bearer " + administradorToken))
                 .andExpect(jsonPath("$.estado").value("CERRADA"));
-        assertTrue(getMesa(mesaId).contains("\"estado\":\"LIBRE\""));
+        assertTrue(getMesa(mesaId).contains("\"activo\":true"));
 
         // Comprobante emitido con datos del cliente
         String comprobantes = mockMvc.perform(get("/api/v1/comprobantes?cuentaId=" + cuentaId)

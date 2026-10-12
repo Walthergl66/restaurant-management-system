@@ -74,7 +74,7 @@ public class CuentaController {
 
     @PatchMapping("/{id}/cerrar")
     @PreAuthorize("hasAuthority('" + PermisoCodigo.CUENTAS_GESTIONAR + "')")
-    @Operation(summary = "Cierra la cuenta y libera la mesa")
+    @Operation(summary = "Cierra la cuenta")
     public CuentaResponse cerrar(@PathVariable Long id) {
         return cuentaService.cerrar(id);
     }

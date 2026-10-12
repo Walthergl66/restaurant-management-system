@@ -66,10 +66,14 @@ public class PedidoService implements Pedidos {
     }
 
     public PedidoResponse crear(CrearPedidoRequest request) {
+        mesas.validarHabilitadaParaNuevoPedido(request.mesaId());
+        return crearPedido(request);
+    }
+
+    private PedidoResponse crearPedido(CrearPedidoRequest request) {
         if (pedidoRepository.existsByCodigo(request.codigo())) {
             throw new ConflictException("Ya existe un pedido con el código " + request.codigo());
         }
-        mesas.ocuparMesa(request.mesaId());
         Pedido pedido = new Pedido(request.codigo(), request.mesaId(), request.notas());
         pedidoRepository.save(pedido);
         eventPublisher.publishEvent(new PedidoCreado(request.codigo(), request.mesaId()));
@@ -192,11 +196,14 @@ public class PedidoService implements Pedidos {
 
     /**
      * Adición: un pedido nuevo ligado a la misma cuenta (RF-17 a RF-19).
-     * La mesa ya está ocupada, así que {@code ocuparMesa} es idempotente.
+     * La mesa debe continuar habilitada para aceptar el nuevo pedido.
      */
     @Override
     public String crearAdicion(Long mesaId, String codigo, String notas) {
-        return crear(new CrearPedidoRequest(codigo, mesaId, notas)).codigo();
+        // La cuenta abierta acredita que la mesa existe. Una deshabilitación
+        // administrativa impide turnos nuevos, pero no interrumpe la atención
+        // ni las adiciones de una cuenta que ya estaba en curso.
+        return crearPedido(new CrearPedidoRequest(codigo, mesaId, notas)).codigo();
     }
 
     @Override
@@ -311,18 +318,11 @@ public class PedidoService implements Pedidos {
         pedido.marcarListo();
     }
 
-    /**
-     * Cancela un borrador. Una adición no libera la mesa si la cuenta todavía
-     * tiene otro pedido; solo cuando es el último pedido de la mesa se libera
-     * (RF-17 a RF-19).
-     */
+    /** Cancela un borrador sin modificar la habilitación administrativa de la mesa. */
     public void cancelarBorrador(String codigo) {
         Pedido pedido = cargarConLineas(codigo);
         if (pedido.getEstado() != EstadoPedido.BORRADOR) {
             throw new BusinessRuleException("Solo un pedido en borrador puede cancelarse");
-        }
-        if (!pedidoRepository.existeOtroPedidoEnMesa(pedido.getMesaId(), codigo)) {
-            mesas.liberarMesa(pedido.getMesaId());
         }
         pedidoRepository.delete(pedido);
         eventPublisher.publishEvent(new PedidoCancelado(codigo, pedido.getMesaId()));

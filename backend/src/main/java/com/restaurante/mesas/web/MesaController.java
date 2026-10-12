@@ -1,7 +1,7 @@
 package com.restaurante.mesas.web;
 
 import com.restaurante.mesas.application.MesaService;
-import com.restaurante.mesas.web.dto.CambiarEstadoMesaRequest;
+import com.restaurante.mesas.web.dto.HabilitacionMesaRequest;
 import com.restaurante.mesas.web.dto.MesaRequest;
 import com.restaurante.mesas.web.dto.MesaResponse;
 import com.restaurante.usuarios.PermisoCodigo;
@@ -68,12 +68,12 @@ public class MesaController {
         return mesaService.actualizar(id, request);
     }
 
-    @PatchMapping("/{id}/estado")
+    @PatchMapping("/{id}/habilitacion")
     @PreAuthorize("hasAuthority('" + PermisoCodigo.MESAS_GESTIONAR + "')")
-    @Operation(summary = "Cambia el estado de una mesa (uso administrativo)")
-    public MesaResponse cambiarEstado(@PathVariable Long id,
-                                      @Valid @RequestBody CambiarEstadoMesaRequest request) {
-        return mesaService.cambiarEstado(id, request);
+    @Operation(summary = "Habilita o deshabilita una mesa para pedidos nuevos")
+    public MesaResponse cambiarHabilitacion(@PathVariable Long id,
+                                            @Valid @RequestBody HabilitacionMesaRequest request) {
+        return mesaService.cambiarHabilitacion(id, request);
     }
 
     @DeleteMapping("/{id}")

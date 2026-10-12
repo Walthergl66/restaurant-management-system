@@ -68,7 +68,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
         assertEquals(2, cuenta.path("pedidos").size());
 
         String mesa = getMesa(mesaId);
-        assertTrue(mesa.contains("\"estado\":\"OCUPADA\""), "La adición mantiene la mesa ocupada: " + mesa);
+        assertTrue(mesa.contains("\"activo\":true"), "La adición no cambia la habilitación: " + mesa);
     }
 
     @Test
@@ -374,7 +374,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
     }
 
     @Test
-    void cerrarCuentaExigeConfirmarTodoYLiberaLaMesa() throws Exception {
+    void cerrarCuentaExigeConfirmarTodoYNoCambiaLaMesa() throws Exception {
         long mesaId = crearMesa();
         long productoId = crearProducto("Bolón", "2.50", null);
 
@@ -397,11 +397,11 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(jsonPath("$.total").value(5.00));
 
         String mesa = getMesa(mesaId);
-        assertTrue(mesa.contains("\"estado\":\"LIBRE\""), "Cerrar la cuenta libera la mesa: " + mesa);
+        assertTrue(mesa.contains("\"activo\":true"), "Cerrar la cuenta no cambia la habilitación: " + mesa);
     }
 
     @Test
-    void cancelarElUnicoBorradorCierraLaCuentaYLiberaLaMesa() throws Exception {
+    void cancelarElUnicoBorradorCierraLaCuentaSinCambiarLaMesa() throws Exception {
         long mesaId = crearMesa();
         long productoId = crearProducto("Tigrillo", "3.50", null);
 
@@ -417,11 +417,11 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertTrue(cuentas.contains("\"estado\":\"CERRADA\""), "La cuenta vacía debe cerrarse: " + cuentas);
-        assertTrue(getMesa(mesaId).contains("\"estado\":\"LIBRE\""));
+        assertTrue(getMesa(mesaId).contains("\"activo\":true"));
     }
 
     @Test
-    void cancelarAdicionNoLiberaLaMesaNiCierraLaCuenta() throws Exception {
+    void cancelarAdicionNoCambiaLaMesaNiCierraLaCuenta() throws Exception {
         long mesaId = crearMesa();
         long productoId = crearProducto("Seco", "5.00", null);
 
@@ -436,8 +436,8 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
                         .header("Authorization", "Bearer " + meseroToken))
                 .andExpect(status().isNoContent());
 
-        assertTrue(getMesa(mesaId).contains("\"estado\":\"OCUPADA\""),
-                "La mesa sigue ocupada mientras haya pedido confirmado");
+        assertTrue(getMesa(mesaId).contains("\"activo\":true"),
+                "La mesa continúa habilitada mientras haya pedidos");
         String cuentas = mockMvc.perform(get("/api/v1/cuentas?mesaId=" + mesaId)
                         .header("Authorization", "Bearer " + administradorToken))
                 .andExpect(status().isOk())
@@ -467,7 +467,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(12.00));
 
-        // Cerrar la cuenta libera la mesa: empieza el turno 2
+        // Cerrar la cuenta permite iniciar una nueva agrupación de consumo.
         mockMvc.perform(patch("/api/v1/cuentas/" + cuenta1 + "/cerrar")
                         .header("Authorization", "Bearer " + cajeroToken))
                 .andExpect(status().isOk())

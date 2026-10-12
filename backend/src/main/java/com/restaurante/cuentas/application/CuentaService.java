@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Cuentas de mesa (RF-24, RF-25): abren/reutilizan la cuenta del turno, listan
  * el consumo y el total (siempre calculado por {@link CalculadoraCuenta}),
- * permiten adiciones y cierran la cuenta librando la mesa.
+ * permiten adiciones y cierran la cuenta sin alterar el catálogo de mesas.
  */
 @Service
 @Transactional
@@ -62,7 +62,7 @@ public class CuentaService implements Cuentas {
 
     /**
      * Si al cancelar un borrador la mesa se queda sin pedidos, se cierra la
-     * cuenta vacía (la mesa ya la liberó el módulo de pedidos).
+     * cuenta vacía.
      */
     @EventListener
     public void alCancelarPedido(PedidoCancelado evento) {
@@ -112,7 +112,7 @@ public class CuentaService implements Cuentas {
     }
 
     /**
-     * Cierra la cuenta y libera la mesa. No admite cerrar con borradores
+     * Cierra la cuenta. No admite cerrar con borradores
      * pendientes sin confirmar (la cuenta solo totaliza confirmados).
      */
     public CuentaResponse cerrar(Long id) {
@@ -133,7 +133,6 @@ public class CuentaService implements Cuentas {
                     "No se puede cerrar la cuenta con pedidos en borrador sin confirmar");
         }
         cuenta.cerrar();
-        mesas.liberarMesa(cuenta.getMesaId());
         return cuenta;
     }
 

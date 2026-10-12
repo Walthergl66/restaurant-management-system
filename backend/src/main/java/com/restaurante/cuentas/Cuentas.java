@@ -13,7 +13,7 @@ public interface Cuentas {
     CuentaResumen resumen(Long cuentaId);
 
     /**
-     * Cierra la cuenta exigiendo que no haya borradores y libera la mesa.
+     * Cierra la cuenta exigiendo que no haya borradores.
      */
     void cerrarParaCobro(Long cuentaId);
 }

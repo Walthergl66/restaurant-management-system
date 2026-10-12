@@ -8,13 +8,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class MesasIntegrationTest extends AbstractIntegracionApi {
 
     @Test
-    void creaYLiberaUnaMesa() throws Exception {
+    void creaUnaMesaHabilitada() throws Exception {
         String token = tokenAdmin();
         mockMvc.perform(post("/api/v1/mesas")
                         .header("Authorization", "Bearer " + token)
@@ -25,31 +26,34 @@ class MesasIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.numero").value(7))
                 .andExpect(jsonPath("$.estado").value("LIBRE"))
+                .andExpect(jsonPath("$.activo").value(true))
                 .andExpect(jsonPath("$.ubicacion").value("Terraza"));
     }
 
     @Test
-    void cambiaEstadoYOcupaSoloUnaVez() throws Exception {
+    void deshabilitaYVuelveAHabilitarUnaMesa() throws Exception {
         String token = tokenAdmin();
         String id = crearMesa(token, 3);
 
-        mockMvc.perform(patch("/api/v1/mesas/" + id + "/estado")
+        mockMvc.perform(patch("/api/v1/mesas/" + id + "/habilitacion")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"estado":"OCUPADA"}
+                                {"habilitada":false}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("OCUPADA"));
+                .andExpect(jsonPath("$.activo").value(false))
+                .andExpect(jsonPath("$.estado").value("LIBRE"));
 
-        // Ocupar una mesa ya ocupada viola la regla de negocio (422).
-        mockMvc.perform(patch("/api/v1/mesas/" + id + "/estado")
+        mockMvc.perform(patch("/api/v1/mesas/" + id + "/habilitacion")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"estado":"OCUPADA"}
+                                {"habilitada":true}
                                 """))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activo").value(true))
+                .andExpect(jsonPath("$.estado").value("LIBRE"));
     }
 
     @Test
@@ -64,6 +68,15 @@ class MesasIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":99,"capacidad":2}
+                                """))
+                .andExpect(status().isForbidden());
+
+        String id = crearMesa(tokenAdmin(), 100);
+        mockMvc.perform(patch("/api/v1/mesas/" + id + "/habilitacion")
+                        .header("Authorization", "Bearer " + tokenMesero)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"habilitada":false}
                                 """))
                 .andExpect(status().isForbidden());
     }
@@ -81,6 +94,39 @@ class MesasIntegrationTest extends AbstractIntegracionApi {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == %s)]", id).isEmpty());
+
+        mockMvc.perform(get("/api/v1/mesas?soloActivas=false")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == %s)]", id).isNotEmpty());
+
+        mockMvc.perform(get("/api/v1/mesas/" + id)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activo").value(false));
+    }
+
+    @Test
+    void rechazaNumeroDuplicadoAlCrearYEditar() throws Exception {
+        String token = tokenAdmin();
+        String id = crearMesa(token, 21);
+        crearMesa(token, 22);
+
+        mockMvc.perform(post("/api/v1/mesas")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"numero":21,"capacidad":4}
+                                """))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(put("/api/v1/mesas/" + id)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"numero":22,"capacidad":4}
+                                """))
+                .andExpect(status().isConflict());
     }
 
     private String crearMesa(String token, int numero) throws Exception {

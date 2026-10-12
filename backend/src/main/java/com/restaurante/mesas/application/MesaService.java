@@ -2,10 +2,9 @@ package com.restaurante.mesas.application;
 
 import com.restaurante.mesas.Mesas;
 import com.restaurante.mesas.MesaResumen;
-import com.restaurante.mesas.domain.EstadoMesa;
 import com.restaurante.mesas.domain.Mesa;
 import com.restaurante.mesas.infrastructure.MesaRepository;
-import com.restaurante.mesas.web.dto.CambiarEstadoMesaRequest;
+import com.restaurante.mesas.web.dto.HabilitacionMesaRequest;
 import com.restaurante.mesas.web.dto.MesaRequest;
 import com.restaurante.mesas.web.dto.MesaResponse;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
@@ -18,8 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Administración de mesas y sus estados. También implementa {@link Mesas},
- * la API pública que usa el flujo de pedidos para ocupar y liberar mesas.
+ * Administración del catálogo de mesas. También implementa {@link Mesas},
+ * la API pública que valida la habilitación al crear pedidos.
  */
 @Service
 @Transactional
@@ -57,23 +56,30 @@ public class MesaService implements Mesas {
     public MesaResponse actualizar(Long id, MesaRequest request) {
         Mesa mesa = mesaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mesa no encontrada"));
+        if (mesaRepository.existsByNumeroAndIdNot(request.numero(), id)) {
+            throw new ConflictException("Ya existe una mesa con el número " + request.numero());
+        }
         mesa.cambiarNumero(request.numero());
         mesa.cambiarCapacidad(request.capacidad());
         mesa.cambiarUbicacion(request.ubicacion());
         return MesaResponse.from(mesa);
     }
 
-    public MesaResponse cambiarEstado(Long id, CambiarEstadoMesaRequest request) {
+    public MesaResponse cambiarHabilitacion(Long id, HabilitacionMesaRequest request) {
         Mesa mesa = mesaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mesa no encontrada"));
-        aplicarEstado(mesa, request.estado());
+        if (request.habilitada()) {
+            mesa.habilitar();
+        } else {
+            mesa.deshabilitar();
+        }
         return MesaResponse.from(mesa);
     }
 
     public void eliminar(Long id) {
         Mesa mesa = mesaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mesa no encontrada"));
-        mesa.desactivar();
+        mesa.deshabilitar();
     }
 
     @Override
@@ -84,32 +90,16 @@ public class MesaService implements Mesas {
     }
 
     @Override
-    public void ocuparMesa(Long mesaId) {
+    @Transactional(readOnly = true)
+    public void validarHabilitadaParaNuevoPedido(Long mesaId) {
         Mesa mesa = cargar(mesaId);
-        // Idempotente: las adiciones abren un segundo pedido en una mesa que ya
-        // está ocupada por la cuenta abierta (RF-17 a RF-19).
-        if (mesa.getEstado() != EstadoMesa.OCUPADA) {
-            mesa.ocupar();
+        if (!mesa.isActivo()) {
+            throw new BusinessRuleException("La mesa está deshabilitada para nuevos pedidos");
         }
-    }
-
-    @Override
-    public void liberarMesa(Long mesaId) {
-        cargar(mesaId).liberar();
     }
 
     private Mesa cargar(Long id) {
         return mesaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mesa no encontrada"));
-    }
-
-    private void aplicarEstado(Mesa mesa, EstadoMesa estado) {
-        switch (estado) {
-            case OCUPADA -> mesa.ocupar();
-            case LIBRE -> mesa.liberar();
-            case RESERVADA -> mesa.reservar();
-            case INACTIVA -> mesa.desactivar();
-            default -> throw new BusinessRuleException("Estado no soportado: " + estado);
-        }
     }
 }

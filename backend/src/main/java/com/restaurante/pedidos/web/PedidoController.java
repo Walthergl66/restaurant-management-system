@@ -46,7 +46,7 @@ public class PedidoController {
     @PostMapping
     @PreAuthorize("hasAuthority('" + PermisoCodigo.PEDIDOS_CREAR + "')")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Crea un pedido en borrador y ocupa la mesa")
+    @Operation(summary = "Crea un pedido en borrador para una mesa habilitada")
     public PedidoResponse crear(@Valid @RequestBody CrearPedidoRequest request) {
         return pedidoService.crear(request);
     }
@@ -110,7 +110,7 @@ public class PedidoController {
     @DeleteMapping("/{codigo}")
     @PreAuthorize("hasAuthority('" + PermisoCodigo.PEDIDOS_EDITAR + "')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Cancela un borrador y libera la mesa")
+    @Operation(summary = "Cancela un pedido en borrador")
     public void cancelar(@PathVariable String codigo) {
         pedidoService.cancelarBorrador(codigo);
     }

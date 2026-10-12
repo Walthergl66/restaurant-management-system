@@ -9,6 +9,8 @@ public interface MesaRepository extends JpaRepository<Mesa, Long> {
 
     boolean existsByNumero(int numero);
 
+    boolean existsByNumeroAndIdNot(int numero, Long id);
+
     List<Mesa> findByActivoTrueOrderByNumeroAsc();
 
     List<Mesa> findByActivoTrueAndEstadoOrderByNumeroAsc(

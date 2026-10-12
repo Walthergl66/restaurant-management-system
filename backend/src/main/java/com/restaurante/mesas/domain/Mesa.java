@@ -9,10 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-/**
- * Mesa del salón. Su estado cambia en este único lugar: los pedidos (Fase 3)
- * la ocupan o liberan llamando a {@link #ocupar()} y {@link #liberar()}.
- */
+/** Mesa registrada en el catálogo del salón. */
 @Entity
 @Table(name = "mesas", schema = "catalogo")
 public class Mesa extends AuditableEntity {
@@ -33,13 +30,7 @@ public class Mesa extends AuditableEntity {
     @Column(nullable = false)
     private boolean activo = true;
 
-    /**
-     * Versión optimista: el estado de la mesa se muta desde varias rutas
-     * (PATCH de estado, ocupar al crear un pedido, liberar al cancelar el
-     * último borrador y liberar al cobrar). Sin ella, dos escrituras
-     * concurrentes se pisan — el cajero libera la mesa mientras el mesero
-     * la ocupa — y queda LIBRE con un pedido confirmado encima.
-     */
+    /** Evita que dos cambios administrativos concurrentes se sobrescriban. */
     @Version
     @Column(nullable = false)
     private Long version;
@@ -72,10 +63,6 @@ public class Mesa extends AuditableEntity {
         return activo;
     }
 
-    public boolean isLibre() {
-        return activo && estado == EstadoMesa.LIBRE;
-    }
-
     public void cambiarNumero(int numero) {
         if (numero <= 0) {
             throw new BusinessRuleException("El número de mesa debe ser mayor que cero");
@@ -94,55 +81,11 @@ public class Mesa extends AuditableEntity {
         this.ubicacion = ubicacion == null || ubicacion.isBlank() ? "SALON" : ubicacion.trim();
     }
 
-    /**
-     * Ocupa la mesa: solo se puede desde LIBRE o RESERVADA.
-     */
-    public void ocupar() {
-        if (estado == EstadoMesa.INACTIVA || !activo) {
-            throw new BusinessRuleException("La mesa está inactiva");
-        }
-        if (estado == EstadoMesa.OCUPADA) {
-            throw new BusinessRuleException("La mesa ya está ocupada");
-        }
-        this.estado = EstadoMesa.OCUPADA;
-        this.activo = true;
-    }
-
-    /**
-     * Libera la mesa: aplica desde cualquier estado activo.
-     */
-    public void liberar() {
-        if (!activo) {
-            throw new BusinessRuleException("La mesa está inactiva");
-        }
-        if (estado == EstadoMesa.LIBRE) {
-            return;
-        }
-        this.estado = EstadoMesa.LIBRE;
-    }
-
-    /**
-     * Reserva la mesa: solo desde LIBRE.
-     */
-    public void reservar() {
-        if (estado == EstadoMesa.INACTIVA || !activo) {
-            throw new BusinessRuleException("La mesa está inactiva");
-        }
-        if (estado != EstadoMesa.LIBRE) {
-            throw new BusinessRuleException("Solo se puede reservar una mesa libre");
-        }
-        this.estado = EstadoMesa.RESERVADA;
-    }
-
-    public void desactivar() {
-        this.estado = EstadoMesa.INACTIVA;
+    public void deshabilitar() {
         this.activo = false;
     }
 
-    public void activar() {
+    public void habilitar() {
         this.activo = true;
-        if (estado == EstadoMesa.INACTIVA) {
-            this.estado = EstadoMesa.LIBRE;
-        }
     }
 }
