@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { Unlock, Lock, Plus, TrendingUp, TrendingDown, X, Check } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
-import { fmt } from '@/lib/utils'
+import { fmt, errMsg } from '@/lib/utils'
 import type { CajaResponse, MovimientoResponse } from '@/types'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -102,7 +102,7 @@ export default function CajaPage() {
                     </div>
                     <div>
                       <p style={{ fontSize:13, fontWeight:600 }}>{m.concepto}</p>
-                      <p style={{ fontSize:11, color:'var(--muted)' }}>{m.metodo ?? '—'} · {format(new Date(m.fecha),'HH:mm',{locale:es})}</p>
+                      <p style={{ fontSize:11, color:'var(--muted)' }}>{m.metodo ?? '—'} · {format(new Date(m.created_at),'HH:mm',{locale:es})}</p>
                     </div>
                   </div>
                   <span style={{ fontWeight:700, fontSize:13, color: m.tipo==='INGRESO' ? 'var(--success)' : 'var(--error)' }}>
@@ -157,7 +157,7 @@ function AperturaModal({ onClose }: { onClose: () => void }) {
   const m = useMutation({
     mutationFn: () => api.post('/cajas/apertura', { montoInicial: parseFloat(monto) }),
     onSuccess: () => { toast.success('Caja abierta'); queryClient.invalidateQueries({ queryKey: ['caja'] }); queryClient.invalidateQueries({ queryKey: ['cajas'] }); onClose() },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
   return (
     <SimpleModal title="Abrir caja" onClose={onClose}>
@@ -172,7 +172,7 @@ function CierreModal({ caja, onClose }: { caja: CajaResponse; onClose: () => voi
   const m = useMutation({
     mutationFn: () => api.post(`/cajas/${caja.id}/cierre`, { montoReal: parseFloat(montoReal) }),
     onSuccess: () => { toast.success('Caja cerrada'); queryClient.invalidateQueries({ queryKey: ['caja'] }); queryClient.invalidateQueries({ queryKey: ['cajas'] }); onClose() },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
   return (
     <SimpleModal title="Cerrar caja" onClose={onClose}>
@@ -190,7 +190,7 @@ function EgresoModal({ cajaId, onClose }: { cajaId: number; onClose: () => void 
   const m = useMutation({
     mutationFn: () => api.post(`/cajas/${cajaId}/egresos`, { concepto, monto: parseFloat(monto), metodo }),
     onSuccess: () => { toast.success('Egreso registrado'); queryClient.invalidateQueries({ queryKey: ['caja', 'movimientos', cajaId] }); onClose() },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
   return (
     <SimpleModal title="Registrar egreso" onClose={onClose}>
