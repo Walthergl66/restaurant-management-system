@@ -1,4 +1,3 @@
-export type EstadoCaja   = 'ABIERTA'|'CERRADA'
 export type EstadoAnulacion = 'SOLICITADA'|'APROBADA'|'RECHAZADA'
 export type MetodoPago      = 'EFECTIVO'|'TARJETA'|'TRANSFERENCIA'|'OTRO'
 
@@ -7,17 +6,8 @@ export type { Categoria, Extra, Producto } from '@/features/catalogo/types'
 export type { EstadoPedido, ExtraLinea, LineaPedido, PedidoResponse } from '@/features/pedidos/types'
 export type { ComandaEstado, ComandaLinea, ComandaResponse } from '@/features/comandas/types'
 export type { EstadoCuenta, CuentaLinea, CuentaPedido, CuentaAnulacion, CuentaResponse } from '@/features/cuentas/types'
+export type { EstadoCaja, CajaResponse, MovimientoResponse } from '@/features/caja/types'
 
-export interface CajaResponse {
-  id: number; estado: EstadoCaja; aperturaInicial: number
-  cierreEsperado?: number | null; cierreReal?: number | null; diferencia?: number | null
-  version?: number | null; abiertaPor?: string | null; cerradaPor?: string | null
-  abiertaAt: string; cerradaAt?: string | null
-}
-export interface MovimientoResponse {
-  id: number; cajaId: number; tipo: 'INGRESO'|'EGRESO'; concepto: string
-  monto: number; metodo?: string | null; pagoId?: number | null; created_at: string
-}
 export interface AnulacionResponse {
   id: number; pedidoCodigo: string; lineaId: number; productoId: number; nombreProducto: string
   precioUnitario: number; cantidad: number; motivo?: string | null; estado: EstadoAnulacion
