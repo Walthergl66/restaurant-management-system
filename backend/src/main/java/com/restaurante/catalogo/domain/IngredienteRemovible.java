@@ -51,7 +51,7 @@ public class IngredienteRemovible extends AuditableEntity {
         if (nombre == null || nombre.isBlank()) {
             throw new BusinessRuleException("El nombre del ingrediente no puede estar vacío");
         }
-        this.nombre = NombreCatalogo.normalizar(nombre);
+        this.nombre = TextoCatalogo.normalizar(nombre, TextoCatalogo.Tipo.NOMBRE);
     }
 
     public void activar() {

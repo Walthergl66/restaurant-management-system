@@ -1,7 +1,7 @@
 package com.restaurante.catalogo.application;
 
 import com.restaurante.catalogo.domain.Categoria;
-import com.restaurante.catalogo.domain.NombreCatalogo;
+import com.restaurante.catalogo.domain.TextoCatalogo;
 import com.restaurante.catalogo.infrastructure.CategoriaRepository;
 import com.restaurante.catalogo.web.dto.CategoriaRequest;
 import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
@@ -77,7 +77,7 @@ public class CategoriaService {
     }
 
     private void validarNombreDisponible(String nombre, Long id) {
-        nombre = NombreCatalogo.normalizar(nombre);
+        nombre = TextoCatalogo.normalizar(nombre, TextoCatalogo.Tipo.NOMBRE);
         boolean duplicado = id == null
                 ? categoriaRepository.existsByNombreIgnoreCase(nombre.trim())
                 : categoriaRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);

@@ -34,8 +34,8 @@ class NombreCatalogoTest {
             "bbq|Bbq", "ñame|Ñame", "área de BBQ|Área de BBQ"
     }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
     void todosLosNombresDelCatalogoUsanLaMismaRegla(String entrada, String esperado) {
-        assertThat(NombreCatalogo.normalizar(entrada)).isEqualTo(esperado);
-        assertThat(NombreCatalogo.normalizar(esperado)).isEqualTo(esperado);
+        assertThat(TextoCatalogo.normalizar(entrada, TextoCatalogo.Tipo.NOMBRE)).isEqualTo(esperado);
+        assertThat(TextoCatalogo.normalizar(esperado, TextoCatalogo.Tipo.NOMBRE)).isEqualTo(esperado);
         assertThat(new Categoria(entrada, 0).getNombre()).isEqualTo(esperado);
         assertThat(new Area(entrada).getNombre()).isEqualTo(esperado);
         assertThat(new Extra(entrada, Money.ZERO).getNombre()).isEqualTo(esperado);
@@ -48,12 +48,12 @@ class NombreCatalogoTest {
     @NullAndEmptySource
     @ValueSource(strings = {"   ", "\t\n", "\u00a0"})
     void rechazaNombresVacios(String entrada) {
-        assertThatThrownBy(() -> NombreCatalogo.normalizar(entrada)).isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> TextoCatalogo.normalizar(entrada, TextoCatalogo.Tipo.NOMBRE)).isInstanceOf(BusinessRuleException.class);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"  salsa\t BBQ  ", "salsa\u00a0\u00a0BBQ", "salsa\nBBQ"})
     void normalizaEspaciosPegadosDesdeOtrosMedios(String entrada) {
-        assertThat(NombreCatalogo.normalizar(entrada)).isEqualTo("Salsa BBQ");
+        assertThat(TextoCatalogo.normalizar(entrada, TextoCatalogo.Tipo.NOMBRE)).isEqualTo("Salsa BBQ");
     }
 }

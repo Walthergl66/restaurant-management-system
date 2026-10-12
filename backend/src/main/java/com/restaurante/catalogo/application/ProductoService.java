@@ -7,7 +7,7 @@ import com.restaurante.catalogo.domain.Area;
 import com.restaurante.catalogo.domain.Categoria;
 import com.restaurante.catalogo.domain.Extra;
 import com.restaurante.catalogo.domain.Producto;
-import com.restaurante.catalogo.domain.NombreCatalogo;
+import com.restaurante.catalogo.domain.TextoCatalogo;
 import com.restaurante.catalogo.infrastructure.AreaRepository;
 import com.restaurante.catalogo.infrastructure.CategoriaRepository;
 import com.restaurante.catalogo.infrastructure.ExtraRepository;
@@ -90,7 +90,7 @@ public class ProductoService implements Catalogo {
     }
 
     private void validarNombreDisponible(String nombre, Long id) {
-        nombre = NombreCatalogo.normalizar(nombre);
+        nombre = TextoCatalogo.normalizar(nombre, TextoCatalogo.Tipo.NOMBRE);
         boolean duplicado = id == null
                 ? productoRepository.existsByNombreIgnoreCase(nombre.trim())
                 : productoRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);

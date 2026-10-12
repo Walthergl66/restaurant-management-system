@@ -1,7 +1,7 @@
 package com.restaurante.catalogo.application;
 
 import com.restaurante.catalogo.domain.Extra;
-import com.restaurante.catalogo.domain.NombreCatalogo;
+import com.restaurante.catalogo.domain.TextoCatalogo;
 import com.restaurante.catalogo.infrastructure.ExtraRepository;
 import com.restaurante.catalogo.web.dto.ExtraRequest;
 import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
@@ -72,7 +72,7 @@ public class ExtraService {
     }
 
     private void validarNombreDisponible(String nombre, Long id) {
-        nombre = NombreCatalogo.normalizar(nombre);
+        nombre = TextoCatalogo.normalizar(nombre, TextoCatalogo.Tipo.NOMBRE);
         boolean duplicado = id == null
                 ? extraRepository.existsByNombreIgnoreCase(nombre.trim())
                 : extraRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);
