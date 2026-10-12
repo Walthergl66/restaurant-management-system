@@ -4,18 +4,14 @@ import { persist } from 'zustand/middleware'
 import api from '@/lib/api'
 import type { UserInfo } from '@/types'
 
+export { hasPermiso } from '@/shared/lib/permissions'
+
 interface AuthState {
   user: UserInfo | null
   isAuthenticated: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
   fetchMe: () => Promise<void>
-}
-
-export function hasPermiso(user: UserInfo | null, ...codigos: string[]) {
-  if (!user) return false
-  if (user.rol === 'ADMIN') return true
-  return codigos.some((c) => user.permisos?.includes(c))
 }
 
 export const useAuthStore = create<AuthState>()(
