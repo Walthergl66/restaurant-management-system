@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../auth/AuthContext';
 import { puedeAtenderMesas } from '../../auth/permisos';
 import { useCart } from '../../carrito/CartContext';
+import { aLineaPedido, claveLinea } from '../../carrito/lineas';
 import { menuService } from '../../menu/menuService';
 import type { ProductoMenu } from '../../menu/types';
 import { meseroService } from '../meseroService';
@@ -46,12 +47,7 @@ export default function WaiterScreen() {
     setSending(true);
     const codigo = generarCodigoPedido();
     try {
-      await meseroService.crearPedido(mesaId, codigo, items.map(item => ({
-        productoId: item.producto.id,
-        cantidad: item.cantidad,
-        extraIds: item.extras.map(extra => extra.id),
-        observaciones: item.observaciones,
-      })), notas);
+      await meseroService.crearPedido(mesaId, codigo, items.map(aLineaPedido), notas);
       clearCart();
       setNotas('');
       Alert.alert('Pedido enviado', `El pedido ${codigo} fue confirmado y enviado a cocina.`);
@@ -95,7 +91,7 @@ export default function WaiterScreen() {
 
       <View style={styles.summary}>
         <Text style={styles.summaryTitle}>Pedido actual · {totalItems} productos</Text>
-        {items.map((item, index) => <Text key={`${item.producto.id}-${index}`} style={styles.item}>{item.cantidad}× {item.producto.nombre}{item.extras.length ? ` + ${item.extras.map(e => e.nombre).join(', ')}` : ''}</Text>)}
+        {items.map(item => <Text key={claveLinea(item)} style={styles.item}>{item.cantidad}× {item.producto.nombre}{item.extras.length ? ` + ${item.extras.map(e => e.nombre).join(', ')}` : ''}{item.ingredientesRemovidos.length ? ` · Sin: ${item.ingredientesRemovidos.join(', ')}` : ''}</Text>)}
         <TextInput style={styles.input} value={notas} onChangeText={setNotas} placeholder="Notas generales (opcional)" placeholderTextColor={colors.textMuted} />
         <View style={styles.total}><Text style={styles.summaryTitle}>Total</Text><Text style={styles.price}>${totalPrice.toFixed(2)}</Text></View>
         <TouchableOpacity disabled={!mesaId || totalItems === 0 || sending} onPress={confirmar} style={[styles.button, (!mesaId || totalItems === 0 || sending) && styles.disabled]}>

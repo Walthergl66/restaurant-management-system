@@ -108,10 +108,7 @@ public class PedidoService implements Pedidos {
         Pedido pedido = cargarConLineas(codigo);
         ProductoParaPedido producto = productoDisponible(request.productoId());
         Set<ExtraLinea> extras = congelarExtras(request.extraIds());
-        Set<IngredienteRemovido> removidos = request.ingredientesRemovidos() == null
-                ? new LinkedHashSet<>()
-                : request.ingredientesRemovidos().stream().map(IngredienteRemovido::new)
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<IngredienteRemovido> removidos = ingredientesRemovidos(producto, request.ingredientesRemovidos());
         pedido.agregarLinea(
                 producto.id(),
                 producto.nombre(),
@@ -126,14 +123,14 @@ public class PedidoService implements Pedidos {
 
     public PedidoResponse actualizarLinea(String codigo, Long lineaId, ActualizarLineaRequest request) {
         Pedido pedido = cargarConLineas(codigo);
+        PedidoLinea linea = pedido.getLineas().stream().filter(l -> l.getId().equals(lineaId))
+                .findFirst().orElseThrow(() -> new NotFoundException("Línea no encontrada"));
+        ProductoParaPedido producto = productoDisponible(linea.getProductoId());
         pedido.actualizarLinea(
                 lineaId,
                 request.cantidad(),
                 congelarExtras(request.extraIds()),
-                request.ingredientesRemovidos() == null
-                        ? new LinkedHashSet<>()
-                        : request.ingredientesRemovidos().stream().map(IngredienteRemovido::new)
-                                .collect(Collectors.toCollection(LinkedHashSet::new)),
+                ingredientesRemovidos(producto, request.ingredientesRemovidos()),
                 request.observaciones());
         pedidoRepository.save(pedido);
         return PedidoResponse.from(pedido);
@@ -331,6 +328,8 @@ public class PedidoService implements Pedidos {
     private void revalidarCatalogo(Pedido pedido) {
         for (PedidoLinea linea : pedido.getLineas()) {
             ProductoParaPedido producto = productoDisponible(linea.getProductoId());
+            producto.validarIngredientesRemovidos(linea.getIngredientesRemovidos().stream()
+                    .map(IngredienteRemovido::getNombre).toList());
             Set<ExtraLinea> extras = linea.getExtras().stream()
                     .map(e -> {
                         ExtraParaPedido extra = catalogo.extraParaPedido(e.getExtraId())
@@ -342,6 +341,11 @@ public class PedidoService implements Pedidos {
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             linea.congelarCatalogo(producto.nombre(), producto.precio(), extras);
         }
+    }
+
+    private Set<IngredienteRemovido> ingredientesRemovidos(ProductoParaPedido producto, List<String> nombres) {
+        return producto.validarIngredientesRemovidos(nombres).stream().map(IngredienteRemovido::new)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private ProductoParaPedido productoDisponible(Long productoId) {

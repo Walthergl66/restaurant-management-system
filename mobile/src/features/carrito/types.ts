@@ -9,5 +9,6 @@ export interface CartItem {
   producto: ProductoMenu;
   cantidad: number;
   extras: ExtraMenu[];
+  ingredientesRemovidos: string[];
   observaciones?: string;
 }

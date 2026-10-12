@@ -19,6 +19,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../../theme/colors';
 import { menuService } from '../menuService';
 import { useCart } from '../../carrito/CartContext';
+import { useAuth } from '../../auth/AuthContext';
+import { puedeAtenderMesas } from '../../auth/permisos';
 import type { ExtraMenu, ProductoMenu } from '../types';
 import { Button } from '../../../components/ui/Button';
 
@@ -29,10 +31,12 @@ export default function ProductDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { addItem } = useCart();
+  const { usuario } = useAuth();
 
   const [producto, setProducto] = useState<ProductoMenu | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedExtras, setSelectedExtras] = useState<ExtraMenu[]>([]);
+  const [ingredientesRemovidos, setIngredientesRemovidos] = useState<string[]>([]);
   const [cantidad, setCantidad] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +47,9 @@ export default function ProductDetailScreen() {
   const loadProducto = async () => {
     try {
       setLoading(true);
+      setSelectedExtras([]);
+      setIngredientesRemovidos([]);
+      setCantidad(1);
       setError(null);
       const data = await menuService.getProducto(parseInt(id!, 10));
       setProducto(data);
@@ -63,7 +70,7 @@ export default function ProductDetailScreen() {
 
   const handleAddToCart = () => {
     if (!producto) return;
-    addItem(producto, cantidad, selectedExtras);
+    addItem(producto, cantidad, selectedExtras, ingredientesRemovidos);
     router.back();
   };
 
@@ -163,6 +170,32 @@ export default function ProductDetailScreen() {
                         )}
                       </View>
                     </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {puedeAtenderMesas(usuario) && !!producto.ingredientes?.length && (
+            <View style={styles.extrasSection}>
+              <Text style={styles.sectionTitle}>Quitar ingredientes</Text>
+              <Text style={styles.description}>Selecciona los ingredientes que no deseas. No cambia el precio.</Text>
+              {producto.ingredientes.map(ingrediente => {
+                const seleccionado = ingredientesRemovidos.includes(ingrediente);
+                return (
+                  <TouchableOpacity
+                    key={ingrediente}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={`Sin ${ingrediente}`}
+                    accessibilityState={{ checked: seleccionado }}
+                    aria-checked={seleccionado}
+                    style={[styles.extraRow, seleccionado && styles.extraRowSelected]}
+                    onPress={() => setIngredientesRemovidos(actual => seleccionado
+                      ? actual.filter(nombre => nombre !== ingrediente)
+                      : [...actual, ingrediente])}
+                  >
+                    <Text style={styles.extraName}>Sin {ingrediente}</Text>
+                    <Ionicons name={seleccionado ? 'checkbox' : 'square-outline'} size={24} color={colors.neonOrange} />
                   </TouchableOpacity>
                 );
               })}

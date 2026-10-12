@@ -125,7 +125,8 @@ public class ProductoService implements Catalogo {
                         p.getPrecio(),
                         p.getArea() == null ? null : p.getArea().getId(),
                         p.getArea() == null ? null : p.getArea().getNombre(),
-                        p.isActivo()));
+                        p.isActivo(),
+                        p.getIngredientes().stream().filter(i -> i.isActivo()).map(i -> i.getNombre()).toList()));
     }
 
     @Override
@@ -145,7 +146,8 @@ public class ProductoService implements Catalogo {
                         p.getPrecio(),
                         p.getArea() == null ? null : p.getArea().getId(),
                         p.getArea() == null ? null : p.getArea().getNombre(),
-                        p.isActivo()))
+                        p.isActivo(),
+                        p.getIngredientes().stream().filter(i -> i.isActivo()).map(i -> i.getNombre()).toList()))
                 .toList();
     }
 
