@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation'
 import { Plus, Search, RefreshCw } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
-import { fmt, ESTADO_PEDIDO } from '@/lib/utils'
+import { fmt, ESTADO_PEDIDO, errMsg } from '@/lib/utils'
 import type { PedidoResponse, EstadoPedido } from '@/types'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import NuevoPedidoModal from '@/components/NuevoPedidoModal'
 
-const ESTADOS: (EstadoPedido | 'TODOS')[] = ['TODOS','BORRADOR','CONFIRMADO','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO']
+const ESTADOS: (EstadoPedido | 'TODOS')[] = ['TODOS','BORRADOR','CONFIRMADO','EN_PREPARACION','LISTO','ENTREGADO','ANULADO']
 
 export default function PedidosPage() {
   const router = useRouter()
@@ -35,18 +35,20 @@ export default function PedidosPage() {
         headers: { 'Idempotency-Key': `web-${codigo}-${Date.now()}` },
       }),
     onSuccess: () => { toast.success('Pedido confirmado'); queryClient.invalidateQueries({ queryKey: ['pedidos'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error al confirmar')),
   })
 
   const cancelar = useMutation({
     mutationFn: (codigo: string) => api.delete(`/pedidos/${codigo}`),
-    onSuccess: () => { toast.success('Pedido cancelado'); queryClient.invalidateQueries({ queryKey: ['pedidos'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onSuccess: () => { toast.success('Pedido anulado'); queryClient.invalidateQueries({ queryKey: ['pedidos'] }) },
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error al anular')),
   })
 
   const filtered = pedidos.filter(p => {
     const okEstado = filtro === 'TODOS' || p.estado === filtro
-    const okSearch = !search || p.codigo.toLowerCase().includes(search.toLowerCase()) || (p.mesaNombre ?? '').toLowerCase().includes(search.toLowerCase())
+    const okSearch = !search
+      || p.codigo.toLowerCase().includes(search.toLowerCase())
+      || (p.mesaId != null && `mesa ${p.mesaId}`.includes(search.toLowerCase()))
     return okEstado && okSearch
   })
 
@@ -106,18 +108,18 @@ export default function PedidosPage() {
                 </thead>
                 <tbody>
                   {filtered.map(p => (
-                    <tr key={p.id} style={{ cursor:'pointer' }} onClick={() => router.push(`/pedidos/${p.codigo}`)}>
+                    <tr key={p.codigo} style={{ cursor:'pointer' }} onClick={() => router.push(`/pedidos/${p.codigo}`)}>
                       <td style={{ fontWeight:700, color:'var(--fuchsia)' }}>#{p.codigo}</td>
-                      <td style={{ color:'var(--muted)' }}>{p.mesaNombre ?? '—'}</td>
+                      <td style={{ color:'var(--muted)' }}>{p.mesaId != null ? `Mesa ${p.mesaId}` : '—'}</td>
                       <td style={{ color:'var(--muted)' }}>{p.lineas?.length ?? 0}</td>
                       <td style={{ fontWeight:700, color:'var(--yellow)' }}>{fmt(p.total)}</td>
                       <td><span className={`badge ${ESTADO_PEDIDO[p.estado]?.badge ?? ''}`}>{ESTADO_PEDIDO[p.estado]?.label ?? p.estado}</span></td>
-                      <td style={{ fontSize:12, color:'var(--muted)' }}>{p.creadoAt ? format(new Date(p.creadoAt),'dd/MM/yy HH:mm',{locale:es}) : '—'}</td>
+                      <td style={{ fontSize:12, color:'var(--muted)' }}>{p.createdAt ? format(new Date(p.createdAt),'dd/MM/yy HH:mm',{locale:es}) : '—'}</td>
                       <td onClick={e => e.stopPropagation()}>
                         {p.estado === 'BORRADOR' && (
                           <div style={{ display:'flex', gap:6 }}>
                             <button className="btn-yellow" style={{ padding:'6px 12px', fontSize:12 }} onClick={() => confirmar.mutate(p.codigo)}>Confirmar</button>
-                            <button className="btn-ghost" style={{ padding:'6px 12px', fontSize:12, color:'var(--error)' }} onClick={() => cancelar.mutate(p.codigo)}>Cancelar</button>
+                            <button className="btn-ghost" style={{ padding:'6px 12px', fontSize:12, color:'var(--error)' }} onClick={() => cancelar.mutate(p.codigo)}>Anular</button>
                           </div>
                         )}
                       </td>
