@@ -2,6 +2,7 @@ package com.restaurante.catalogo.domain;
 
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /** Regla compartida por nombres y descripciones; conserva marcas, siglas y tildes. */
@@ -14,6 +15,7 @@ public final class TextoCatalogo {
     private TextoCatalogo() {}
 
     public static String normalizar(String texto, Tipo tipo) {
+        Objects.requireNonNull(tipo, "El tipo de texto es obligatorio");
         boolean nombre = tipo == Tipo.NOMBRE;
         Pattern espacios = nombre ? ESPACIOS : ESPACIOS_HORIZONTALES;
         String limpio = texto == null ? "" : espacios.matcher(texto).replaceAll(" ").strip();

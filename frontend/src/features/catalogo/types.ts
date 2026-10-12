@@ -34,6 +34,9 @@ export interface CategoriaPayload {
   orden?: number
 }
 
+export type CatalogoRecurso = 'productos' | 'categorias' | 'areas' | 'extras'
+export type OrdenCategoriasPayload = { modo: 'ALFABETICO' | 'PERSONALIZADO'; categoriaIds: number[] }
+
 export interface AreaPayload {
   nombre: string
   descripcion: string | null

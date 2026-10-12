@@ -50,7 +50,7 @@ public class CategoriaController {
     @PreAuthorize("hasAuthority('" + PermisoCodigo.CATALOGO_GESTIONAR + "')")
     @Operation(summary = "Selecciona orden alfabético o guarda el orden personalizado del menú")
     public List<CategoriaResponse> cambiarOrden(@Valid @RequestBody OrdenCategoriasRequest request) {
-        return categoriaService.cambiarOrden(request);
+        return categoriaService.cambiarOrden(request.toCommand());
     }
 
     @GetMapping("/{id}")

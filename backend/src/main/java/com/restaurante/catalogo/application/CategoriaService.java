@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.restaurante.catalogo.web.dto.OrdenCategoriasRequest;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
 
 /**
@@ -86,13 +85,13 @@ public class CategoriaService {
         }
     }
 
-    public List<CategoriaResponse> cambiarOrden(OrdenCategoriasRequest request) {
+    public List<CategoriaResponse> cambiarOrden(OrdenCategoriasCommand command) {
         List<Categoria> categorias = categoriaRepository.findAll();
-        if (request.modo() == OrdenCategoriasRequest.Modo.ALFABETICO) {
+        if (command.modo() == OrdenCategoriasCommand.Modo.ALFABETICO) {
             categorias.forEach(c -> c.cambiarOrden(0));
         } else {
             Map<Long, Categoria> porId = categorias.stream().collect(Collectors.toMap(Categoria::getId, Function.identity()));
-            List<Long> ids = request.categoriaIds();
+            List<Long> ids = command.categoriaIds();
             if (ids.size() != categorias.size() || !new HashSet<>(ids).equals(porId.keySet())) {
                 throw new BusinessRuleException("La lista de categorías cambió. Actualiza y vuelve a ordenar todas las categorías.");
             }

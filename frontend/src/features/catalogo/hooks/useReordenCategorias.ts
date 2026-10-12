@@ -1,11 +1,10 @@
 'use client'
 import { useId, useRef, useState } from 'react'
-import type { PointerEvent } from 'react'
-import { GripVertical } from 'lucide-react'
+import type { PointerEvent, ButtonHTMLAttributes } from 'react'
 import { useOrdenCategorias } from '../hooks'
 import type { Categoria } from '../types'
 
-export function useReordenCategorias(categorias: Categoria[]) {
+export function useReordenCategorias(categorias: Categoria[], habilitado: boolean) {
   const mutation = useOrdenCategorias()
   const instruccionesId = useId()
   const lista = useRef<HTMLTableSectionElement>(null)
@@ -22,7 +21,7 @@ export function useReordenCategorias(categorias: Categoria[]) {
     })
   }
   const iniciar = (event: PointerEvent<HTMLButtonElement>, id: number) => {
-    if (event.button !== 0 || mutation.isPending) return
+    if (!habilitado || event.button !== 0 || mutation.isPending) return
     event.preventDefault()
     event.currentTarget.focus()
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -64,17 +63,19 @@ export function useReordenCategorias(categorias: Categoria[]) {
     if (actual.ids.some((id, index) => id !== categorias[index]?.id)) guardar(actual.ids)
     else setVistaPrevia(null)
   }
-  const ayuda = <>
-    <span id={instruccionesId} className="category-order-announcement">Arrastra el asa arriba o abajo. Con teclado usa las flechas. Escape cancela el arrastre.</span>
-    <span role="status" className="category-order-announcement">{mutation.isPending ? 'Guardando orden…' : anuncio}</span>
-  </>
-  const asa = (categoria: Categoria) => <button className="category-drag-handle" disabled={mutation.isPending}
-    aria-label={`Mover ${categoria.nombre}`} aria-describedby={instruccionesId} title="Arrastrar para ordenar"
-    onPointerDown={event => iniciar(event, categoria.id)} onPointerMove={arrastrar} onPointerUp={soltar} onPointerCancel={cancelar}
-    onLostPointerCapture={() => { if (arrastre.current) cancelar() }}
-    onKeyDown={event => {
+  const getAsaProps = (categoria: Categoria): ButtonHTMLAttributes<HTMLButtonElement> => ({
+    disabled: !habilitado || mutation.isPending,
+    'aria-label': `Mover ${categoria.nombre}`,
+    'aria-describedby': instruccionesId,
+    title: 'Arrastrar para ordenar',
+    onPointerDown: event => iniciar(event, categoria.id),
+    onPointerMove: arrastrar,
+    onPointerUp: soltar,
+    onPointerCancel: cancelar,
+    onLostPointerCapture: () => { if (arrastre.current) cancelar() },
+    onKeyDown: event => {
       if (event.key === 'Escape') { cancelar(); return }
-      if (arrastre.current || mutation.isPending || !['ArrowUp', 'ArrowDown'].includes(event.key)) return
+      if (!habilitado || arrastre.current || mutation.isPending || !['ArrowUp', 'ArrowDown'].includes(event.key)) return
       event.preventDefault()
       const indice = categorias.findIndex(c => c.id === categoria.id)
       const destino = indice + (event.key === 'ArrowUp' ? -1 : 1)
@@ -84,6 +85,7 @@ export function useReordenCategorias(categorias: Categoria[]) {
       ids.splice(destino, 0, categoria.id)
       guardar(ids)
       setAnuncio(`${categoria.nombre}, posición ${destino + 1} de ${ids.length}`)
-    }}><GripVertical size={22}/></button>
-  return { lista, visibles, arrastrando, ayuda, asa }
+    },
+  })
+  return { lista, visibles, arrastrando, instruccionesId, anuncio, guardando: mutation.isPending, getAsaProps }
 }
