@@ -12,6 +12,12 @@ interface AuthState {
   fetchMe: () => Promise<void>
 }
 
+export function hasPermiso(user: UserInfo | null, ...codigos: string[]) {
+  if (!user) return false
+  if (user.rol === 'ADMIN') return true
+  return codigos.some((c) => user.permisos?.includes(c))
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
