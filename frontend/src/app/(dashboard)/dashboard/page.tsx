@@ -9,7 +9,7 @@ import {
 import api from '@/lib/api'
 import { fmt, ESTADO_PEDIDO } from '@/lib/utils'
 import type { PedidoResponse, ReporteVentas, CajaResponse } from '@/types'
-import NuevoPedidoModal from '@/components/NuevoPedidoModal'
+import NuevoPedidoModal from '@/features/pedidos/components/NuevoPedidoModal'
 
 /* ---- data hooks ---- */
 function useReporte() {
