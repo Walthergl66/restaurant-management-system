@@ -47,7 +47,7 @@ export default function UsuariosScreen() {
                   {usuarios.map(u => (
                     <tr key={u.id}>
                       <td style={{ fontWeight: 700, color: 'var(--yellow)' }}>{u.username}</td>
-                      <td>{u.nombre}</td>
+                      <td style={{ textTransform: 'uppercase' }}>{u.nombre}</td>
                       <td>
                         <span style={{ fontSize: 11, background: 'rgba(245,166,35,.15)', color: 'var(--yellow)', borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>
                           {u.rol}

@@ -11,7 +11,8 @@ import java.util.Optional;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    Optional<Usuario> findByUsername(String username);
+    @Query("select u from Usuario u where lower(u.username) = lower(:username)")
+    Optional<Usuario> findByUsername(@Param("username") String username);
 
     /**
      * Usuario con la fila bloqueada en escritura. Lo usa el módulo de
@@ -21,18 +22,20 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      * violación de la clave única {@code usuario_id}.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select u from Usuario u where u.username = :username")
+    @Query("select u from Usuario u where lower(u.username) = lower(:username)")
     Optional<Usuario> findBloqueadoPorUsername(@Param("username") String username);
 
-    Optional<Usuario> findByUsernameAndActivoTrue(String username);
+    @Query("select u from Usuario u where lower(u.username) = lower(:username) and u.activo = true")
+    Optional<Usuario> findByUsernameAndActivoTrue(@Param("username") String username);
 
-    boolean existsByUsername(String username);
+    @Query("select count(u) > 0 from Usuario u where lower(u.username) = lower(:username)")
+    boolean existsByUsername(@Param("username") String username);
 
     @Query("select u from Usuario u left join fetch u.rol where u.id = :id")
     Optional<Usuario> findByIdWithRol(@Param("id") Long id);
 
     /** A-04: versión de sesión vigente del usuario activo, para compararla
      *  con la embebida en el JWT sin cargar la entidad completa. */
-    @Query("select u.sesionVersion from Usuario u where u.username = :username and u.activo = true")
+    @Query("select u.sesionVersion from Usuario u where lower(u.username) = lower(:username) and u.activo = true")
     Optional<Long> findSesionVersionActivo(@Param("username") String username);
 }

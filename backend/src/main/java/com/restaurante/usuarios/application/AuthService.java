@@ -28,6 +28,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -81,7 +82,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        Usuario usuario = usuarioRepository.findByUsernameAndActivoTrue(request.username())
+        Usuario usuario = usuarioRepository.findByUsernameAndActivoTrue(normalizarUsername(request.username()))
                 .orElseThrow(() -> new UnauthorizedException("Usuario o contraseña incorrectos"));
         if (!passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
             throw new UnauthorizedException("Usuario o contraseña incorrectos");
@@ -260,5 +261,9 @@ public class AuthService {
         } catch (IllegalArgumentException e) {
             throw new UnauthorizedException("Token de refresco inválido");
         }
+    }
+
+    private static String normalizarUsername(String username) {
+        return username == null ? null : username.trim().toLowerCase(Locale.ROOT);
     }
 }

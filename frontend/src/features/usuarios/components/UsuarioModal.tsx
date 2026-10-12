@@ -38,7 +38,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
           {fields.map(({ label, value, set, type }) => (
             <div key={label}>
               <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>{label}</label>
-              <input type={type} value={value} onChange={e => set(e.target.value)} className="input" />
+              <input type={type} value={value} onChange={e => set(label === 'USUARIO' ? e.target.value.trim().toLowerCase() : e.target.value)} className="input" />
             </div>
           ))}
           <div>

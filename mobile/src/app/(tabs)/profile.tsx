@@ -148,7 +148,7 @@ export default function ProfileScreen() {
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{inicial}</Text>
             </View>
-            <Text style={styles.userName}>{nombre}</Text>
+            <Text style={styles.userName}>{nombre.toLocaleUpperCase('es')}</Text>
             <Text style={styles.userEmail}>@{correo}</Text>
             {usuario?.rol && (
               <View style={styles.rolBadge}>
@@ -166,7 +166,7 @@ export default function ProfileScreen() {
                 <Text style={styles.rowLabel}>Nombre</Text>
               </View>
               <Text style={styles.rowValue} numberOfLines={1}>
-                {nombre}
+                {nombre.toLocaleUpperCase('es')}
               </Text>
             </View>
 

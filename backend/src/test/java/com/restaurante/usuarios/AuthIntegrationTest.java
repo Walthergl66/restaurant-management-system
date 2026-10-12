@@ -33,7 +33,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
             MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"admin","password":"admin123"}
+                                    {"username":" ADMIN ","password":"admin123"}
                                     """))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.tokenType").value("Bearer"))
@@ -192,7 +192,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
                             .header("Authorization", "Bearer " + adminToken)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"admin","nombre":"Prueba","password":"clave123","rolCodigo":"MESERO"}
+                                    {"username":"AdMiN","nombre":"Prueba","password":"clave123","rolCodigo":"MESERO"}
                                     """))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.type").value("urn:problem:restaurante:conflicto"));

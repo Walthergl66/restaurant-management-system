@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -56,8 +57,9 @@ public class UsuarioService implements Usuarios {
     }
 
     public UsuarioAdminResponse crear(CrearUsuarioRequest request) {
-        if (usuarioRepository.existsByUsername(request.username())) {
-            throw new ConflictException("Ya existe un usuario con el nombre '" + request.username() + "'");
+        String username = normalizarUsername(request.username());
+        if (usuarioRepository.existsByUsername(username)) {
+            throw new ConflictException("Ya existe un usuario con el nombre '" + username + "'");
         }
         Rol rol = rolRepository.findByCodigo(request.rolCodigo())
                 .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + request.rolCodigo()));
@@ -65,7 +67,7 @@ public class UsuarioService implements Usuarios {
             throw new BusinessRuleException("El rol está desactivado");
         }
         Usuario usuario = new Usuario(
-                request.username().trim(),
+                username,
                 passwordEncoder.encode(request.password()),
                 request.nombre().trim(),
                 rol);
@@ -80,7 +82,7 @@ public class UsuarioService implements Usuarios {
      */
     public Usuario registrarCliente(String username, String rawPassword, String nombre,
                                     String cedula, String celular) {
-        String limpio = username == null ? null : username.trim();
+        String limpio = normalizarUsername(username);
         if (limpio == null || limpio.isBlank()) {
             throw new BusinessRuleException("El nombre de usuario es obligatorio");
         }
@@ -169,13 +171,13 @@ public class UsuarioService implements Usuarios {
     @Override
     @Transactional(readOnly = true)
     public Optional<UsuarioResumen> porUsername(String username) {
-        return usuarioRepository.findByUsername(username).map(u -> resumo(u));
+        return usuarioRepository.findByUsername(normalizarUsername(username)).map(u -> resumo(u));
     }
 
     @Override
     @Transactional
     public Optional<UsuarioResumen> porUsernameBloqueado(String username) {
-        return usuarioRepository.findBloqueadoPorUsername(username).map(u -> resumo(u));
+        return usuarioRepository.findBloqueadoPorUsername(normalizarUsername(username)).map(u -> resumo(u));
     }
 
     @Override
@@ -208,5 +210,9 @@ public class UsuarioService implements Usuarios {
                 u.getNombre(),
                 u.getRol() != null ? u.getRol().getCodigo() : null,
                 u.isActivo());
+    }
+
+    private String normalizarUsername(String username) {
+        return username == null ? null : username.trim().toLowerCase(Locale.ROOT);
     }
 }
