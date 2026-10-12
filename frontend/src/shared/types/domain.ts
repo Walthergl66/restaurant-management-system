@@ -1,12 +1,12 @@
 export type EstadoCaja   = 'ABIERTA'|'CERRADA'
 export type EstadoCuenta = 'ABIERTA'|'CERRADA'
 export type EstadoAnulacion = 'SOLICITADA'|'APROBADA'|'RECHAZADA'
-export type ComandaEstado   = 'PENDIENTE'|'EN_PREPARACION'|'LISTO'
 export type MetodoPago      = 'EFECTIVO'|'TARJETA'|'TRANSFERENCIA'|'OTRO'
 
 export type { Mesa, EstadoMesa } from '@/features/mesas/types'
 export type { Categoria, Extra, Producto } from '@/features/catalogo/types'
 export type { EstadoPedido, ExtraLinea, LineaPedido, PedidoResponse } from '@/features/pedidos/types'
+export type { ComandaEstado, ComandaLinea, ComandaResponse } from '@/features/comandas/types'
 
 export interface CajaResponse {
   id: number; estado: EstadoCaja; aperturaInicial: number
@@ -50,11 +50,3 @@ export interface ReporteVentas {
   porProducto: { productoId: string; nombre: string; cantidad: number; monto: number }[]
 }
 export interface ResumenFinanzas { ingresos: number; egresos: number; resultado: number }
-export interface ComandaLinea {
-  productoId: number; nombreProducto: string; cantidad: number
-  extras?: string | null; ingredientes?: string | null; observaciones?: string | null; orden: number
-}
-export interface ComandaResponse {
-  id: number; pedidoCodigo: string; numeroComanda: number; areaId?: number | null; areaNombre: string
-  tipo: string; estado: ComandaEstado; lineas: ComandaLinea[]
-}
