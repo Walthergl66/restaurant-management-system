@@ -1,36 +1,44 @@
 'use client'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { RefreshCw, Clock, CheckCircle } from 'lucide-react'
+import { RefreshCw, Clock, CheckCircle, Printer } from 'lucide-react'
 import api from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
+import { errMsg } from '@/lib/utils'
 import type { ComandaResponse, ComandaEstado } from '@/types'
 import toast from 'react-hot-toast'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 const COLS: { estado: ComandaEstado; label: string; color: string; bg: string }[] = [
   { estado: 'PENDIENTE',      label: 'Pendientes', color: '#F5A623', bg: 'rgba(245,166,35,.07)'  },
   { estado: 'EN_PREPARACION', label: 'Preparando', color: '#E91E8C', bg: 'rgba(233,30,140,.07)' },
-  { estado: 'LISTA',          label: 'Listos',     color: '#22c55e', bg: 'rgba(34,197,94,.07)'   },
+  { estado: 'LISTO',          label: 'Listos',     color: '#22c55e', bg: 'rgba(34,197,94,.07)'   },
 ]
 
 export default function CocinaPage() {
   const { data: comandas = [], isLoading, refetch } = useQuery<ComandaResponse[]>({
     queryKey: ['comandas'],
-    queryFn: async () => { const { data } = await api.get('/comandas'); return data },
+    queryFn: async () => {
+      const { data } = await api.get('/comandas')
+      return (data as ComandaResponse[]).filter(c => c.tipo === 'ORDEN')
+    },
     refetchInterval: 10_000,
   })
 
   const enPrep = useMutation({
     mutationFn: (id: number) => api.post(`/comandas/${id}/en-preparacion`),
     onSuccess: () => { toast.success('En preparación'); queryClient.invalidateQueries({ queryKey: ['comandas'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   const listo = useMutation({
     mutationFn: (id: number) => api.post(`/comandas/${id}/listo`),
     onSuccess: () => { toast.success('¡Lista!'); queryClient.invalidateQueries({ queryKey: ['comandas'] }) },
-    onError: (e: any) => toast.error(e?.response?.data?.mensaje ?? 'Error'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
+  })
+
+  const reimprimir = useMutation({
+    mutationFn: (id: number) => api.post(`/comandas/${id}/reimprimir`),
+    onSuccess: () => toast.success('Reimpresión enviada'),
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })
 
   return (
@@ -70,14 +78,14 @@ export default function CocinaPage() {
                         <div key={cmd.id} style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:14, marginBottom:10 }}>
                           <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
                             <span style={{ fontSize:13, fontWeight:700, color:'var(--fuchsia)' }}>#{cmd.pedidoCodigo}</span>
-                            <span style={{ fontSize:11, color:'var(--muted)' }}>{cmd.creadoAt ? format(new Date(cmd.creadoAt),'HH:mm',{locale:es}) : ''}</span>
+                            <span style={{ fontSize:11, color:'var(--muted)' }}>Comanda #{cmd.numeroComanda}</span>
                           </div>
                           <p style={{ fontSize:11, color:'var(--muted)', marginBottom:8 }}>{cmd.areaNombre}</p>
                           <div style={{ display:'flex', flexDirection:'column', gap:3, marginBottom:10 }}>
-                            {cmd.items.map((item, i) => (
+                            {cmd.lineas.map((item, i) => (
                               <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12 }}>
-                                <span><strong>{item.cantidad}×</strong> {item.productoNombre}</span>
-                                {item.anotaciones && <span style={{ color:'var(--muted)', fontSize:11 }}>{item.anotaciones}</span>}
+                                <span><strong>{item.cantidad}×</strong> {item.nombreProducto}</span>
+                                {item.observaciones && <span style={{ color:'var(--muted)', fontSize:11 }}>{item.observaciones}</span>}
                               </div>
                             ))}
                           </div>
@@ -92,6 +100,9 @@ export default function CocinaPage() {
                                 <CheckCircle size={11}/> Listo
                               </button>
                             )}
+                            <button className="btn-ghost" style={{ padding:'6px 8px', fontSize:11 }} onClick={() => reimprimir.mutate(cmd.id)} title="Reimprimir">
+                              <Printer size={12}/>
+                            </button>
                           </div>
                         </div>
                       ))
