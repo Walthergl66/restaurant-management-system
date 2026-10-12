@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,10 +56,16 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
 
             mockMvc.perform(get("/api/v1/menu"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.categorias[0].nombre").value("Platos fuertes"))
-                    .andExpect(jsonPath("$.categorias[0].productos[0].nombre").value("HamburguesaDoble"))
-                    .andExpect(jsonPath("$.categorias[0].productos[0].precio").value(12.50))
-                    .andExpect(jsonPath("$.categorias[0].productos[0].ingredientes[0]").value("cebolla"));
+                    .andExpect(jsonPath("$.categorias[?(@.nombre == 'Platos fuertes')]").value(hasSize(1)))
+                    .andExpect(jsonPath(
+                            "$.categorias[?(@.nombre == 'Platos fuertes')].productos[0].nombre")
+                            .value(hasItem("HamburguesaDoble")))
+                    .andExpect(jsonPath(
+                            "$.categorias[?(@.nombre == 'Platos fuertes')].productos[0].precio")
+                            .value(hasItem(12.50)))
+                    .andExpect(jsonPath(
+                            "$.categorias[?(@.nombre == 'Platos fuertes')].productos[0].ingredientes[0]")
+                            .value(hasItem("cebolla")));
 
             mockMvc.perform(delete("/api/v1/productos/" + productoId)
                             .header("Authorization", "Bearer " + token))
@@ -65,7 +73,8 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
 
             mockMvc.perform(get("/api/v1/menu"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.categorias[0].productos").isEmpty());
+                    .andExpect(jsonPath(
+                            "$.categorias[?(@.nombre == 'Platos fuertes')].productos[0]").isEmpty());
         }
     }
 
