@@ -75,10 +75,14 @@ class ArquitecturaTests {
      * sube, el test falla.
      *
      * <p>Los topes son la medicion de ArchUnit, no un conteo de lineas de
-     * import: 47 dependencias hacia 17 clases. Si se migra un servicio a
-     * Command/Result, hay que bajar aqui los dos numeros en el mismo commit.
+     * import: 51 dependencias hacia 17 clases. El tope se renegocio al sumar el
+     * modulo clientes (Fase 7): ClientesService importa 4 DTOs de web
+     * (CrearPedidoClienteRequest, ConfirmarPedidoClienteRequest,
+     * NuevaDireccionClienteRequest e ItemRequest) como contrato de entrada. Si
+     * se migra un servicio a Command/Result, hay que bajar aqui los dos numeros
+     * en el mismo commit.
      */
-    private static final int MAX_IMPORTS_DE_APPLICATION_A_WEB = 47;
+    private static final int MAX_IMPORTS_DE_APPLICATION_A_WEB = 51;
     private static final int MAX_CLASES_DE_APPLICATION_CON_DTO_WEB = 17;
 
     // ---------------------------------------------------------------------
