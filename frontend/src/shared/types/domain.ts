@@ -1,10 +1,12 @@
 export type EstadoPedido = 'BORRADOR'|'CONFIRMADO'|'EN_PREPARACION'|'LISTO'|'ENTREGADO'|'ANULADO'
-export type EstadoMesa   = 'LIBRE'|'OCUPADA'|'RESERVADA'|'INACTIVA'
 export type EstadoCaja   = 'ABIERTA'|'CERRADA'
 export type EstadoCuenta = 'ABIERTA'|'CERRADA'
 export type EstadoAnulacion = 'SOLICITADA'|'APROBADA'|'RECHAZADA'
 export type ComandaEstado   = 'PENDIENTE'|'EN_PREPARACION'|'LISTO'
 export type MetodoPago      = 'EFECTIVO'|'TARJETA'|'TRANSFERENCIA'|'OTRO'
+
+export type { Mesa, EstadoMesa } from '@/features/mesas/types'
+export type { Categoria, Extra, Producto } from '@/features/catalogo/types'
 
 export interface ExtraLinea { extraId: number; nombre: string; precio: number }
 export interface LineaPedido {
@@ -18,12 +20,6 @@ export interface PedidoResponse {
   codigo: string; mesaId?: number | null; estado: EstadoPedido; notas?: string | null
   total: number; lineas: LineaPedido[]; createdAt: string; updatedAt: string
 }
-export interface Mesa {
-  id: number; numero: number; capacidad: number; ubicacion?: string | null
-  estado: EstadoMesa; activo: boolean
-}
-export type { Categoria, Extra, Producto } from '@/features/catalogo/types'
-
 export interface CajaResponse {
   id: number; estado: EstadoCaja; aperturaInicial: number
   cierreEsperado?: number | null; cierreReal?: number | null; diferencia?: number | null
