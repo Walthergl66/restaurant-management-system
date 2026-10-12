@@ -31,7 +31,7 @@ export interface ProductoPayload {
 export interface CategoriaPayload {
   nombre: string
   descripcion: string | null
-  orden: number
+  orden?: number
 }
 
 export interface AreaPayload {

@@ -57,7 +57,7 @@ public class Extra extends AuditableEntity {
         if (nombre == null || nombre.isBlank()) {
             throw new BusinessRuleException("El nombre del extra no puede estar vacío");
         }
-        this.nombre = nombre.trim();
+        this.nombre = NombreCatalogo.normalizar(nombre);
     }
 
     public void cambiarDescripcion(String descripcion) {

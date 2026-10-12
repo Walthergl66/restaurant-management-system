@@ -12,10 +12,10 @@ import java.util.List;
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     // Incluye registros inactivos: desactivar no libera el nombre.
-    @Query("select count(e) > 0 from Producto e where lower(trim(e.nombre)) = lower(trim(:nombre))")
+    @Query("select count(e) > 0 from Producto e where lower(trim(function('regexp_replace', e.nombre, '[[:space:]]+', ' ', 'g'))) = lower(trim(:nombre))")
     boolean existsByNombreIgnoreCase(@Param("nombre") String nombre);
 
-    @Query("select count(e) > 0 from Producto e where lower(trim(e.nombre)) = lower(trim(:nombre)) and e.id <> :id")
+    @Query("select count(e) > 0 from Producto e where lower(trim(function('regexp_replace', e.nombre, '[[:space:]]+', ' ', 'g'))) = lower(trim(:nombre)) and e.id <> :id")
     boolean existsByNombreIgnoreCaseAndIdNot(@Param("nombre") String nombre, @Param("id") Long id);
 
     /**

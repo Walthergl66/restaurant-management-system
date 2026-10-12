@@ -20,6 +20,12 @@ export async function listarCategorias(): Promise<Categoria[]> {
   return Array.isArray(data) ? data : data.content ?? []
 }
 
+export type OrdenCategoriasPayload = { modo: 'ALFABETICO' | 'PERSONALIZADO'; categoriaIds: number[] }
+
+export async function guardarOrdenCategorias(body: OrdenCategoriasPayload): Promise<Categoria[]> {
+  return (await api.put('/categorias/orden', body)).data
+}
+
 export async function listarAreas(): Promise<Area[]> {
   const { data } = await api.get('/areas')
   return Array.isArray(data) ? data : data.content ?? []

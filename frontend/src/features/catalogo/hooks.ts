@@ -6,6 +6,7 @@ import { errMsg } from '@/shared/lib/utils'
 import {
   listarProductos,
   listarCategorias,
+  guardarOrdenCategorias,
   crearProducto,
   actualizarProducto,
   eliminarProducto,
@@ -47,6 +48,18 @@ export function useCategorias() {
   return useQuery<Categoria[]>({
     queryKey: ['categorias'],
     queryFn: listarCategorias,
+  })
+}
+
+export function useOrdenCategorias() {
+  return useMutation({
+    mutationFn: guardarOrdenCategorias,
+    onSuccess: async (categorias) => {
+      queryClient.setQueryData(['categorias'], categorias)
+      toast.success('Orden del menú actualizado')
+      await queryClient.invalidateQueries({ queryKey: ['categorias'] })
+    },
+    onError: (e: unknown) => toast.error(errMsg(e, 'No se pudo guardar el orden')),
   })
 }
 

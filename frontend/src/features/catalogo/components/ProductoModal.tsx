@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react'
 import { Check, ImageIcon, Plus, Trash2, X } from 'lucide-react'
 import { useGuardarProducto } from '../hooks'
+import { normalizarNombreCatalogo } from '../normalizacion'
 import type { Area, Categoria, Extra, Producto, ProductoPayload } from '../types'
 
 type Errors = Partial<Record<'nombre' | 'precio' | 'categoriaId' | 'areaId' | 'imagenUrl', string>>
@@ -27,8 +28,8 @@ export default function ProductoModal({ categorias, areas, extras, editing, onCl
   const previewUrl = useMemo(() => imagenUrl.trim(), [imagenUrl])
 
   const addIngrediente = () => {
-    const value = nuevoIngrediente.trim()
-    if (value && !ingredientes.some(i => i.toLowerCase() === value.toLowerCase())) setIngredientes([...ingredientes, value])
+    const value = normalizarNombreCatalogo(nuevoIngrediente)
+    if (value && !ingredientes.some(i => normalizarNombreCatalogo(i).toLocaleLowerCase('es') === value.toLocaleLowerCase('es'))) setIngredientes([...ingredientes, value])
     setNuevoIngrediente('')
   }
 
@@ -43,7 +44,7 @@ export default function ProductoModal({ categorias, areas, extras, editing, onCl
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
     const body: ProductoPayload = {
-      nombre: nombre.trim(), descripcion: descripcion.trim() || null, imagenUrl: imagenUrl.trim() || null,
+      nombre: normalizarNombreCatalogo(nombre), descripcion: descripcion.trim() || null, imagenUrl: imagenUrl.trim() || null,
       precio: parsedPrice, categoriaId, areaId, extraIds, ingredientes,
     }
     mutation.mutate({ id: editing?.id, body })
@@ -53,7 +54,7 @@ export default function ProductoModal({ categorias, areas, extras, editing, onCl
     <div className="modal-header"><div><h2 id="producto-title">{editing ? 'Editar producto' : 'Nuevo producto'}</h2><p>Información que verá el cliente en el menú.</p></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X size={18}/></button></div>
     <div className="product-form-grid">
       <div className="form-stack">
-        <Field label="Nombre" error={errors.nombre}><input value={nombre} maxLength={120} onChange={e => setNombre(e.target.value)} className="input" autoFocus/></Field>
+        <Field label="Nombre" error={errors.nombre}><input value={nombre} maxLength={120} onChange={e => setNombre(e.target.value)} onBlur={() => setNombre(normalizarNombreCatalogo(nombre))} className="input" autoFocus/></Field>
         <Field label="Descripción"><textarea value={descripcion} maxLength={500} onChange={e => setDescripcion(e.target.value)} className="input" rows={3}/></Field>
         <div className="form-grid-2">
           <Field label="Precio" error={errors.precio}><input type="number" min="0" step="0.01" value={precio} onChange={e => setPrecio(e.target.value)} className="input"/></Field>

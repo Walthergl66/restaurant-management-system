@@ -1,6 +1,7 @@
 package com.restaurante.catalogo.application;
 
 import com.restaurante.catalogo.domain.Area;
+import com.restaurante.catalogo.domain.NombreCatalogo;
 import com.restaurante.catalogo.infrastructure.AreaRepository;
 import com.restaurante.catalogo.web.dto.AreaRequest;
 import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
@@ -69,6 +70,7 @@ public class AreaService {
     }
 
     private void validarNombreDisponible(String nombre, Long id) {
+        nombre = NombreCatalogo.normalizar(nombre);
         boolean duplicado = id == null
                 ? areaRepository.existsByNombreIgnoreCase(nombre.trim())
                 : areaRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);

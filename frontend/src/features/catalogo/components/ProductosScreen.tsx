@@ -10,6 +10,7 @@ import type { Area, Categoria, Extra, Producto } from '../types'
 import CatalogoModal from './CatalogoModal'
 import ConfirmDialog from './ConfirmDialog'
 import ProductoModal from './ProductoModal'
+import { useReordenCategorias } from './OrdenCategorias'
 
 type Tab = 'productos' | 'categorias' | 'areas' | 'extras'
 type CatalogItem = Categoria | Area | Extra
@@ -56,7 +57,8 @@ function ProductsPanel({ search, canManage }: { search: string; canManage: boole
 function CatalogPanel({ kind, search, canManage }: { kind: 'categoria' | 'area' | 'extra'; search: string; canManage: boolean }) {
   const categoriasQuery = useCategorias(); const areasQuery = useAreas(); const extrasQuery = useExtras()
   const query = kind === 'categoria' ? categoriasQuery : kind === 'area' ? areasQuery : extrasQuery
-  const items = (query.data ?? []) as CatalogItem[]
+  const orden = useReordenCategorias(categoriasQuery.data ?? [])
+  const items = (kind === 'categoria' ? orden.visibles : query.data ?? []) as CatalogItem[]
   const [editing, setEditing] = useState<CatalogItem | null | undefined>(undefined)
   const [confirming, setConfirming] = useState<CatalogItem | null>(null)
   const habilitacion = useHabilitacionCatalogo(kind === 'categoria' ? 'categorias' : kind === 'area' ? 'areas' : 'extras')
@@ -66,7 +68,8 @@ function CatalogPanel({ kind, search, canManage }: { kind: 'categoria' | 'area' 
   if (query.isError) return <StateCard text="No se pudieron cargar los datos." error/>
   return <>
     <div className="panel-heading"><div><strong>{filtered.length}</strong><span> registros</span></div>{canManage && <button className="btn-fuchsia" onClick={() => setEditing(null)}><Plus size={15}/>Nuevo {label}</button>}</div>
-    {!filtered.length ? <StateCard text={`No hay ${label}s para mostrar.`}/> : <div className="card table-card"><div className="table-scroll"><table className="tbl"><thead><tr><th>Nombre</th><th>Descripción</th>{kind === 'categoria' && <th>Orden</th>}{kind === 'extra' && <th>Precio</th>}<th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>{filtered.map(item => <tr key={item.id}><td className="strong-cell">{item.nombre}</td><td>{item.descripcion || '—'}</td>{kind === 'categoria' && <td>{(item as Categoria).orden}</td>}{kind === 'extra' && <td>${Number((item as Extra).precio).toFixed(2)}</td>}<td><span className={`status-pill ${item.activo ? 'active' : 'inactive'}`}>{item.activo ? 'Activo' : 'Inactivo'}</span></td>{canManage && <td><div className="row-actions"><button className="icon-button" onClick={() => setEditing(item)} aria-label={`Editar ${item.nombre}`}><Pencil size={14}/></button><button className={item.activo ? 'btn-ghost danger-text' : 'btn-yellow'} onClick={() => setConfirming(item)} disabled={habilitacion.isPending} aria-label={`${item.activo ? 'Desactivar' : 'Activar'} ${item.nombre}`}><Power size={14}/>{item.activo ? 'Desactivar' : 'Activar'}</button></div></td>}</tr>)}</tbody></table></div></div>}
+    {!filtered.length ? <StateCard text={`No hay ${label}s para mostrar.`}/> : <div className="card table-card"><div className="table-scroll"><table className="tbl"><thead><tr>{kind === 'categoria' && canManage && <th aria-label="Reordenar"/>}<th>Nombre</th><th>Descripción</th>{kind === 'extra' && <th>Precio</th>}<th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody ref={kind === 'categoria' ? orden.lista : undefined}>{filtered.map(item => <tr key={item.id} data-categoria-id={kind === 'categoria' ? item.id : undefined} className={kind === 'categoria' && orden.arrastrando === item.id ? 'category-table-dragging' : undefined}>{kind === 'categoria' && canManage && <td className="category-handle-cell">{orden.asa(item as Categoria)}</td>}<td className="strong-cell">{item.nombre}</td><td>{item.descripcion || '—'}</td>{kind === 'extra' && <td>${Number((item as Extra).precio).toFixed(2)}</td>}<td><span className={`status-pill ${item.activo ? 'active' : 'inactive'}`}>{item.activo ? 'Activo' : 'Inactivo'}</span></td>{canManage && <td><div className="row-actions"><button className="icon-button" onClick={() => setEditing(item)} aria-label={`Editar ${item.nombre}`}><Pencil size={14}/></button><button className={item.activo ? 'btn-ghost danger-text' : 'btn-yellow'} onClick={() => setConfirming(item)} disabled={habilitacion.isPending} aria-label={`${item.activo ? 'Desactivar' : 'Activar'} ${item.nombre}`}><Power size={14}/>{item.activo ? 'Desactivar' : 'Activar'}</button></div></td>}</tr>)}</tbody></table></div></div>}
+    {kind === 'categoria' && orden.ayuda}
     {editing !== undefined && <CatalogoModal kind={kind} editing={editing} onClose={() => setEditing(undefined)}/>}
     {confirming && <ConfirmDialog activating={!confirming.activo} title={`${confirming.activo ? 'Desactivar' : 'Activar'} ${label}`} message={confirming.activo ? `“${confirming.nombre}” dejará de estar disponible para nuevas configuraciones. Los datos históricos se conservarán.` : `Se reactivará “${confirming.nombre}” conservando el mismo ID y sus relaciones con los productos.`} pending={habilitacion.isPending} onClose={() => setConfirming(null)} onConfirm={() => habilitacion.mutate({ id: confirming.id, habilitada: !confirming.activo }, { onSuccess: () => setConfirming(null) })}/>}
   </>

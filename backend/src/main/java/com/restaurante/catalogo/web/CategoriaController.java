@@ -4,6 +4,7 @@ import com.restaurante.catalogo.application.CategoriaService;
 import com.restaurante.catalogo.web.dto.CategoriaRequest;
 import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
 import com.restaurante.catalogo.web.dto.CategoriaResponse;
+import com.restaurante.catalogo.web.dto.OrdenCategoriasRequest;
 import com.restaurante.usuarios.PermisoCodigo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +44,13 @@ public class CategoriaController {
     @Operation(summary = "Lista categorías")
     public List<CategoriaResponse> listar(@RequestParam(defaultValue = "false") boolean soloActivas) {
         return categoriaService.listar(soloActivas);
+    }
+
+    @PutMapping("/orden")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.CATALOGO_GESTIONAR + "')")
+    @Operation(summary = "Selecciona orden alfabético o guarda el orden personalizado del menú")
+    public List<CategoriaResponse> cambiarOrden(@Valid @RequestBody OrdenCategoriasRequest request) {
+        return categoriaService.cambiarOrden(request);
     }
 
     @GetMapping("/{id}")

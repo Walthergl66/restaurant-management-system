@@ -45,7 +45,7 @@ public class Area extends AuditableEntity {
         if (nombre == null || nombre.isBlank()) {
             throw new BusinessRuleException("El nombre del área no puede estar vacío");
         }
-        this.nombre = nombre.trim();
+        this.nombre = NombreCatalogo.normalizar(nombre);
     }
 
     public void cambiarDescripcion(String descripcion) {
