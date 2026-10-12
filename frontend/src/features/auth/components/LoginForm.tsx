@@ -63,14 +63,13 @@ export default function LoginForm() {
         <div style={{ position:'absolute', top:'20%', left:'50%', transform:'translateX(-50%)', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.12) 0%, transparent 70%)', pointerEvents:'none' }}/>
         <div style={{ position:'absolute', bottom:'15%', left:'50%', transform:'translateX(-50%)', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.1) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
-        {/* logo — coloca tu archivo en frontend/public/logo.png */}
-        <div style={{ position:'relative', width:200, height:200, marginBottom:28 }}>
+        <div style={{ width:200, marginBottom:28 }}>
           <Image
-            src="/logo.png"
+            src="/Estacion-Burger-Logo.png"
             alt="Estación Burger"
-            fill
-            sizes="200px"
-            style={{ objectFit:'contain', filter:'drop-shadow(0 0 24px rgba(245,166,35,.4))' }}
+            width={1678}
+            height={937}
+            style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 0 24px rgba(245,166,35,.4))' }}
             priority
           />
         </div>
@@ -109,8 +108,15 @@ export default function LoginForm() {
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
-          <div style={{ position:'relative', width:80, height:80 }}>
-            <Image src="/logo.png" alt="Estación Burger" fill sizes="80px" style={{ objectFit:'contain' }} priority/>
+          <div style={{ width:80 }}>
+            <Image
+              src="/Estacion-Burger-Logo.png"
+              alt="Estación Burger"
+              width={1678}
+              height={937}
+              style={{ width:'100%', height:'auto', display:'block' }}
+              priority
+            />
           </div>
         </div>
 
