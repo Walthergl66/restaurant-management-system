@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { X, Check } from 'lucide-react'
+import { X, Check, Eye, EyeOff } from 'lucide-react'
 import { useCrearUsuario, useActualizarUsuario } from '../hooks'
 import type { RolDto, UsuarioAdminResponse } from '../types'
 
@@ -8,6 +8,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
   const [username, setUsername] = useState(editing?.username ?? '')
   const [nombre,   setNombre]   = useState(editing?.nombre ?? '')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [activo,   setActivo]   = useState(editing?.activo ?? true)
   const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? roles[0]?.codigo ?? '')
 
@@ -38,7 +39,31 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
           {fields.map(({ label, value, set, type }) => (
             <div key={label}>
               <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>{label}</label>
-              <input type={type} value={value} onChange={e => set(label === 'USUARIO' ? e.target.value.trim().toLowerCase() : e.target.value)} className="input" />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={type === 'password' && showPassword ? 'text' : type}
+                  value={value}
+                  onChange={e => set(label === 'USUARIO' ? e.target.value.trim().toLowerCase() : e.target.value)}
+                  className="input"
+                  style={type === 'password' ? { paddingRight: 44 } : undefined}
+                />
+                {type === 'password' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(visible => !visible)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    style={{
+                      position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 2, border: 'none', background: 'transparent',
+                      color: 'var(--muted)', cursor: 'pointer',
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
           <div>
