@@ -3,7 +3,7 @@ import api from '@/shared/api/client'
 import type { Mesa, MesaPayload, EstadoMesa } from './types'
 
 export async function listarMesas(): Promise<Mesa[]> {
-  const { data } = await api.get('/mesas')
+  const { data } = await api.get('/mesas', { params: { soloActivas: false } })
   return Array.isArray(data) ? data : data.content ?? []
 }
 
@@ -20,6 +20,14 @@ export async function actualizarMesa(id: number, body: MesaPayload): Promise<Mes
 export async function cambiarEstadoMesa(id: number, estado: EstadoMesa): Promise<Mesa> {
   const { data } = await api.patch(`/mesas/${id}/estado`, { estado })
   return data
+}
+
+export async function cambiarHabilitacionMesa(id: number, habilitada: boolean): Promise<Mesa | void> {
+  if (!habilitada) {
+    await eliminarMesa(id)
+    return
+  }
+  return cambiarEstadoMesa(id, 'LIBRE')
 }
 
 export async function eliminarMesa(id: number): Promise<void> {

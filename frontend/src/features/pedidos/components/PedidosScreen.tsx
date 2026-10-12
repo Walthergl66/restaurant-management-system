@@ -1,11 +1,10 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, RefreshCw } from 'lucide-react'
+import { Search, RefreshCw } from 'lucide-react'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
-import { usePedidos, useConfirmarPedido, useAnularPedido } from '../hooks'
+import { usePedidos } from '../hooks'
 import type { EstadoPedido } from '../types'
-import NuevoPedidoModal from './NuevoPedidoModal'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -15,11 +14,8 @@ export default function PedidosScreen() {
   const router = useRouter()
   const [search, setSearch]   = useState('')
   const [filtro, setFiltro]   = useState<EstadoPedido | 'TODOS'>('TODOS')
-  const [showModal, setShowModal] = useState(false)
 
   const { data: pedidos = [], isLoading, refetch } = usePedidos()
-  const confirmar = useConfirmarPedido()
-  const cancelar = useAnularPedido()
 
   const filtered = pedidos.filter(p => {
     const okEstado = filtro === 'TODOS' || p.estado === filtro
@@ -34,10 +30,7 @@ export default function PedidosScreen() {
       {/* header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
         <h1 style={{ fontSize:20, fontWeight:800 }}>Pedidos</h1>
-        <div style={{ display:'flex', gap:8 }}>
-          <button className="btn-ghost" onClick={() => refetch()}><RefreshCw size={15}/></button>
-          <button className="btn-fuchsia" onClick={() => setShowModal(true)}><Plus size={15}/> Nuevo pedido</button>
-        </div>
+        <button className="btn-ghost" onClick={() => refetch()} aria-label="Actualizar pedidos"><RefreshCw size={15}/></button>
       </div>
 
       {/* filters */}
@@ -80,7 +73,7 @@ export default function PedidosScreen() {
               <table className="tbl">
                 <thead>
                   <tr>
-                    {['Código','Mesa','Ítems','Total','Estado','Creado','Acciones'].map(h => <th key={h}>{h}</th>)}
+                    {['Código','Mesa','Ítems','Total','Estado','Creado'].map(h => <th key={h}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -92,14 +85,6 @@ export default function PedidosScreen() {
                       <td style={{ fontWeight:700, color:'var(--yellow)' }}>{fmt(p.total)}</td>
                       <td><span className={`badge ${ESTADO_PEDIDO[p.estado]?.badge ?? ''}`}>{ESTADO_PEDIDO[p.estado]?.label ?? p.estado}</span></td>
                       <td style={{ fontSize:12, color:'var(--muted)' }}>{p.createdAt ? format(new Date(p.createdAt),'dd/MM/yy HH:mm',{locale:es}) : '—'}</td>
-                      <td onClick={e => e.stopPropagation()}>
-                        {p.estado === 'BORRADOR' && (
-                          <div style={{ display:'flex', gap:6 }}>
-                            <button className="btn-yellow" style={{ padding:'6px 12px', fontSize:12 }} onClick={() => confirmar.mutate(p.codigo)}>Confirmar</button>
-                            <button className="btn-ghost" style={{ padding:'6px 12px', fontSize:12, color:'var(--error)' }} onClick={() => cancelar.mutate(p.codigo)}>Anular</button>
-                          </div>
-                        )}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -107,8 +92,6 @@ export default function PedidosScreen() {
             )
         }
       </div>
-
-      {showModal && <NuevoPedidoModal onClose={() => setShowModal(false)} />}
     </div>
   )
 }

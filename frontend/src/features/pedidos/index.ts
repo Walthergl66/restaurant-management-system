@@ -1,6 +1,5 @@
 export { default as PedidosScreen } from './components/PedidosScreen'
 export { default as PedidoDetalle } from './components/PedidoDetalle'
-export { default as NuevoPedidoModal } from './components/NuevoPedidoModal'
 export {
   usePedidos,
   usePedido,

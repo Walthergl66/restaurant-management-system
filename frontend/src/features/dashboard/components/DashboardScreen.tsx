@@ -1,13 +1,11 @@
 'use client'
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, TrendingUp, ShoppingBag, DollarSign, CreditCard, ArrowRight, AlertTriangle } from 'lucide-react'
+import { TrendingUp, ShoppingBag, DollarSign, CreditCard, ArrowRight, AlertTriangle } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
 import type { ReactNode } from 'react'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
-import NuevoPedidoModal from '@/features/pedidos/components/NuevoPedidoModal'
 import { useReporte, usePedidos, useCaja } from '../hooks'
 
 /* ---- mock hourly fallback ---- */
@@ -20,8 +18,6 @@ const MOCK_HOURS = Array.from({ length: 14 }, (_, i) => ({
 /* ================================================================ */
 export default function DashboardScreen() {
   const router = useRouter()
-  const [showModal, setShowModal] = useState(false)
-
   const { data: reporte, isLoading: loadR } = useReporte()
   const { data: pedidos = [], isLoading: loadP } = usePedidos()
   const { data: caja } = useCaja()
@@ -42,9 +38,6 @@ export default function DashboardScreen() {
 
       {/* action bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <button className="btn-fuchsia" onClick={() => setShowModal(true)}>
-          <Plus size={15} /> NUEVO PEDIDO
-        </button>
         {caja && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
@@ -200,8 +193,6 @@ export default function DashboardScreen() {
           </button>
         </div>
       </div>
-
-      {showModal && <NuevoPedidoModal onClose={() => setShowModal(false)} />}
     </div>
   )
 }

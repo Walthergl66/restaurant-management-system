@@ -14,7 +14,7 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; permisos
   { href: '/dashboard',   label: 'Resumen',    icon: LayoutDashboard },
   { href: '/pedidos',     label: 'Pedidos',    icon: ShoppingBag,  permisos: ['pedidos:ver'] },
   { href: '/cocina',      label: 'Cocina',     icon: ChefHat,      permisos: ['comandas:ver'] },
-  { href: '/mesas',       label: 'Mesas',      icon: Table2,       permisos: ['mesas:ver'] },
+  { href: '/mesas',       label: 'Mesas',      icon: Table2,       permisos: ['mesas:gestionar'] },
   { href: '/productos',   label: 'Productos',  icon: Package,      permisos: ['catalogo:ver'] },
   { href: '/cuentas',     label: 'Cuentas',    icon: Receipt,      permisos: ['cuentas:ver'] },
   { href: '/caja',        label: 'Caja',       icon: DollarSign,   permisos: ['caja:movimientos'] },
