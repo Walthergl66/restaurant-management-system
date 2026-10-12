@@ -5,28 +5,30 @@ import {
   LayoutDashboard, ShoppingBag, Package, Table2, DollarSign,
   Users, XCircle, ClipboardList, BarChart3, LogOut, ChefHat, Receipt,
 } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore, hasPermiso } from '@/store/authStore'
 import Logo from './Logo'
 import toast from 'react-hot-toast'
 
-const NAV = [
+const NAV: { href: string; label: string; icon: typeof LayoutDashboard; permisos?: string[] }[] = [
   { href: '/dashboard',   label: 'Resumen',    icon: LayoutDashboard },
-  { href: '/pedidos',     label: 'Pedidos',    icon: ShoppingBag },
-  { href: '/cocina',      label: 'Cocina',     icon: ChefHat },
-  { href: '/mesas',       label: 'Mesas',      icon: Table2 },
-  { href: '/productos',   label: 'Productos',  icon: Package },
-  { href: '/cuentas',     label: 'Cuentas',    icon: Receipt },
-  { href: '/caja',        label: 'Caja',       icon: DollarSign },
-  { href: '/reportes',    label: 'Reportes',   icon: BarChart3 },
-  { href: '/usuarios',    label: 'Usuarios',   icon: Users },
-  { href: '/anulaciones', label: 'Anulaciones',icon: XCircle },
-  { href: '/auditoria',   label: 'Auditoría',  icon: ClipboardList },
+  { href: '/pedidos',     label: 'Pedidos',    icon: ShoppingBag,  permisos: ['pedidos:ver'] },
+  { href: '/cocina',      label: 'Cocina',     icon: ChefHat,      permisos: ['comandas:ver'] },
+  { href: '/mesas',       label: 'Mesas',      icon: Table2,       permisos: ['mesas:ver'] },
+  { href: '/productos',   label: 'Productos',  icon: Package,      permisos: ['catalogo:ver'] },
+  { href: '/cuentas',     label: 'Cuentas',    icon: Receipt,      permisos: ['cuentas:ver'] },
+  { href: '/caja',        label: 'Caja',       icon: DollarSign,   permisos: ['caja:movimientos'] },
+  { href: '/reportes',    label: 'Reportes',   icon: BarChart3,    permisos: ['reportes:ver'] },
+  { href: '/usuarios',    label: 'Usuarios',   icon: Users,        permisos: ['usuarios:ver'] },
+  { href: '/anulaciones', label: 'Anulaciones',icon: XCircle,      permisos: ['anulaciones:solicitar', 'anulaciones:aprobar'] },
+  { href: '/auditoria',   label: 'Auditoría',  icon: ClipboardList,permisos: ['auditoria:ver'] },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
   const router   = useRouter()
   const { user, logout } = useAuthStore()
+
+  const nav = NAV.filter((item) => !item.permisos || hasPermiso(user, ...item.permisos))
 
   const handleLogout = async () => {
     await logout()
@@ -54,7 +56,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
           return (
             <Link key={href} href={href} className={`nav-item${active ? ' active' : ''}`}>
