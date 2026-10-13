@@ -8,8 +8,8 @@
  *   - Maneja 204 (sin contenido) y fallos de red
  */
 
-import { API_BASE_URL } from '../../config/environment';
-import { authStorage } from '../storage/authStorage';
+import { API_BASE_URL } from '@/config/environment';
+import { authStorage } from '@/core/storage/authStorage';
 import { ApiError, problemDetailToApiError } from './apiError';
 
 class ApiClient {
