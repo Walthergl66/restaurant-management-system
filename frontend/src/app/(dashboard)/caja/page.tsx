@@ -1,1 +1,1 @@
-export { default } from '@/features/caja/components/CajaScreen'
+export { CajaScreen as default } from '@/features/caja'
