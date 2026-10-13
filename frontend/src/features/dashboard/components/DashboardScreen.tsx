@@ -6,32 +6,41 @@ import {
 } from 'recharts'
 import type { ReactNode } from 'react'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
-import { useReporte, usePedidos, useCaja } from '../hooks'
+import { useReporte, useReporteAyer, useReporteSemana, usePedidos, useCaja } from '../hooks'
 
-/* ---- mock hourly fallback ---- */
-const MOCK_HOURS = Array.from({ length: 14 }, (_, i) => ({
-  hora: `${i + 8}h`,
-  monto: 80 + (i + 1) * 28 + (i > 7 ? (i - 7) * 55 : 0),
-  peak: i >= 11 && i <= 13,
-}))
+/* etiqueta dd/MM a partir de la fecha (ISO o yyyy-MM-dd) que devuelve el backend */
+function etiquetaDia(fecha: string): string {
+  const d = new Date(String(fecha).length > 10 ? fecha : `${fecha}T00:00:00`)
+  return Number.isNaN(d.getTime()) ? String(fecha) : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+/* variación porcentual real de un valor contra el mismo de ayer; null si no hay base */
+function variacion(actual: number, previo: number): { text: string; up: boolean } | null {
+  if (!previo) return null
+  const pct = ((actual - previo) / previo) * 100
+  return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% vs. ayer`, up: pct >= 0 }
+}
 
 /* ================================================================ */
 export default function DashboardScreen() {
   const router = useRouter()
   const { data: reporte, isLoading: loadR } = useReporte()
+  const { data: ayer, isLoading: loadA } = useReporteAyer()
+  const { data: semana } = useReporteSemana()
   const { data: pedidos = [], isLoading: loadP } = usePedidos()
   const { data: caja } = useCaja()
 
-  const chartData = reporte?.porDia?.length
-    ? reporte.porDia.map((d, i) => ({
-        hora: String(d.fecha).length > 10 ? String(d.fecha).slice(11, 13) + 'h' : String(d.fecha),
-        monto: d.total,
-        peak: i % 3 === 2,
-      }))
-    : MOCK_HOURS
+  const porDia = semana?.porDia ?? []
+  const maxMonto = porDia.reduce((max, d) => Math.max(max, d.total), 0)
+  const chartData = porDia.map(d => ({
+    fecha: etiquetaDia(d.fecha),
+    monto: d.total,
+    peak: maxMonto > 0 && d.total === maxMonto,
+  }))
 
   const topProductos = reporte?.porProducto?.slice(0, 4) ?? []
   const ticketPromedio = reporte && reporte.numeroVentas > 0 ? reporte.total / reporte.numeroVentas : 0
+  const ticketAyer = ayer && ayer.numeroVentas > 0 ? ayer.total / ayer.numeroVentas : 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -53,10 +62,10 @@ export default function DashboardScreen() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 14 }}>
-        <KpiCard label="Ventas de hoy"    value={loadR ? '...' : fmt(reporte?.total)}       icon={<DollarSign size={17}/>}  color="var(--yellow)"   change="+18.2% vs. ayer" />
-        <KpiCard label="Pedidos"          value={loadR ? '...' : String(reporte?.numeroVentas??0)} icon={<ShoppingBag size={17}/>} color="var(--fuchsia)"  change="+12.4% vs. ayer" />
-        <KpiCard label="Ticket promedio"  value={loadR ? '...' : fmt(ticketPromedio)}     icon={<TrendingUp size={17}/>}  color="var(--yellow)"   change="+5.8% vs. ayer" />
-        <KpiCard label="Métodos de pago"  value={loadR ? '...' : String(reporte?.porMetodo?.length??0)} icon={<CreditCard size={17}/>} color="var(--fuchsia)" change="+9.1% vs. ayer" />
+        <KpiCard label="Ventas de hoy"    value={loadR ? '...' : fmt(reporte?.total)}       icon={<DollarSign size={17}/>}  color="var(--yellow)"   change={loadR || loadA ? undefined : variacion(reporte?.total ?? 0, ayer?.total ?? 0)} />
+        <KpiCard label="Pedidos"          value={loadR ? '...' : String(reporte?.numeroVentas??0)} icon={<ShoppingBag size={17}/>} color="var(--fuchsia)"  change={loadR || loadA ? undefined : variacion(reporte?.numeroVentas ?? 0, ayer?.numeroVentas ?? 0)} />
+        <KpiCard label="Ticket promedio"  value={loadR ? '...' : fmt(ticketPromedio)}     icon={<TrendingUp size={17}/>}  color="var(--yellow)"   change={loadR || loadA ? undefined : variacion(ticketPromedio, ticketAyer)} />
+        <KpiCard label="Métodos de pago"  value={loadR ? '...' : String(reporte?.porMetodo?.length??0)} icon={<CreditCard size={17}/>} color="var(--fuchsia)" change={loadR || loadA ? undefined : variacion(reporte?.porMetodo?.length ?? 0, ayer?.porMetodo?.length ?? 0)} />
       </div>
 
       {/* main row */}
@@ -65,25 +74,28 @@ export default function DashboardScreen() {
         {/* chart */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ fontWeight: 700, fontSize: 15 }}>Ventas por hora</h2>
-            <span style={{ fontSize: 12, color: 'var(--yellow)', fontWeight: 600 }}>HOY</span>
+            <h2 style={{ fontWeight: 700, fontSize: 15 }}>Ventas de los últimos 7 días</h2>
+            <span style={{ fontSize: 12, color: 'var(--yellow)', fontWeight: 600 }}>7 DÍAS</span>
           </div>
-          <ResponsiveContainer width="100%" height={210}>
-            <BarChart data={chartData} barSize={20} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-              <XAxis dataKey="hora" tick={{ fill: 'var(--muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'var(--muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, color: '#fff', fontSize: 12 }}
-                cursor={{ fill: 'rgba(255,255,255,.03)' }}
-                formatter={(v) => [fmt(Number(v)), 'Ventas']}
-              />
-              <Bar dataKey="monto" radius={[5,5,0,0]}>
-                {chartData.map((d, i) => (
-                  <Cell key={i} fill={d.peak ? 'var(--fuchsia)' : 'var(--yellow)'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {chartData.length === 0
+            ? <p style={{ fontSize: 13, color: 'var(--dim)', padding: '80px 0', textAlign: 'center' }}>Sin datos aún</p>
+            : <ResponsiveContainer width="100%" height={210}>
+                <BarChart data={chartData} barSize={20} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                  <XAxis dataKey="fecha" tick={{ fill: 'var(--muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'var(--muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, color: '#fff', fontSize: 12 }}
+                    cursor={{ fill: 'rgba(255,255,255,.03)' }}
+                    formatter={(v) => [fmt(Number(v)), 'Ventas']}
+                  />
+                  <Bar dataKey="monto" radius={[5,5,0,0]}>
+                    {chartData.map((d, i) => (
+                      <Cell key={i} fill={d.peak ? 'var(--fuchsia)' : 'var(--yellow)'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+          }
         </div>
 
         {/* top productos */}
@@ -199,7 +211,7 @@ export default function DashboardScreen() {
 
 /* ---- KPI card ---- */
 function KpiCard({ label, value, icon, color, change }: {
-  label: string; value: string; icon: ReactNode; color: string; change: string
+  label: string; value: string; icon: ReactNode; color: string; change?: { text: string; up: boolean } | null
 }) {
   return (
     <div className="card" style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -208,7 +220,10 @@ function KpiCard({ label, value, icon, color, change }: {
         <span style={{ color }}>{icon}</span>
       </div>
       <p style={{ fontSize:26, fontWeight:900, color:'var(--text)' }}>{value}</p>
-      <p style={{ fontSize:12, fontWeight:600, color:'var(--success)' }}>{change}</p>
+      {change
+        ? <p style={{ fontSize:12, fontWeight:600, color: change.up ? 'var(--success)' : 'var(--error)' }}>{change.text}</p>
+        : <p style={{ fontSize:12, fontWeight:600, color:'var(--muted)' }}>Sin datos previos</p>
+      }
     </div>
   )
 }
