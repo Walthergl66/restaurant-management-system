@@ -18,11 +18,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { useAuth } from '../features/auth/AuthContext';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
-import { ApiError } from '../core/api/apiError';
+import { colors } from '@/theme/colors';
+import { useAuth } from '@/features/auth';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { ApiError } from '@/core/api/apiError';
 
 export default function VerificarScreen() {
   const router = useRouter();
