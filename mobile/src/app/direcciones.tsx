@@ -18,11 +18,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { pedidosService } from '../features/pedidos/pedidosService';
-import type { DireccionCliente } from '../features/pedidos/types';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
+import { colors } from '@/theme/colors';
+import { pedidosService } from '@/features/pedidos';
+import type { DireccionCliente } from '@/features/pedidos';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 export default function DireccionesScreen() {
   const router = useRouter();
