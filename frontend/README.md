@@ -19,11 +19,16 @@ El frontend se ejecuta directamente en el entorno de desarrollo del cliente con 
 
 ## 📁 Estructura del Proyecto
 
+La arquitectura es **modular por feature**. Cada dominio de negocio vive en
+`src/features/<feature>/` y expone su superficie pública solo a través de su barrel
+`index.ts`. El código transversal (cliente HTTP, layout, UI, utilidades) vive en
+`src/shared/`. Las rutas de Next.js son finas: solo montan la pantalla de la feature.
+
 ```
 frontend/
 ├── src/
-│   ├── app/                      # Rutas de Next.js (App Router)
-│   │   ├── (dashboard)/          # Vistas principales protegidas
+│   ├── app/                      # Rutas de Next.js (App Router) — solo montan pantallas
+│   │   ├── (dashboard)/          # Vistas protegidas (layout con Sidebar/TopBar + AuthGuard)
 │   │   │   ├── anulaciones/      # Aprobación y consulta de anulaciones
 │   │   │   ├── auditoria/        # Registro de eventos auditables
 │   │   │   ├── caja/             # Apertura, movimientos y cierre de caja
@@ -36,13 +41,39 @@ frontend/
 │   │   │   ├── reportes/         # Reportes financieros y ventas
 │   │   │   └── usuarios/         # Gestión de usuarios y roles
 │   │   └── login/                # Autenticación y obtención de JWT
-│   ├── components/               # Componentes UI reutilizables
-│   ├── lib/                      # Cliente API, utilidades y helpers
-│   ├── store/                    # Stores de Zustand (auth, turno, carrito)
-│   └── types/                    # Tipos e interfaces TypeScript
+│   ├── features/                 # Módulos de dominio (uno por feature)
+│   │   └── <feature>/            # p. ej. pedidos, catalogo, auth, caja...
+│   │       ├── index.ts          # Barrel: ÚNICA superficie pública del módulo
+│   │       ├── api.ts            # Llamadas HTTP tipadas (axios, vía shared/api)
+│   │       ├── hooks.ts          # Hooks de TanStack Query / mutaciones
+│   │       ├── types.ts          # Tipos del dominio de la feature
+│   │       ├── components/       # Pantallas y componentes de la feature
+│   │       └── lib/              # Utilidades internas (opcional)
+│   └── shared/                   # Código transversal, sin dependencia de features*
+│       ├── api/                  # Cliente axios, queryClient
+│       ├── layout/               # Providers, Sidebar, TopBar
+│       ├── ui/                    # Componentes UI reutilizables (Logo...)
+│       ├── lib/                   # Utilidades (permisos, formato...)
+│       └── types/                 # Tipos comunes
 ├── next.config.ts                # Configuración de proxy/rewrites hacia backend
 └── package.json                  # Dependencias y scripts npm
 ```
+
+### Reglas de la arquitectura
+
+- **Imports entre módulos solo por el barrel.** Entre features (y desde `app/`) se
+  importa desde `@/features/<feature>`, nunca desde rutas profundas como
+  `@/features/<feature>/components/...` o `.../api`.
+- **Rutas finas.** Los archivos de `app/` reexportan la pantalla del barrel, p. ej.
+  `export { DashboardScreen as default } from '@/features/dashboard'`.
+- **Estado separado.** El estado de servidor va en TanStack Query (hooks por feature);
+  el estado de UI/sesión va en Zustand (p. ej. `features/auth/store.ts`). Nunca se
+  duplica la respuesta del servidor en un store.
+- **Sin fetching en componentes.** Los componentes consumen hooks/API de su feature,
+  nunca el cliente HTTP directo.
+
+\* `shared/layout/Sidebar` y `TopBar` leen la sesión desde `@/features/auth` (única
+excepción documentada de la dirección `shared → feature`).
 
 ---
 
