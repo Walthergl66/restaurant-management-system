@@ -6,7 +6,7 @@ import { useAuth, puedeAtenderMesas } from '@/features/auth';
 import { useCart, aLineaPedido, claveLinea } from '@/features/carrito';
 import { menuService } from '@/features/menu';
 import type { ProductoMenu } from '@/features/menu';
-import { meseroService } from '../meseroService';
+import { meseroService } from '../api';
 import type { MesaMesero } from '../types';
 import { generarCodigoPedido } from '@/features/pedidos';
 import { colors } from '@/theme/colors';
