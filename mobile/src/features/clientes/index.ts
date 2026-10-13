@@ -1,2 +1,2 @@
-export { clientesService } from './clientesService'
-export type { ActualizarPerfil, ClientePerfil } from './clientesService'
+export { clientesService } from './api'
+export type { ActualizarPerfil, ClientePerfil } from './api'
