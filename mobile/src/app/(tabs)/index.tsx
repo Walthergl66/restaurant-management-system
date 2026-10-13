@@ -19,13 +19,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
-import { menuService } from '../../features/menu/menuService';
-import type { MenuDto, ProductoMenu } from '../../features/menu/types';
-import { ProductCard } from '../../components/ProductCard';
-import { Header } from '../../components/Header';
-import { useCart } from '../../features/carrito/CartContext';
-import { useAuth } from '../../features/auth/AuthContext';
+import { colors } from '@/theme/colors';
+import { menuService } from '@/features/menu';
+import type { MenuDto, ProductoMenu } from '@/features/menu';
+import { ProductCard } from '@/components/ProductCard';
+import { Header } from '@/components/Header';
+import { useCart } from '@/features/carrito';
+import { useAuth } from '@/features/auth';
 
 export default function MenuScreen() {
   const router = useRouter();
