@@ -6,7 +6,7 @@
  * de detalle de un solo producto, así que se resuelve desde el menú.
  */
 
-import { apiClient } from '../../core/api/apiClient';
+import { apiClient } from '@/core/api/apiClient';
 import type { CategoriaMenu, MenuDto, ProductoMenu } from './types';
 
 const ENDPOINTS = {
