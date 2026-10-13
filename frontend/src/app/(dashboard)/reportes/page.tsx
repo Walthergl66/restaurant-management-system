@@ -1,1 +1,1 @@
-export { default } from '@/features/reportes/components/ReportesScreen'
+export { ReportesScreen as default } from '@/features/reportes'
