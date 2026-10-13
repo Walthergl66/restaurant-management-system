@@ -3,12 +3,34 @@ import { useQuery } from '@tanstack/react-query'
 import type { ReporteVentas } from '@/features/reportes'
 import type { PedidoResponse } from '@/features/pedidos'
 import type { CajaResponse } from '@/features/caja'
-import { obtenerReporteHoy, listarPedidosRecientes, obtenerCajaAbierta } from './api'
+import {
+  obtenerReporteHoy,
+  obtenerReporteAyer,
+  obtenerReporteSemana,
+  listarPedidosRecientes,
+  obtenerCajaAbierta,
+} from './api'
 
 export function useReporte() {
   return useQuery<ReporteVentas>({
     queryKey: ['reporte', 'hoy'],
     queryFn: obtenerReporteHoy,
+    refetchInterval: 60_000,
+  })
+}
+
+export function useReporteAyer() {
+  return useQuery<ReporteVentas>({
+    queryKey: ['reporte', 'ayer'],
+    queryFn: obtenerReporteAyer,
+    refetchInterval: 60_000,
+  })
+}
+
+export function useReporteSemana() {
+  return useQuery<ReporteVentas>({
+    queryKey: ['reporte', 'semana'],
+    queryFn: obtenerReporteSemana,
     refetchInterval: 60_000,
   })
 }
