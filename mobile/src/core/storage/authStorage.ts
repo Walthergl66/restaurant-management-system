@@ -5,7 +5,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { StoredAuth } from '../../features/auth/types';
+import type { StoredAuth } from '@/features/auth';
 
 const KEYS = {
   accessToken: 'estacion_access_token',
