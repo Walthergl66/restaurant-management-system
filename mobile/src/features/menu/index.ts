@@ -1,5 +1,5 @@
-export { menuService } from './menuService'
-export { default as ProductoScreen } from './screens/ProductoScreen'
+export { menuService } from './api'
+export { default as ProductoScreen } from './components/ProductoScreen'
 export type {
   CategoriaMenu,
   ExtraMenu,
