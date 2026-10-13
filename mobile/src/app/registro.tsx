@@ -31,7 +31,7 @@ import {
   esCorreoValido,
   evaluarPassword,
 } from '@/features/auth';
-import { ApiError, firstFieldErrorMessage } from '@/core/api/apiError';
+import { ApiError, firstFieldErrorMessage } from '@/shared/api/apiError';
 
 export default function RegistroScreen() {
   const router = useRouter();
