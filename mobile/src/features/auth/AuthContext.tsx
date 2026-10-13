@@ -13,9 +13,9 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
-import { authService } from './authService';
-import { authStorage } from '@/core/storage/authStorage';
-import { apiClient } from '@/core/api/apiClient';
+import { authService } from './api';
+import { authStorage } from '@/shared/storage/authStorage';
+import { apiClient } from '@/shared/api/apiClient';
 import type { RegistroRequest, UsuarioInfo } from './types';
 
 interface AuthContextType {
