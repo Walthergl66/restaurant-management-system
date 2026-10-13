@@ -10,10 +10,10 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider, useAuth } from '../features/auth/AuthContext';
-import { puedeAtenderMesas } from '../features/auth/permisos';
-import { CartProvider } from '../features/carrito/CartContext';
-import { colors } from '../theme/colors';
+import { AuthProvider, useAuth } from '@/features/auth';
+import { puedeAtenderMesas } from '@/features/auth';
+import { CartProvider } from '@/features/carrito';
+import { colors } from '@/theme/colors';
 
 /** Rutas públicas de autenticación (no requieren sesión). */
 const RUTAS_AUTH = ['login', 'registro', 'recuperar', 'verificar'];
