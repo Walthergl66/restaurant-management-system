@@ -1,6 +1,6 @@
-import Providers from '@/components/Providers'
-import Sidebar from '@/components/Sidebar'
-import TopBar from '@/components/TopBar'
+import Providers from '@/shared/layout/Providers'
+import Sidebar from '@/shared/layout/Sidebar'
+import TopBar from '@/shared/layout/TopBar'
 import { AuthGuard } from '@/features/auth'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
