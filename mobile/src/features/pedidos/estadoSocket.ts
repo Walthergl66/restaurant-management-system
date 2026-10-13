@@ -11,7 +11,7 @@
  */
 
 import { Client, IMessage } from '@stomp/stompjs';
-import { API_BASE_URL } from '../../config/environment';
+import { API_BASE_URL } from '@/config/environment';
 import type { PedidoCliente } from './types';
 
 /** Deriva la URL del WebSocket desde la URL base de la API. */
