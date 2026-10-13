@@ -20,14 +20,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
-import { useAuth } from '../../features/auth/AuthContext';
-import { Button } from '../../components/ui/Button';
-import { Header } from '../../components/Header';
-import { clientesService } from '../../features/clientes/clientesService';
-import type { ClientePerfil } from '../../features/clientes/clientesService';
-import { ApiError } from '../../core/api/apiError';
-import { esCelularValido, esCorreoValido } from '../../features/auth/validation';
+import { colors } from '@/theme/colors';
+import { useAuth } from '@/features/auth';
+import { Button } from '@/components/ui/Button';
+import { Header } from '@/components/Header';
+import { clientesService } from '@/features/clientes';
+import type { ClientePerfil } from '@/features/clientes';
+import { ApiError } from '@/core/api/apiError';
+import { esCelularValido, esCorreoValido } from '@/features/auth';
 
 export default function ProfileScreen() {
   const router = useRouter();
