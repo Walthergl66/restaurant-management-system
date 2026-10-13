@@ -1,1 +1,1 @@
-export { default } from '@/features/comandas/components/CocinaScreen'
+export { CocinaScreen as default } from '@/features/comandas'
