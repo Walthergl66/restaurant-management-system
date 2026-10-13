@@ -62,7 +62,7 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
             assertEquals(1, platos.size());
             assertEquals("HamburguesaDoble", platos.get(0).path("nombre").asText());
             assertEquals(12.50, platos.get(0).path("precio").asDouble());
-            assertEquals("cebolla", platos.get(0).path("ingredientes").get(0).asText());
+            assertEquals("Cebolla", platos.get(0).path("ingredientes").get(0).asText());
 
             mockMvc.perform(delete("/api/v1/productos/" + productoId)
                             .header("Authorization", "Bearer " + token))
@@ -158,7 +158,7 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.precio").value(6.00))
                     .andExpect(jsonPath("$.extras[0].nombre").value("Tocino"))
-                    .andExpect(jsonPath("$.ingredientes[0]").value("sal"));
+                    .andExpect(jsonPath("$.ingredientes[0]").value("Sal"));
         }
 
         @Test

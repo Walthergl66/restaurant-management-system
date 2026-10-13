@@ -263,6 +263,15 @@ body {
   .toolbar-action { width: 100%; margin-left: 0; justify-content: center; }
 }
 
+.tbl td.category-handle-cell { width: 56px; padding: 4px 6px; }
+.category-table-dragging { background: var(--surface-2); outline: 1px solid var(--yellow); outline-offset: -1px; opacity: .8; }
+.category-drag-handle { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--dim); cursor: grab; touch-action: none; user-select: none; }
+.category-drag-handle:hover, .category-drag-handle:focus-visible { color: var(--yellow); background: var(--surface); }
+.category-drag-handle:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.category-drag-handle:active { cursor: grabbing; }
+.category-drag-handle:disabled { cursor: wait; opacity: .4; }
+.category-order-announcement { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
 /* ---- login page responsive ---- */
 @keyframes spin {
   to { transform: rotate(360deg); }

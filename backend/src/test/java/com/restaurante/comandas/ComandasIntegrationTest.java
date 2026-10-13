@@ -55,7 +55,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     void confirmarGeneraUnaComandaPorAreaYOrdenDeImpresion() throws Exception {
         long areaCocina = crearArea("Cocina");
         long areaBarra = crearArea("Barra");
-        long productoA = crearProductoConArea("Lomo Saltado", "11.00", areaCocina);
+        long productoA = crearProductoConArea("Lomo Saltado", "11.00", areaCocina, List.of("sin ají"));
         long productoB = crearProductoConArea("Jugo Natural", "3.00", areaBarra);
 
         long mesaId = crearMesa();
@@ -63,7 +63,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         crearBorrador(mesaId, codigo);
         postItem(codigo, productoA, 2, null, null, null);
         postItem(codigo, productoA, 1, null, null, null);
-        postItem(codigo, productoA, 1, null, "sin ají", null);
+        postItem(codigo, productoA, 1, null, "Sin ají", null);
         postItem(codigo, productoB, 1, null, null, "con hielo");
 
         confirmar(codigo, "key-comandas-1");
@@ -79,7 +79,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         JsonNode agrupada = lineas.get(0);
         assertTrue(agrupada.path("nombreProducto").asText().startsWith("Lomo Saltado"));
         assertEquals(3, agrupada.path("cantidad").asInt(), "1 + 2 = 3");
-        assertTrue(lineas.toString().contains("sin ají"));
+        assertTrue(lineas.toString().contains("Sin ají"));
 
         // Órdenes de impresión en el outbox
         assertEquals(2, buscarPendientes(codigo).size(), "una orden de impresión por comanda");
@@ -570,12 +570,17 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     }
 
     private long crearProductoConArea(String nombre, String precio, long areaId) throws Exception {
+        return crearProductoConArea(nombre, precio, areaId, List.of());
+    }
+
+    private long crearProductoConArea(String nombre, String precio, long areaId, List<String> ingredientes) throws Exception {
+        String ingredientesJson = "[\"" + String.join("\",\"", ingredientes) + "\"]";
         String body = mockMvc.perform(post("/api/v1/productos")
                         .header("Authorization", "Bearer " + administradorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"%s-%d","precio":%s,"areaId":%d,"extraIds":[],"ingredientes":[]}
-                                """.formatted(nombre, System.nanoTime() % 100000, precio, areaId)))
+                                {"nombre":"%s-%d","precio":%s,"areaId":%d,"extraIds":[],"ingredientes":%s}
+                                """.formatted(nombre, System.nanoTime() % 100000, precio, areaId, ingredientesJson)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();

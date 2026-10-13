@@ -13,18 +13,20 @@ import React, {
   ReactNode,
 } from 'react';
 import type { CartItem } from './types';
+import { claveLinea } from './lineas';
 import type { ExtraMenu, ProductoMenu } from '../menu/types';
 
 interface CartContextType {
   items: CartItem[];
   totalItems: number;
   totalPrice: number;
-  addItem: (producto: ProductoMenu, cantidad?: number, extras?: ExtraMenu[]) => void;
-  removeItem: (productoId: number, extras: ExtraMenu[]) => void;
+  addItem: (producto: ProductoMenu, cantidad?: number, extras?: ExtraMenu[], ingredientesRemovidos?: string[]) => void;
+  removeItem: (productoId: number, extras: ExtraMenu[], ingredientesRemovidos?: string[]) => void;
   updateQuantity: (
     productoId: number,
     extras: ExtraMenu[],
-    cantidad: number
+    cantidad: number,
+    ingredientesRemovidos?: string[]
   ) => void;
   clearCart: () => void;
   getItemQuantity: (productoId: number) => number;
@@ -32,23 +34,22 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-/** Identidad de un item: mismo producto + mismos extras (mismo orden). */
 const mismaCombinacion = (
-  a: { producto: ProductoMenu; extras: ExtraMenu[] },
+  a: CartItem,
   productoId: number,
-  extras: ExtraMenu[]
+  extras: ExtraMenu[],
+  ingredientesRemovidos: string[] = []
 ) =>
-  a.producto.id === productoId &&
-  JSON.stringify(a.extras) === JSON.stringify(extras);
+  claveLinea(a) === claveLinea({ producto: { ...a.producto, id: productoId }, extras, ingredientesRemovidos });
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
   const addItem = useCallback(
-    (producto: ProductoMenu, cantidad: number = 1, extras: ExtraMenu[] = []) => {
+    (producto: ProductoMenu, cantidad: number = 1, extras: ExtraMenu[] = [], ingredientesRemovidos: string[] = []) => {
       setItems(prev => {
         const existingIndex = prev.findIndex(item =>
-          mismaCombinacion(item, producto.id, extras)
+          mismaCombinacion(item, producto.id, extras, ingredientesRemovidos)
         );
 
         if (existingIndex >= 0) {
@@ -60,27 +61,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
           return updated;
         }
 
-        return [...prev, { producto, cantidad, extras }];
+        return [...prev, { producto, cantidad, extras, ingredientesRemovidos: [...new Set(ingredientesRemovidos)] }];
       });
     },
     []
   );
 
-  const removeItem = useCallback((productoId: number, extras: ExtraMenu[]) => {
+  const removeItem = useCallback((productoId: number, extras: ExtraMenu[], ingredientesRemovidos: string[] = []) => {
     setItems(prev =>
-      prev.filter(item => !mismaCombinacion(item, productoId, extras))
+      prev.filter(item => !mismaCombinacion(item, productoId, extras, ingredientesRemovidos))
     );
   }, []);
 
   const updateQuantity = useCallback(
-    (productoId: number, extras: ExtraMenu[], cantidad: number) => {
+    (productoId: number, extras: ExtraMenu[], cantidad: number, ingredientesRemovidos: string[] = []) => {
       if (cantidad <= 0) {
-        removeItem(productoId, extras);
+        removeItem(productoId, extras, ingredientesRemovidos);
         return;
       }
       setItems(prev =>
         prev.map(item =>
-          mismaCombinacion(item, productoId, extras)
+          mismaCombinacion(item, productoId, extras, ingredientesRemovidos)
             ? { ...item, cantidad }
             : item
         )

@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { useCart } from '../../features/carrito/CartContext';
+import { claveLinea } from '../../features/carrito/lineas';
 import { CartItemRow } from '../../components/CartItemRow';
 import { Button } from '../../components/ui/Button';
 import { Header } from '../../components/Header';
@@ -58,7 +59,7 @@ export default function CartScreen() {
       <FlatList
         data={items}
         renderItem={({ item }) => <CartItemRow item={item} />}
-        keyExtractor={item => `${item.producto.id}-${item.extras.map(e => e.id).join(',')}`}
+        keyExtractor={claveLinea}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />

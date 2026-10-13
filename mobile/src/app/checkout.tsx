@@ -26,6 +26,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useCart } from '../features/carrito/CartContext';
+import { claveLinea } from '../features/carrito/lineas';
 import { pedidosService } from '../features/pedidos/pedidosService';
 import {
   generarCodigoPedido,
@@ -98,12 +99,12 @@ export default function CheckoutScreen() {
         metodoEntrega,
         direccionId,
         idempotencyKey: idempotencyKey.current,
-        items: items.map(item => ({
-          productoId: item.producto.id,
-          cantidad: item.cantidad,
-          extraIds: item.extras.map(extra => extra.id),
-          observaciones: item.observaciones,
-        })),
+          items: items.map(item => ({
+            productoId: item.producto.id,
+            cantidad: item.cantidad,
+            extraIds: item.extras.map(extra => extra.id),
+            observaciones: item.observaciones,
+          })),
       });
 
       // 2) Confirmar con la MISMA clave (congela el total)
@@ -171,9 +172,7 @@ export default function CheckoutScreen() {
             <Text style={styles.sectionTitle}>Tu pedido</Text>
             {items.map(item => (
               <CartItemRow
-                key={`${item.producto.id}-${item.extras
-                  .map(e => e.id)
-                  .join(',')}`}
+                key={claveLinea(item)}
                 item={item}
               />
             ))}

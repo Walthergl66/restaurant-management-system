@@ -11,6 +11,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
+import { puedeAtenderMesas } from '../features/auth/permisos';
 import { CartProvider } from '../features/carrito/CartContext';
 import { colors } from '../theme/colors';
 
@@ -28,7 +29,7 @@ function RootNavigator() {
     const enAuth = RUTAS_AUTH.includes(segments[0] as string);
     const enCliente = segments[0] === '(tabs)';
     const enMesero = segments[0] === '(waiter)';
-    const esMesero = usuario?.rol === 'MESERO' || usuario?.permisos?.includes('pedidos:crear');
+    const esMesero = puedeAtenderMesas(usuario);
     if (!isAuthenticated && !enAuth) {
       router.replace('/login');
     } else if (isAuthenticated && enAuth) {
@@ -88,12 +89,18 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <StatusBar style="light" />
-        <RootNavigator />
-      </CartProvider>
+      <SessionContent />
     </AuthProvider>
   );
+}
+
+/** El carrito pertenece a una cuenta: se reinicia al salir o cambiar de usuario. */
+function SessionContent() {
+  const { usuario } = useAuth();
+  return <CartProvider key={usuario?.id ?? 'sin-sesion'}>
+    <StatusBar style="light" />
+    <RootNavigator />
+  </CartProvider>;
 }
 
 const styles = StyleSheet.create({
