@@ -34,10 +34,6 @@ export default function TopBar() {
         aria-label="Notificaciones"
       >
         <Bell size={17} color="var(--muted)" />
-        <span style={{
-          position: 'absolute', top: 7, right: 7, width: 8, height: 8,
-          borderRadius: '50%', background: 'var(--fuchsia)',
-        }} />
       </button>
     </header>
   )
