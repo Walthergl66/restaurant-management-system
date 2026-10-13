@@ -1,4 +1,4 @@
-import { apiClient } from '@/core/api/apiClient';
+import { apiClient } from '@/shared/api/apiClient';
 import type { MesaMesero, LineaPedidoMesero } from './types';
 
 export const meseroService = {
