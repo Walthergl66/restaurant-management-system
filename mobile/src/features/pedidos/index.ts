@@ -1,4 +1,4 @@
-export { pedidosService } from './pedidosService'
+export { pedidosService } from './api'
 export { suscribirEstadoPedido, toWebSocketUrl } from './estadoSocket'
 export { generarCodigoPedido, generarIdempotencyKey } from './idempotencia'
 export type {
