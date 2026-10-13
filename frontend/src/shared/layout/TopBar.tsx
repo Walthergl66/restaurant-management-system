@@ -1,6 +1,6 @@
 'use client'
 import { Bell } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/features/auth'
 import { getGreeting, getTurno } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
