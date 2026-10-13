@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { ImageIcon, Pencil, Plus, Power, Search } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/features/auth'
 import { hasPermiso } from '@/shared/lib/permissions'
 import {
   useAreas, useCategorias, useHabilitacionCatalogo, useExtras, useProductos,

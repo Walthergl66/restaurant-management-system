@@ -1,1 +1,1 @@
-export { default } from '@/features/pedidos/components/PedidosScreen'
+export { PedidosScreen as default } from '@/features/pedidos'

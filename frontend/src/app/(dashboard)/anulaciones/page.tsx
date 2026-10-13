@@ -1,1 +1,1 @@
-export { default } from '@/features/anulaciones/components/AnulacionesScreen'
+export { AnulacionesScreen as default } from '@/features/anulaciones'

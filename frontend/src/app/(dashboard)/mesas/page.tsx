@@ -1,1 +1,1 @@
-export { default } from '@/features/mesas/components/MesasScreen'
+export { MesasScreen as default } from '@/features/mesas'

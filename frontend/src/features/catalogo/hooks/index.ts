@@ -8,11 +8,11 @@ import {
   guardarOrdenCategorias, cambiarHabilitacionCatalogo,
   crearProducto, actualizarProducto, crearCategoria, actualizarCategoria,
   crearArea, actualizarArea, crearExtra, actualizarExtra,
-} from './api'
+} from '../api'
 import type {
   Area, AreaPayload, Categoria, CategoriaPayload, Extra, ExtraPayload,
   Producto, ProductoPayload, CatalogoRecurso,
-} from './types'
+} from '../types'
 
 /** Los nombres y relaciones del catálogo también se muestran en las tarjetas de productos. */
 async function invalidarCatalogo(recurso: CatalogoRecurso) {

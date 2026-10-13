@@ -1,1 +1,1 @@
-export { default } from '@/features/usuarios/components/UsuariosScreen'
+export { UsuariosScreen as default } from '@/features/usuarios'
