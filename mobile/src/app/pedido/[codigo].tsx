@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 import { pedidosService } from '@/features/pedidos';
 import { suscribirEstadoPedido } from '@/features/pedidos';
-import { authStorage } from '@/core/storage/authStorage';
+import { authStorage } from '@/shared/storage/authStorage';
 import type { PedidoCliente } from '@/features/pedidos';
 import { Button } from '@/components/ui/Button';
 
