@@ -9,7 +9,7 @@
  */
 
 import { API_BASE_URL } from '@/config/environment';
-import { authStorage } from '@/core/storage/authStorage';
+import { authStorage } from '@/shared/storage/authStorage';
 import { ApiError, problemDetailToApiError } from './apiError';
 
 class ApiClient {
