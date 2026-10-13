@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/Button';
 import { Header } from '@/components/Header';
 import { clientesService } from '@/features/clientes';
 import type { ClientePerfil } from '@/features/clientes';
-import { ApiError } from '@/core/api/apiError';
+import { ApiError } from '@/shared/api/apiError';
 import { esCelularValido, esCorreoValido } from '@/features/auth';
 
 export default function ProfileScreen() {
