@@ -1,3 +1,3 @@
-export { meseroService } from './meseroService'
-export { default as AtencionMesasScreen } from './screens/AtencionMesasScreen'
+export { meseroService } from './api'
+export { default as AtencionMesasScreen } from './components/AtencionMesasScreen'
 export type { LineaPedidoMesero, MesaMesero } from './types'
