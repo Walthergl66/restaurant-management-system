@@ -5,7 +5,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Table2, DollarSign,
   Users, XCircle, ClipboardList, BarChart3, LogOut, ChefHat, Receipt,
 } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/features/auth'
 import { hasPermiso } from '@/shared/lib/permissions'
 import Logo from '@/shared/ui/Logo'
 import toast from 'react-hot-toast'
