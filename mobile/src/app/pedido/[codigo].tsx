@@ -18,12 +18,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
-import { pedidosService } from '../../features/pedidos/pedidosService';
-import { suscribirEstadoPedido } from '../../features/pedidos/estadoSocket';
-import { authStorage } from '../../core/storage/authStorage';
-import type { PedidoCliente } from '../../features/pedidos/types';
-import { Button } from '../../components/ui/Button';
+import { colors } from '@/theme/colors';
+import { pedidosService } from '@/features/pedidos';
+import { suscribirEstadoPedido } from '@/features/pedidos';
+import { authStorage } from '@/core/storage/authStorage';
+import type { PedidoCliente } from '@/features/pedidos';
+import { Button } from '@/components/ui/Button';
 
 /** Secuencia de estados de un pedido presencial/entrega. */
 const PASOS = ['CONFIRMADO', 'EN_PREPARACION', 'LISTO', 'ENTREGADO'] as const;
