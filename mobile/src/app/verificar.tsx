@@ -22,7 +22,7 @@ import { colors } from '@/theme/colors';
 import { useAuth } from '@/features/auth';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { ApiError } from '@/core/api/apiError';
+import { ApiError } from '@/shared/api/apiError';
 
 export default function VerificarScreen() {
   const router = useRouter();
