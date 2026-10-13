@@ -42,7 +42,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
         String codigo = crearBorrador(mesaId);
 
-        postItem(codigo, productoId, 2, extraId, "sin sal", "poco hecha");
+        postItem(codigo, productoId, 2, extraId, "Cebolla", "poco hecha");
 
         MvcResult resumen = getPedido(codigo);
         JsonNode lineas = objectMapper.readTree(resumen.getResponse().getContentAsString()).path("lineas");
@@ -54,7 +54,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
         assertEquals(2, linea.path("cantidad").asInt());
         // (12.50 * 2) + (1.50 * 2)
         assertEquals(0, new BigDecimal("28.00").compareTo(linea.path("subtotal").decimalValue()));
-        assertTrue(linea.path("ingredientesRemovidos").toString().contains("sin sal"));
+        assertTrue(linea.path("ingredientesRemovidos").toString().contains("cebolla"));
         assertEquals(1, linea.path("extras").size());
         assertEquals("Extra Queso", linea.path("extras").get(0).path("nombre").asText());
         assertEquals(0, new BigDecimal("28.00").compareTo(
