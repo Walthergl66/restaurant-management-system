@@ -11,9 +11,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import type { CartItem } from '../features/carrito/types';
-import { useCart } from '../features/carrito/CartContext';
+import { colors } from '@/theme/colors';
+import type { CartItem } from '@/features/carrito';
+import { useCart } from '@/features/carrito';
 
 interface CartItemRowProps {
   item: CartItem;
