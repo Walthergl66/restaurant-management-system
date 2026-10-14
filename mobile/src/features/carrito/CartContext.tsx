@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 import type { CartItem } from './types';
 import { claveLinea } from './lineas';
-import type { ExtraMenu, ProductoMenu } from '../menu/types';
+import type { ExtraMenu, ProductoMenu } from '@/features/menu';
 
 interface CartContextType {
   items: CartItem[];

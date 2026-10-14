@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
+import { colors } from '@/theme/colors';
 import logo from '../../public/Estacion-Burger-Logo.png';
 
 interface HeaderProps {

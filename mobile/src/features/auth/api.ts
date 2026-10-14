@@ -3,7 +3,7 @@
  * Contrato: POST /api/v1/auth/login | /refresh | /logout, GET /auth/me.
  */
 
-import { apiClient } from '../../core/api/apiClient';
+import { apiClient } from '@/shared/api/apiClient';
 import type {
   AuthResponse,
   LoginRequest,

@@ -16,13 +16,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../theme/colors';
-import { menuService } from '../menuService';
-import { useCart } from '../../carrito/CartContext';
-import { useAuth } from '../../auth/AuthContext';
-import { puedeAtenderMesas } from '../../auth/permisos';
+import { colors } from '@/theme/colors';
+import { menuService } from '../api';
+import { useCart } from '@/features/carrito';
+import { useAuth } from '@/features/auth';
+import { puedeAtenderMesas } from '@/features/auth';
 import type { ExtraMenu, ProductoMenu } from '../types';
-import { Button } from '../../../components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 const { width } = Dimensions.get('window');
 

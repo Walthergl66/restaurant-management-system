@@ -3,7 +3,7 @@
  * Contrato: GET /api/v1/clientes/perfil
  */
 
-import { apiClient } from '../../core/api/apiClient';
+import { apiClient } from '@/shared/api/apiClient';
 
 export interface ClientePerfil {
   id: number;

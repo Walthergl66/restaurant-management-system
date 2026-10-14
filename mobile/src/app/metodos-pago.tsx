@@ -20,11 +20,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { pedidosService } from '../features/pedidos/pedidosService';
-import type { MetodoPagoCliente } from '../features/pedidos/types';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
+import { colors } from '@/theme/colors';
+import { pedidosService } from '@/features/pedidos';
+import type { MetodoPagoCliente } from '@/features/pedidos';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 const TIPOS = ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO'] as const;
 type Tipo = (typeof TIPOS)[number];

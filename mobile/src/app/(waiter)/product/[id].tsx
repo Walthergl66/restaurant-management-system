@@ -1,1 +1,1 @@
-export { default } from '../../../features/menu/screens/ProductoScreen';
+export { ProductoScreen as default } from '@/features/menu';

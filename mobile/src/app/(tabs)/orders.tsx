@@ -18,12 +18,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
-import type { PedidoCliente } from '../../features/pedidos/types';
-import { pedidosService } from '../../features/pedidos/pedidosService';
-import { useAuth } from '../../features/auth/AuthContext';
-import { OrderCard } from '../../components/OrderCard';
-import { Header } from '../../components/Header';
+import { colors } from '@/theme/colors';
+import type { PedidoCliente } from '@/features/pedidos';
+import { pedidosService } from '@/features/pedidos';
+import { useAuth } from '@/features/auth';
+import { OrderCard } from '@/components/OrderCard';
+import { Header } from '@/components/Header';
 
 /** Estados que aún pueden cambiar (sondeo activo). */
 const ESTADOS_ACTIVOS = ['BORRADOR', 'CONFIRMADO', 'EN_PREPARACION'];

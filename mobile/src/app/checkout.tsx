@@ -24,18 +24,17 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { useCart } from '../features/carrito/CartContext';
-import { claveLinea } from '../features/carrito/lineas';
-import { pedidosService } from '../features/pedidos/pedidosService';
+import { colors } from '@/theme/colors';
+import { useCart, claveLinea } from '@/features/carrito';
+import { pedidosService } from '@/features/pedidos';
 import {
   generarCodigoPedido,
   generarIdempotencyKey,
-} from '../features/pedidos/idempotencia';
-import { CartItemRow } from '../components/CartItemRow';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Header } from '../components/Header';
+} from '@/features/pedidos';
+import { CartItemRow } from '@/components/CartItemRow';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Header } from '@/components/Header';
 
 const METODOS_PAGO = ['EFECTIVO', 'TARJETA'] as const;
 const METODOS_ENTREGA = ['RETIRAR', 'DOMICILIO'] as const;

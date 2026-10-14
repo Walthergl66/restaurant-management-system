@@ -20,18 +20,18 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { useAuth } from '../features/auth/AuthContext';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
-import { PasswordStrength } from '../features/auth/PasswordStrength';
+import { colors } from '@/theme/colors';
+import { useAuth } from '@/features/auth';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { PasswordStrength } from '@/features/auth';
 import {
   esCedulaValida,
   esCelularValido,
   esCorreoValido,
   evaluarPassword,
-} from '../features/auth/validation';
-import { ApiError, firstFieldErrorMessage } from '../core/api/apiError';
+} from '@/features/auth';
+import { ApiError, firstFieldErrorMessage } from '@/shared/api/apiError';
 
 export default function RegistroScreen() {
   const router = useRouter();

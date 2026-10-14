@@ -2,16 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../auth/AuthContext';
-import { puedeAtenderMesas } from '../../auth/permisos';
-import { useCart } from '../../carrito/CartContext';
-import { aLineaPedido, claveLinea } from '../../carrito/lineas';
-import { menuService } from '../../menu/menuService';
-import type { ProductoMenu } from '../../menu/types';
-import { meseroService } from '../meseroService';
+import { useAuth, puedeAtenderMesas } from '@/features/auth';
+import { useCart, aLineaPedido, claveLinea } from '@/features/carrito';
+import { menuService } from '@/features/menu';
+import type { ProductoMenu } from '@/features/menu';
+import { meseroService } from '../api';
 import type { MesaMesero } from '../types';
-import { generarCodigoPedido } from '../../pedidos/idempotencia';
-import { colors } from '../../../theme/colors';
+import { generarCodigoPedido } from '@/features/pedidos';
+import { colors } from '@/theme/colors';
 
 export default function WaiterScreen() {
   const router = useRouter();

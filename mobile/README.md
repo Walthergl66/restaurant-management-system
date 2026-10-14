@@ -7,31 +7,46 @@ contrato, la app se adapta a él.
 
 ## Estructura modular
 
+Misma organización que el frontend web: **`features/` + `shared/`**, cada
+feature con un barrel (`index.ts`) como única superficie pública, rutas
+`app/` finas y los imports con el alias `@/` (mapea a `src/`).
+
 ```
 src/
-├── app/                        # Expo Router (cada archivo = pantalla)
+├── app/                        # Expo Router (cada archivo = ruta fina)
 │   ├── (tabs)/                 # Menú, Carrito, Pedidos, Perfil
+│   ├── (waiter)/               # Mesero: atención de mesas, producto
 │   ├── checkout.tsx            # Flujo de pedido idempotente
 │   ├── login.tsx               # Auth
-│   └── product/[id].tsx        # Detalle de producto
+│   └── product/[id].tsx        # Detalle (reexport del barrel del feature)
 ├── components/                 # UI compartida (Header, Cards, ui/*)
 ├── config/
 │   └── environment.ts          # API_BASE_URL (ver "Conexión")
-├── core/                       # Infraestructura, sin lógica de negocio
+├── shared/                     # Infraestructura transversal, sin negocio
 │   ├── api/apiClient.ts        # Único boundary HTTP + inyección JWT
 │   ├── api/apiError.ts         # ApiError ← ProblemDetail (RFC 7807)
 │   └── storage/authStorage.ts  # Sesión en AsyncStorage
-├── features/                   # Módulos por capacidad
-│   ├── auth/                   # types + authService + AuthContext
-│   ├── menu/                   # types (MenuDto) + menuService
-│   ├── pedidos/                # types (SPI) + pedidosService + idempotencia
-│   └── carrito/                # CartContext (estado local) + types
+├── features/                   # Módulos por capacidad (cada uno con barrel)
+│   ├── auth/                   # index.ts · api.ts · AuthContext · types
+│   ├── menu/                   # index.ts · api.ts · components/ProductoScreen
+│   ├── pedidos/                # index.ts · api.ts · idempotencia · estadoSocket
+│   ├── carrito/                # index.ts · CartContext (estado local) · types
+│   ├── clientes/               # index.ts · api.ts · types
+│   └── mesero/                 # index.ts · api.ts · components/AtencionMesasScreen
 └── theme/                      # colores y tipografía
 ```
 
 Reglas:
+- Cada feature expone su API pública por `index.ts` (barrel). Cruzarlo
+  se hace **siempre** por el barrel, nunca por una ruta interna.
+- Imports internos con el alias `@/` (mapea a `src/`), p. ej.
+  `@/shared/api/apiClient` o `@/features/menu`.
+- Las rutas `app/` son finas: montan la pantalla del feature
+  (`export { ProductoScreen as default } from '@/features/menu'`).
 - La UI **nunca** hace `fetch` directo: todo pasa por
-  `core/api/apiClient.ts`.
+  `shared/api/apiClient.ts`.
+- El boundary HTTP de cada feature vive en `features/<x>/api.ts`
+  (antes `*Service.ts`).
 - Los tipos viven junto al feature y nombran al DTO/SPI del
   backend que representan (ej. `PedidoCliente` = `PedidoClienteSPI`).
 - El carrito es estado local; se envía al backend solo en el

@@ -3,7 +3,7 @@
  * Contrato: ClientesController (/api/v1/clientes, autenticado).
  */
 
-import { apiClient } from '../../core/api/apiClient';
+import { apiClient } from '@/shared/api/apiClient';
 import type {
   CarritoCliente,
   ConfirmarPedidoRequest,

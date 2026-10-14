@@ -18,11 +18,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { useAuth } from '../features/auth/AuthContext';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
-import { ApiError } from '../core/api/apiError';
+import { colors } from '@/theme/colors';
+import { useAuth } from '@/features/auth';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { ApiError } from '@/shared/api/apiError';
 import logo from '../../public/Estacion-Burger-Logo.png';
 
 export default function LoginScreen() {
