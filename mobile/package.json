@@ -6,7 +6,7 @@
     "@expo/metro-runtime": "~57.0.16",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
-    "@stomp/stompjs": "^7.3.0",
+    "@stomp/stompjs": "^7.4.0",
     "@types/react": "~19.2.4",
     "expo": "~57.0.27",
     "expo-constants": "~57.0.19",
@@ -29,5 +29,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@expo/ngrok": "^4.1.3"
+  }
 }

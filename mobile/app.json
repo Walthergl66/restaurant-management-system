@@ -17,11 +17,12 @@
       "bundleIdentifier": "com.estacionburger.app"
     },
     "android": {
-      "package": "com.estacionburger.app",
+      "package": "com.restaurante.app",
       "adaptiveIcon": {
         "backgroundColor": "#0A0A0A",
         "foregroundImage": "./public/brand-adaptive.png"
-      }
+      },
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./public/brand-favicon.png"
