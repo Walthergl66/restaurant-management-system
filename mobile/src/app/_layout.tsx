@@ -6,38 +6,51 @@
  * sesión iniciada las pantallas de auth se redirigen a las pestañas.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider, useAuth } from '@/features/auth';
-import { puedeAtenderMesas } from '@/features/auth';
+import { AuthProvider, useAuth, puedeAtenderMesas } from '@/features/auth';
 import { CartProvider } from '@/features/carrito';
 import { colors } from '@/theme/colors';
 
 /** Rutas públicas de autenticación (no requieren sesión). */
 const RUTAS_AUTH = ['login', 'registro', 'recuperar', 'verificar'];
 
+/**
+ * Calcula la ruta de redirección según el estado de sesión.
+ * Devuelve null si no hay que redirigir.
+ */
+function computeRedirectTarget(
+  segments: string[],
+  isAuthenticated: boolean,
+  esMesero: boolean,
+): string | null {
+  const enAuth = RUTAS_AUTH.includes(segments[0] as string);
+  const enCliente = segments[0] === '(tabs)';
+  const enMesero = segments[0] === '(waiter)';
+
+  if (!isAuthenticated && !enAuth) return '/login';
+  if (isAuthenticated && enAuth) return esMesero ? '/(waiter)' : '/(tabs)';
+  if (isAuthenticated && esMesero && enCliente) return '/(waiter)';
+  if (isAuthenticated && !esMesero && enMesero) return '/(tabs)';
+  return null;
+}
+
 function RootNavigator() {
   const { loading, isAuthenticated, usuario } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const lastRedirect = useRef<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
 
-    const enAuth = RUTAS_AUTH.includes(segments[0] as string);
-    const enCliente = segments[0] === '(tabs)';
-    const enMesero = segments[0] === '(waiter)';
     const esMesero = puedeAtenderMesas(usuario);
-    if (!isAuthenticated && !enAuth) {
-      router.replace('/login');
-    } else if (isAuthenticated && enAuth) {
-      router.replace(esMesero ? '/(waiter)' : '/(tabs)');
-    } else if (isAuthenticated && esMesero && enCliente) {
-      router.replace('/(waiter)');
-    } else if (isAuthenticated && !esMesero && enMesero) {
-      router.replace('/(tabs)');
+    const target = computeRedirectTarget(segments, isAuthenticated, esMesero);
+    if (target && target !== lastRedirect.current) {
+      lastRedirect.current = target;
+      router.replace(target);
     }
   }, [loading, isAuthenticated, usuario, segments, router]);
 

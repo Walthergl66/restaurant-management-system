@@ -69,16 +69,9 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'right', 'bottom', 'left']}>
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        contentInsetAdjustmentBehavior="never"
-        automaticallyAdjustContentInsets={false}
-        automaticallyAdjustKeyboardInsets={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
@@ -156,7 +149,6 @@ export default function LoginScreen() {
         </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
