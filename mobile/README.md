@@ -57,19 +57,39 @@ Reglas:
 La URL base se resuelve así (en orden):
 
 1. `EXPO_PUBLIC_API_URL` (variable de entorno, al bundlear)
-2. `extra.apiUrl` de `app.json`
-3. `http://localhost:8080/api/v1` (default de desarrollo)
+2. Host del dev server de Expo (`hostUri`, en desarrollo) → la IP del PC
+3. `extra.apiUrl` de `app.json` (builds sin dev server)
+4. `http://localhost:8080/api/v1` (default)
+
+El punto 2 es el que evita el error `Sin conexión / no se pudo
+conectar al servidor` en un teléfono físico: `localhost` en el
+dispositivo **es el propio teléfono**, no la PC. Como el teléfono ya
+cargó el bundle desde el dev server, la IP de ese mismo `hostUri`
+siempre es alcanzable, y `API_BASE_URL` se arma a partir de ella sin
+configurar nada a mano.
 
 ```bash
-# Teléfono en la misma red (Expo Go):
+# Teléfono en la misma red (Expo Go): basta con escanear el QR,
+# la IP se toma sola. Override manual solo si el backend está en otra máquina/puerto:
 EXPO_PUBLIC_API_URL=http://192.168.2.100:8080/api/v1 npx expo start
 
-# Emulador Android (adb reverse, localhost funciona):
+# Emulador Android: Expo hace `adb reverse` solo del 8081 (bundle),
+# así que el 8080 del backend hay que mapearlo aparte:
+adb reverse tcp:8080 tcp:8080
 npx expo start --android
 ```
 
 Requisitos: backend arriba en `:8080` y PostgreSQL
 (`docker compose up -d postgres` desde la raíz del repo).
+
+Si la app corre en el teléfono pero sigue sin conectar, revisa el
+firewall del PC: el puerto `8080/tcp` debe estar abierto en la zona
+del firewall donde está la interfaz por la que llega el teléfono
+(`firewall-cmd --zone=<zona> --list-all`).
+
+Builds standalone (APK/IPA): no hay dev server, así que hay que fijar
+la URL en build con `EXPO_PUBLIC_API_URL=...` o en `app.json`.
+
 
 ## Endpoints que consume
 
