@@ -10,8 +10,6 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
