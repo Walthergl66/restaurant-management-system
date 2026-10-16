@@ -89,8 +89,7 @@ export default function LoginForm() {
 
       {/* ── right panel: formulario minimalista ── */}
       <div style={{
-        width: '100%',
-        maxWidth: 400,
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
