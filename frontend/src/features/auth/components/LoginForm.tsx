@@ -10,21 +10,23 @@ import { Eye, EyeOff, LogIn } from 'lucide-react'
 export default function LoginForm() {
   const router = useRouter()
   const { login } = useAuthStore()
-  const [username,    setUsername]    = useState('')
-  const [password,    setPassword]    = useState('')
-  const [showPass,    setShowPass]    = useState(false)
-  const [loading,     setLoading]     = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!username || !password) { toast.error('Completa todos los campos'); return }
+    setError('')
+    if (!username || !password) { setError('Completa todos los campos'); return }
     setLoading(true)
     try {
       await login(username, password)
       toast.success('Bienvenido')
       router.push('/dashboard')
     } catch (err: unknown) {
-      toast.error(errMsg(err, 'Credenciales incorrectas'))
+      setError(errMsg(err, 'Credenciales incorrectas'))
     } finally {
       setLoading(false)
     }
@@ -44,48 +46,45 @@ export default function LoginForm() {
       boxShadow: '0 32px 80px rgba(0,0,0,.6)',
     }}>
 
-      {/* ── left panel: brand (solo visible en ≥ 700px) ── */}
-      <div style={{
-        flex: 1,
-        background: 'linear-gradient(145deg, #0d0d0d 0%, #1a1a1a 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '48px 40px',
-        borderRight: '1px solid var(--border)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      {/* ── left panel: marca protagonista (oculto en mobile) ── */}
+      <div
         className="login-brand-panel"
+        style={{
+          flex: 1,
+          background: 'linear-gradient(145deg, #0d0d0d 0%, #1a1a1a 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '48px 40px',
+          borderRight: '1px solid var(--border)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
       >
         {/* glow decorativo */}
-        <div style={{ position:'absolute', top:'20%', left:'50%', transform:'translateX(-50%)', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.12) 0%, transparent 70%)', pointerEvents:'none' }}/>
-        <div style={{ position:'absolute', bottom:'15%', left:'50%', transform:'translateX(-50%)', width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.1) 0%, transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', top:'18%', left:'50%', transform:'translateX(-50%)', width:340, height:340, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.14) 0%, transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', bottom:'12%', left:'50%', transform:'translateX(-50%)', width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.12) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
-        <div style={{ width:320, maxWidth:'100%', marginBottom:28 }}>
+        <div style={{ width:380, maxWidth:'100%' }}>
           <Image
             src="/Estacion-Burger-Logo.png"
             alt="Estación Burger"
             width={1678}
             height={937}
-            style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 0 24px rgba(245,166,35,.4))' }}
+            style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 0 28px rgba(245,166,35,.45))' }}
             priority
           />
         </div>
-
-        <h2 style={{ fontSize:28, fontWeight:900, color:'var(--yellow)', letterSpacing:2, textAlign:'center', textShadow:'0 0 20px rgba(245,166,35,.4)' }}>
-          ESTACIÓN BURGER
-        </h2>
-        <p style={{ fontSize:13, color:'var(--muted)', marginTop:8, textAlign:'center', lineHeight:1.5 }}>
-          Sistema Gestion y Administracion<br/>
+        <p style={{ fontSize:13, color:'var(--muted)', marginTop:20, textAlign:'center', lineHeight:1.6, maxWidth:260 }}>
+          Gestión y administración de pedidos
         </p>
       </div>
 
-      {/* ── right panel: form ── */}
+      {/* ── right panel: formulario minimalista ── */}
       <div style={{
         width: '100%',
-        maxWidth: 420,
+        maxWidth: 400,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -95,7 +94,7 @@ export default function LoginForm() {
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
-          <div style={{ width:140, maxWidth:'100%' }}>
+          <div style={{ width:150, maxWidth:'100%' }}>
             <Image
               src="/Estacion-Burger-Logo.png"
               alt="Estación Burger"
@@ -107,25 +106,26 @@ export default function LoginForm() {
           </div>
         </div>
 
-        <h1 style={{ fontSize:26, fontWeight:900, color:'var(--yellow)', marginBottom:4, textAlign:'center' }}>
+        <h1 style={{ fontSize:24, fontWeight:900, color:'var(--yellow)', marginBottom:4, textAlign:'center' }}>
           ¡BIENVENIDO!
         </h1>
-        <p style={{ fontSize:13, color:'var(--muted)', textAlign:'center', marginBottom:36 }}>
-          Sabor extremo con el flow de ESTACION BURGER.
+        <p style={{ fontSize:13, color:'var(--muted)', textAlign:'center', marginBottom:32 }}>
+          Accede con tu cuenta para continuar.
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:20 }}>
+        <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
           {/* username */}
           <div>
-            <label style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:8 }}>
+            <label htmlFor="username" style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:8 }}>
               Email o usuario
             </label>
             <input
+              id="username"
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder="carlos.estacion@burger.com"
+              placeholder="usuario"
               className="input"
               style={{ fontSize:14, padding:'13px 16px', borderColor: username ? 'var(--yellow)' : 'var(--border)' }}
               autoComplete="username"
@@ -135,11 +135,12 @@ export default function LoginForm() {
 
           {/* password */}
           <div>
-            <label style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:8 }}>
+            <label htmlFor="password" style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:8 }}>
               Contraseña
             </label>
             <div style={{ position:'relative' }}>
               <input
+                id="password"
                 type={showPass ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -151,18 +152,22 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={showPass}
                 style={{ position:'absolute', right:14, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', display:'flex', alignItems:'center' }}
                 tabIndex={-1}
               >
                 {showPass ? <EyeOff size={17}/> : <Eye size={17}/>}
               </button>
             </div>
-            <div style={{ textAlign:'right', marginTop:6 }}>
-              <button type="button" style={{ fontSize:12, color:'var(--fuchsia)', background:'none', border:'none', cursor:'pointer' }}>
-                ¿Olvidé mi contraseña?
-              </button>
-            </div>
           </div>
+
+          {/* error inline */}
+          {error && (
+            <p role="alert" style={{ fontSize:12, color:'var(--error)', margin:0, textAlign:'center' }}>
+              {error}
+            </p>
+          )}
 
           {/* submit */}
           <button
