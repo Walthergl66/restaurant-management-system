@@ -33,7 +33,6 @@
   --primary-foreground:   #000000;
   --secondary:            var(--surface-2);
   --secondary-foreground: var(--text);
-  --muted:                var(--surface-2);
   --muted-foreground:     var(--muted);
   --accent:               var(--surface-3);
   --accent-foreground:    var(--text);
@@ -148,6 +147,7 @@ body {
   transition: border-color .15s;
 }
 .input:focus { border-color: var(--yellow); }
+.input::placeholder { color: var(--muted); opacity: .8; }
 
 /* ---- badges ---- */
 .badge {
@@ -357,7 +357,7 @@ body {
   --color-accent-foreground:           var(--accent-foreground);
   --color-accent:           var(--accent);
   --color-muted-foreground:           var(--muted-foreground);
-  --color-muted:           var(--muted);
+  --color-muted:           var(--surface-2);
   --color-secondary-foreground:           var(--secondary-foreground);
   --color-secondary:           var(--secondary);
   --color-primary-foreground:           var(--primary-foreground);
@@ -389,7 +389,6 @@ body {
   --primary-foreground:   #000000;
   --secondary:            var(--surface-2);
   --secondary-foreground: var(--text);
-  --muted:                var(--surface-2);
   --muted-foreground:     var(--muted);
   --accent:               var(--surface-3);
   --accent-foreground:    var(--text);
