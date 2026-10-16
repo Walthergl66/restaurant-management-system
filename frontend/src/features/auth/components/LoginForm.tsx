@@ -183,9 +183,7 @@ export default function LoginForm() {
           </button>
         </form>
 
-        <p style={{ fontSize:11, color:'var(--dim)', textAlign:'center', marginTop:40 }}>
-          Sistema de gestión · Estación Burger © 2022
-        </p>
+        
       </div>
     </div>
   )
