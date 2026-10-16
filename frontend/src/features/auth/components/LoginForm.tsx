@@ -76,9 +76,7 @@ export default function LoginForm() {
             priority
           />
         </div>
-        <p style={{ fontSize:13, color:'var(--muted)', marginTop:20, textAlign:'center', lineHeight:1.6, maxWidth:260 }}>
-          Gestión y administración de pedidos
-        </p>
+
       </div>
 
       {/* ── right panel: formulario minimalista ── */}
