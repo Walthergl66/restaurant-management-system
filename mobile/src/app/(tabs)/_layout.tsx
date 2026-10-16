@@ -25,6 +25,7 @@ export default function TabsLayout() {
       initialRouteName="index"
       screenOptions={{
         headerShown: false,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.surfaceBorder,
