@@ -12,6 +12,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
@@ -106,7 +108,10 @@ export default function RegistroScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -235,7 +240,7 @@ export default function RegistroScreen() {
         </View>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
