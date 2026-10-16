@@ -5,7 +5,7 @@
  * re-verificación). Nombre y cédula son de solo lectura.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -43,6 +41,8 @@ export default function ProfileScreen() {
   const [celularDraft, setCelularDraft] = useState('');
   const [correoDraft, setCorreoDraft] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const celularInputRef = useRef<TextInput>(null);
+  const correoInputRef = useRef<TextInput>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -72,12 +72,14 @@ export default function ProfileScreen() {
     setCelularDraft(perfil?.telefono ?? '');
     setEditandoCelular(true);
     setEditandoCorreo(false);
+    setTimeout(() => celularInputRef.current?.focus(), 100);
   };
 
   const iniciarEdicionCorreo = () => {
     setCorreoDraft(usuario?.username ?? '');
     setEditandoCorreo(true);
     setEditandoCelular(false);
+    setTimeout(() => correoInputRef.current?.focus(), 100);
   };
 
   const cancelarEdicion = () => {
@@ -132,10 +134,7 @@ export default function ProfileScreen() {
   const inicial = nombre.charAt(0).toUpperCase();
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <View style={[styles.wrapper, { paddingTop: insets.top }]}>
         <Header title="Perfil" />
 
@@ -185,6 +184,7 @@ export default function ProfileScreen() {
                 <View style={styles.rowLeft}>
                   <Ionicons name="call-outline" size={22} color={colors.neonOrange} />
                   <TextInput
+                    ref={celularInputRef}
                     style={styles.editInput}
                     value={celularDraft}
                     onChangeText={setCelularDraft}
@@ -192,7 +192,6 @@ export default function ProfileScreen() {
                     maxLength={10}
                     placeholder="0991234567"
                     placeholderTextColor={colors.textMuted}
-                    autoFocus
                   />
                 </View>
                 <View style={styles.editActions}>
@@ -224,6 +223,7 @@ export default function ProfileScreen() {
                 <View style={styles.rowLeft}>
                   <Ionicons name="mail-outline" size={22} color={colors.neonOrange} />
                   <TextInput
+                    ref={correoInputRef}
                     style={styles.editInput}
                     value={correoDraft}
                     onChangeText={setCorreoDraft}
@@ -233,7 +233,6 @@ export default function ProfileScreen() {
                     maxLength={50}
                     placeholder="correo@ejemplo.com"
                     placeholderTextColor={colors.textMuted}
-                    autoFocus
                   />
                 </View>
                 <View style={styles.editActions}>
@@ -313,7 +312,7 @@ export default function ProfileScreen() {
           <Text style={styles.version}>Estación Burger v1.0.0</Text>
         </ScrollView>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
