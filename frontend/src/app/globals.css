@@ -1,6 +1,11 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
+  /* === Paleta original (mantenida 1:1) === */
   --bg:           #0a0a0a;
   --surface:      #111111;
   --surface-2:    #1a1a1a;
@@ -16,6 +21,47 @@
   --success:      #22c55e;
   --warning:      #f59e0b;
   --error:        #ef4444;
+
+  /* === Tokens shadcn/ui mapeados a tu paleta (dark) === */
+  --background:           var(--bg);
+  --foreground:           var(--text);
+  --card:                 var(--surface);
+  --card-foreground:      var(--text);
+  --popover:              var(--surface);
+  --popover-foreground:   var(--text);
+  --primary:              var(--yellow);
+  --primary-foreground:   #000000;
+  --secondary:            var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted:                var(--surface-2);
+  --muted-foreground:     var(--muted);
+  --accent:               var(--surface-3);
+  --accent-foreground:    var(--text);
+  --destructive:          var(--error);
+  --destructive-foreground: #ffffff;
+  --input:                var(--surface-2);
+  --ring:                 var(--yellow);
+  --border:               var(--border);
+
+  /* Charts (coherentes con marca) */
+  --chart-1:              var(--yellow);
+  --chart-2:              var(--fuchsia);
+  --chart-3:              var(--success);
+  --chart-4:              var(--warning);
+  --chart-5:              var(--yellow-dark);
+
+  /* Radios (coherentes con tus 12–16px) */
+  --radius:               0.75rem;
+
+  /* Sidebar (oscuro, coherente con layout) */
+  --sidebar:              var(--surface);
+  --sidebar-foreground:   var(--text);
+  --sidebar-primary:      var(--yellow);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent:       var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border:       var(--border);
+  --sidebar-ring:         var(--yellow);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -286,4 +332,97 @@ body {
 /* en desktop ocultamos el logo mobile */
 @media (min-width: 681px) {
   .login-mobile-logo { display: none !important; }
+}
+
+@theme inline {
+  --font-heading:           var(--font-sans);
+  --font-sans:           var(--font-sans);
+  --color-sidebar-ring:           var(--sidebar-ring);
+  --color-sidebar-border:           var(--sidebar-border);
+  --color-sidebar-accent-foreground:           var(--sidebar-accent-foreground);
+  --color-sidebar-accent:           var(--sidebar-accent);
+  --color-sidebar-primary-foreground:           var(--sidebar-primary-foreground);
+  --color-sidebar-primary:           var(--sidebar-primary);
+  --color-sidebar-foreground:           var(--sidebar-foreground);
+  --color-sidebar:           var(--sidebar);
+  --color-chart-5:           var(--chart-5);
+  --color-chart-4:           var(--chart-4);
+  --color-chart-3:           var(--chart-3);
+  --color-chart-2:           var(--chart-2);
+  --color-chart-1:           var(--chart-1);
+  --color-ring:           var(--ring);
+  --color-input:           var(--input);
+  --color-border:           var(--border);
+  --color-destructive:           var(--destructive);
+  --color-accent-foreground:           var(--accent-foreground);
+  --color-accent:           var(--accent);
+  --color-muted-foreground:           var(--muted-foreground);
+  --color-muted:           var(--muted);
+  --color-secondary-foreground:           var(--secondary-foreground);
+  --color-secondary:           var(--secondary);
+  --color-primary-foreground:           var(--primary-foreground);
+  --color-primary:           var(--primary);
+  --color-popover-foreground:           var(--popover-foreground);
+  --color-popover:           var(--popover);
+  --color-card-foreground:           var(--card-foreground);
+  --color-card:           var(--card);
+  --color-foreground:           var(--foreground);
+  --color-background:           var(--background);
+  --radius-sm:           calc(var(--radius) * 0.6);
+  --radius-md:           calc(var(--radius) * 0.8);
+  --radius-lg:           var(--radius);
+  --radius-xl:           calc(var(--radius) * 1.4);
+  --radius-2xl:           calc(var(--radius) * 1.8);
+  --radius-3xl:           calc(var(--radius) * 2.2);
+  --radius-4xl:           calc(var(--radius) * 2.6);
+}
+
+.dark {
+  /* Mantén mismo tema oscuro (app ya es dark) */
+  --background:           var(--bg);
+  --foreground:           var(--text);
+  --card:                 var(--surface);
+  --card-foreground:      var(--text);
+  --popover:              var(--surface);
+  --popover-foreground:   var(--text);
+  --primary:              var(--yellow);
+  --primary-foreground:   #000000;
+  --secondary:            var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted:                var(--surface-2);
+  --muted-foreground:     var(--muted);
+  --accent:               var(--surface-3);
+  --accent-foreground:    var(--text);
+  --destructive:          var(--error);
+  --destructive-foreground: #ffffff;
+  --input:                var(--surface-2);
+  --ring:                 var(--yellow);
+  --border:               var(--border);
+
+  --chart-1:              var(--yellow);
+  --chart-2:              var(--fuchsia);
+  --chart-3:              var(--success);
+  --chart-4:              var(--warning);
+  --chart-5:              var(--yellow-dark);
+
+  --sidebar:              var(--surface);
+  --sidebar-foreground:   var(--text);
+  --sidebar-primary:      var(--yellow);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent:       var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border:       var(--border);
+  --sidebar-ring:         var(--yellow);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }
