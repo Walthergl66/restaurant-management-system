@@ -22,7 +22,7 @@
         "backgroundColor": "#0A0A0A",
         "foregroundImage": "./public/brand-adaptive.png"
       },
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./public/brand-favicon.png"
