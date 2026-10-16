@@ -18,8 +18,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -125,10 +123,7 @@ export default function CheckoutScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <View style={{ paddingTop: insets.top }}>
         <Header
           title="Checkout"
@@ -299,7 +294,7 @@ export default function CheckoutScreen() {
           />
         </View>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
