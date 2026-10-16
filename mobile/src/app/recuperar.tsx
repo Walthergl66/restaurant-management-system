@@ -14,8 +14,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -88,10 +86,7 @@ export default function RecuperarScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -212,7 +207,7 @@ export default function RecuperarScreen() {
           )}
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
