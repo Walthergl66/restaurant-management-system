@@ -14,6 +14,8 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -134,7 +136,10 @@ export default function ProfileScreen() {
   const inicial = nombre.charAt(0).toUpperCase();
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={[styles.wrapper, { paddingTop: insets.top }]}>
         <Header title="Perfil" />
 
@@ -312,7 +317,7 @@ export default function ProfileScreen() {
           <Text style={styles.version}>Estación Burger v1.0.0</Text>
         </ScrollView>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
