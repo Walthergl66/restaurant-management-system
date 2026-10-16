@@ -51,22 +51,24 @@ export default function LoginForm() {
         className="login-brand-panel"
         style={{
           flex: 1,
-          background: 'linear-gradient(145deg, #0d0d0d 0%, #1a1a1a 100%)',
+          background: 'radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(145deg, #0d0d0d 0%, #1a1a1a 100%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '48px 40px',
-          borderRight: '1px solid var(--border)',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
         {/* glow decorativo */}
-        <div style={{ position:'absolute', top:'18%', left:'50%', transform:'translateX(-50%)', width:340, height:340, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.14) 0%, transparent 70%)', pointerEvents:'none' }}/>
-        <div style={{ position:'absolute', bottom:'12%', left:'50%', transform:'translateX(-50%)', width:220, height:220, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.12) 0%, transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', top:'16%', left:'50%', transform:'translateX(-50%)', width:360, height:360, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.16) 0%, transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', bottom:'10%', left:'50%', transform:'translateX(-50%)', width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.14) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
-        <div style={{ width:380, maxWidth:'100%' }}>
+        {/* filo de marca: borde degradado amarillo → fucsia */}
+        <div style={{ position:'absolute', top:0, right:0, width:2, height:'100%', background:'linear-gradient(180deg, var(--yellow), var(--fuchsia))', pointerEvents:'none' }}/>
+
+        <div style={{ width:400, maxWidth:'100%', position:'relative' }}>
           <Image
             src="/Estacion-Burger-Logo.png"
             alt="Estación Burger"
@@ -77,6 +79,12 @@ export default function LoginForm() {
           />
         </div>
 
+        {/* separador */}
+        <div style={{ width:120, height:2, marginTop:26, borderRadius:2, background:'linear-gradient(90deg, transparent, var(--yellow), transparent)', pointerEvents:'none' }}/>
+
+        <p style={{ position:'relative', fontSize:13, color:'var(--muted)', marginTop:22, textAlign:'center', lineHeight:1.6, maxWidth:280 }}>
+          Gestión y administración de pedidos
+        </p>
       </div>
 
       {/* ── right panel: formulario minimalista ── */}
