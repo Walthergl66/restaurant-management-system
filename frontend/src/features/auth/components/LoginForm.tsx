@@ -74,7 +74,7 @@ export default function LoginForm() {
             alt="Estación Burger"
             width={1678}
             height={937}
-            style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 0 28px rgba(245,166,35,.45))' }}
+            style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 0 8px rgba(245,166,35,.2))' }}
             priority
           />
         </div>
@@ -173,6 +173,17 @@ export default function LoginForm() {
               {error}
             </p>
           )}
+
+          {/* forgot password */}
+          <div style={{ textAlign:'center', marginTop:4 }}>
+            <button
+              type="button"
+              onClick={() => toast('Contacta a un administrador para restablecer tu contraseña', { icon: '🔑' })}
+              style={{ background:'none', border:'none', cursor:'pointer', color:'var(--fuchsia)', fontSize:12, fontWeight:600, padding:'4px 8px' }}
+            >
+              ¿Olvidaste la contraseña?
+            </button>
+          </div>
 
           {/* submit */}
           <button
