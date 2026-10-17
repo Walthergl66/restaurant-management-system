@@ -18,7 +18,11 @@ api.interceptors.response.use(
   (res) => res,
   async (err) => {
     const original = err.config
-    if (err.response?.status === 401 && !original._retry) {
+    const url = original?.url ?? ''
+    const esLlamadaAuth = url.includes('/auth/login') || url.includes('/auth/refresh')
+    const enLogin = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
+
+    if (err.response?.status === 401 && original && !original._retry && !esLlamadaAuth) {
       original._retry = true
       const refresh = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null
       if (refresh) {
@@ -30,12 +34,12 @@ api.interceptors.response.use(
           return api(original)
         } catch {
           localStorage.clear()
-          window.location.href = '/login'
+          if (!enLogin) window.location.href = '/login'
         }
       } else {
         if (typeof window !== 'undefined') {
           localStorage.clear()
-          window.location.href = '/login'
+          if (!enLogin) window.location.href = '/login'
         }
       }
     }
