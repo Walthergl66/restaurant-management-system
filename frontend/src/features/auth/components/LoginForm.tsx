@@ -94,7 +94,7 @@ export default function LoginForm() {
           background: 'var(--bg)',
         }}
       >
-        <div style={{ padding: '48px 40px' }}>
+        <div className="login-form-body" style={{ padding: '48px 40px' }}>
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
