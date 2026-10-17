@@ -98,7 +98,7 @@ export default function LoginForm() {
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
-          <div style={{ width:150, maxWidth:'100%' }}>
+          <div style={{ width:230, maxWidth:'100%' }}>
             <Image
               src="/Estacion-Burger-Logo.png"
               alt="Estación Burger"
