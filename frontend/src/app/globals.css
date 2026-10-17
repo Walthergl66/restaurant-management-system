@@ -382,8 +382,9 @@ body {
   animation: login-intro-cover 1.4s ease forwards;
 }
 .login-intro__logo {
-  width: 240px;
+  width: 360px;
   height: auto;
+  max-width: 78vw;
   filter: drop-shadow(0 0 34px rgba(245,166,35,.55));
   animation: login-intro-logo 1.4s ease forwards;
 }
