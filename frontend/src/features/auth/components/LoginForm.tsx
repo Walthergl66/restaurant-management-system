@@ -50,7 +50,8 @@ export default function LoginForm() {
       <div
         className="login-brand-panel"
         style={{
-          flex: 1,
+          flex: '0 0 50%',
+          minWidth: 0,
           background: 'radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(145deg, #1c1406 0%, #0d0d0d 75%)',
           display: 'flex',
           flexDirection: 'column',
@@ -89,7 +90,8 @@ export default function LoginForm() {
       <div
         className="login-form-panel"
         style={{
-          flex: 1,
+          flex: '0 0 50%',
+          minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',

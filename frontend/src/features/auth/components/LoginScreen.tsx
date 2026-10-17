@@ -1,20 +1,9 @@
-import Image from 'next/image'
 import Providers from '@/shared/layout/Providers'
 import LoginForm from './LoginForm'
 
 export default function LoginScreen() {
   return (
     <Providers>
-      {/* capa de apertura: solo el logo, luego se abre como libreta */}
-      <div className="login-intro" aria-hidden="true">
-        <Image
-          src="/Estacion-Burger-Logo.png"
-          alt=""
-          width={1678}
-          height={937}
-          className="login-intro__logo"
-        />
-      </div>
       <div style={{
         minHeight: '100vh',
         display: 'flex',
