@@ -74,7 +74,8 @@ export default function LoginForm() {
             alt="Estación Burger"
             width={1678}
             height={937}
-            style={{ width:'100%', height:'auto', display:'block', filter:'drop-shadow(0 0 8px rgba(245,166,35,.2))' }}
+            className="login-logo"
+            style={{ width:'100%', height:'auto', display:'block' }}
             priority
           />
         </div>
@@ -109,12 +110,9 @@ export default function LoginForm() {
         </div>
 
         <h1 style={{ fontSize:24, fontWeight:900, color:'var(--yellow)', marginBottom:4, textAlign:'center' }}>
-          ¡BIENVENIDO!
+          BIENVENIDO
         </h1>
-        <p style={{ fontSize:13, color:'var(--muted)', textAlign:'center', marginBottom:32 }}>
-          Accede con tu cuenta para continuar.
-        </p>
-
+        
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
           {/* username */}
