@@ -328,6 +328,10 @@ body {
   0%   { opacity: 0; transform: scale(.6); }
   100% { opacity: 1; transform: scale(1); }
 }
+@keyframes mobile-title {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
 @keyframes mobile-open {
   from { grid-template-rows: 0fr; }
   to   { grid-template-rows: 1fr; }
@@ -336,6 +340,7 @@ body {
 /* en mobile ocultamos el panel de marca y mostramos el logo pequeño */
 @media (max-width: 680px) {
   .login-brand-panel { display: none !important; }
+  .login-mobile-title { animation: mobile-title 2s ease both; }
   .login-mobile-logo { display: flex !important; animation: mobile-logo 2s cubic-bezier(.2,.7,.2,1) both; }
   .login-form-panel { flex-basis: 100% !important; animation: none; opacity: 1; }
   .login-mobile-collapsible {
