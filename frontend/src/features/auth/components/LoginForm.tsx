@@ -96,6 +96,8 @@ export default function LoginForm() {
       >
         <div className="login-form-body" style={{ padding: '48px 40px' }}>
 
+        <div className="login-mobile-reveal-top">
+        <div>
         <svg
           className="login-mobile-title"
           viewBox="0 0 320 96"
@@ -112,6 +114,8 @@ export default function LoginForm() {
             </textPath>
           </text>
         </svg>
+        </div>
+        </div>
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', margin:'12px 0 8px' }} className="login-mobile-logo">
@@ -127,7 +131,7 @@ export default function LoginForm() {
           </div>
         </div>
 
-        <div className="login-mobile-collapsible">
+        <div className="login-mobile-reveal-bottom">
         <div>
 
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:18 }}>
