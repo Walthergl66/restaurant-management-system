@@ -96,8 +96,25 @@ export default function LoginForm() {
       >
         <div className="login-form-body" style={{ padding: '48px 40px' }}>
 
+        <svg
+          className="login-mobile-title"
+          viewBox="0 0 320 96"
+          style={{ display:'block', width:'100%', height:'auto', marginBottom:4 }}
+          role="img"
+          aria-label="Bienvenido"
+        >
+          <defs>
+            <path id="bienvenido-arco" d="M 10 80 Q 160 14 310 80" fill="none" />
+          </defs>
+          <text fill="var(--yellow)" fontSize="30" fontWeight="900" letterSpacing="5">
+            <textPath href="#bienvenido-arco" startOffset="50%" textAnchor="middle">
+              BIENVENIDO
+            </textPath>
+          </text>
+        </svg>
+
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
-        <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
+        <div style={{ display:'flex', justifyContent:'center', margin:'12px 0 8px' }} className="login-mobile-logo">
           <div style={{ width:320, maxWidth:'100%' }}>
             <Image
               src="/Estacion-Burger-Logo.png"
@@ -113,22 +130,6 @@ export default function LoginForm() {
         <div className="login-mobile-collapsible">
         <div>
 
-        <svg
-          viewBox="0 0 320 96"
-          style={{ display:'block', width:'100%', height:'auto', marginBottom:4 }}
-          role="img"
-          aria-label="Bienvenido"
-        >
-          <defs>
-            <path id="bienvenido-arco" d="M 10 80 Q 160 14 310 80" fill="none" />
-          </defs>
-          <text fill="var(--yellow)" fontSize="30" fontWeight="900" letterSpacing="5">
-            <textPath href="#bienvenido-arco" startOffset="50%" textAnchor="middle">
-              BIENVENIDO
-            </textPath>
-          </text>
-        </svg>
-        
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
           {/* username */}
