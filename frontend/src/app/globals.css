@@ -334,6 +334,20 @@ body {
   .login-mobile-logo { display: none !important; }
 }
 
+/* logo del panel: zoom suave y glow al pasar el cursor */
+.login-logo {
+  filter: drop-shadow(0 0 24px rgba(245,166,35,.4));
+  transition: transform .35s ease, filter .35s ease;
+}
+.login-logo:hover {
+  transform: scale(1.07);
+  filter: drop-shadow(0 0 34px rgba(245,166,35,.6));
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-logo { transition: none; }
+  .login-logo:hover { transform: none; }
+}
+
 @theme inline {
   --font-heading:           var(--font-sans);
   --font-sans:           var(--font-sans);
