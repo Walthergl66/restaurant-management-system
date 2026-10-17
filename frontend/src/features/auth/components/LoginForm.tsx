@@ -82,9 +82,6 @@ export default function LoginForm() {
         {/* separador */}
         <div style={{ width:120, height:2, marginTop:26, borderRadius:2, background:'linear-gradient(90deg, transparent, var(--yellow), transparent)', pointerEvents:'none' }}/>
 
-        <p style={{ position:'relative', fontSize:13, color:'var(--muted)', marginTop:22, textAlign:'center', lineHeight:1.6, maxWidth:280 }}>
-          Gestión y administración de pedidos
-        </p>
       </div>
 
       {/* ── right panel: formulario minimalista ── */}
