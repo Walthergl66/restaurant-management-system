@@ -362,18 +362,21 @@ body {
 }
 
 .login-brand-panel {
+  flex: 0 0 100%;
   min-width: 0;
   animation: menu-cover 1.4s cubic-bezier(.55,.06,.25,1) both;
 }
 .login-form-panel {
+  flex: 0 0 0%;
   min-width: 0;
   overflow: hidden;
+  opacity: 0;
   animation: menu-page 1.4s cubic-bezier(.55,.06,.25,1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .login-brand-panel,
-  .login-form-panel { animation: none; }
+  .login-brand-panel { animation: none; flex: 0 0 50%; }
+  .login-form-panel { animation: none; flex: 0 0 50%; opacity: 1; }
 }
 
 @theme inline {
