@@ -348,6 +348,61 @@ body {
   .login-logo:hover { transform: none; }
 }
 
+/* ---- animacion de apertura tipo libreta ---- */
+@keyframes login-intro-cover {
+  0%, 45% { opacity: 1; }
+  100%    { opacity: 0; visibility: hidden; }
+}
+@keyframes login-intro-logo {
+  0%   { opacity: 0; transform: scale(.85); }
+  28%  { opacity: 1; transform: scale(1); }
+  45%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+@keyframes login-open-left {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+@keyframes login-open-right {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+.login-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(145deg, #1c1406 0%, #0d0d0d 75%);
+  animation: login-intro-cover 1.4s ease forwards;
+}
+.login-intro__logo {
+  width: 240px;
+  height: auto;
+  filter: drop-shadow(0 0 34px rgba(245,166,35,.55));
+  animation: login-intro-logo 1.4s ease forwards;
+}
+
+.login-brand-panel {
+  transform-origin: right center;
+  animation: login-open-left .8s cubic-bezier(.22,.9,.24,1) .6s both;
+}
+.login-form-panel {
+  transform-origin: left center;
+  animation: login-open-right .8s cubic-bezier(.22,.9,.24,1) .6s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-intro { display: none; }
+  .login-brand-panel,
+  .login-form-panel { animation: none; }
+}
+
 @theme inline {
   --font-heading:           var(--font-sans);
   --font-sans:           var(--font-sans);
