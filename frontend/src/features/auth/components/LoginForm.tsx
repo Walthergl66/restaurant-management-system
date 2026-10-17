@@ -110,6 +110,9 @@ export default function LoginForm() {
           </div>
         </div>
 
+        <div className="login-mobile-collapsible">
+        <div>
+
         <svg
           viewBox="0 0 320 96"
           style={{ display:'block', width:'100%', height:'auto', marginBottom:4 }}
@@ -207,6 +210,8 @@ export default function LoginForm() {
           </button>
         </form>
 
+        </div>
+        </div>
         </div>
       </div>
     </div>
