@@ -110,9 +110,21 @@ export default function LoginForm() {
           </div>
         </div>
 
-        <h1 style={{ fontSize:24, fontWeight:900, color:'var(--yellow)', marginBottom:4, textAlign:'center' }}>
-          BIENVENIDO
-        </h1>
+        <svg
+          viewBox="0 0 320 96"
+          style={{ display:'block', width:'100%', height:'auto', marginBottom:4 }}
+          role="img"
+          aria-label="Bienvenido"
+        >
+          <defs>
+            <path id="bienvenido-arco" d="M 10 80 Q 160 14 310 80" fill="none" />
+          </defs>
+          <text fill="var(--yellow)" fontSize="30" fontWeight="900" letterSpacing="5">
+            <textPath href="#bienvenido-arco" startOffset="50%" textAnchor="middle">
+              BIENVENIDO
+            </textPath>
+          </text>
+        </svg>
         
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
