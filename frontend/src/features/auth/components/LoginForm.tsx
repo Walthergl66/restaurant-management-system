@@ -86,14 +86,17 @@ export default function LoginForm() {
       </div>
 
       {/* ── right panel: formulario minimalista ── */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '48px 40px',
-        background: 'var(--bg)',
-      }}>
+      <div
+        className="login-form-panel"
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '48px 40px',
+          background: 'var(--bg)',
+        }}
+      >
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
