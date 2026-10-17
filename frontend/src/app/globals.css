@@ -327,6 +327,7 @@ body {
 @media (max-width: 680px) {
   .login-brand-panel { display: none !important; }
   .login-mobile-logo { display: flex !important; }
+  .login-form-panel { flex-basis: 100% !important; animation: none; opacity: 1; }
 }
 
 /* en desktop ocultamos el logo mobile */
@@ -348,58 +349,29 @@ body {
   .login-logo:hover { transform: none; }
 }
 
-/* ---- animacion de apertura tipo libreta ---- */
-@keyframes login-intro-cover {
-  0%, 45% { opacity: 1; }
-  100%    { opacity: 0; visibility: hidden; }
+/* ---- animacion de apertura tipo carta de menu ---- */
+/* el panel del logo (portada) sale primero a pantalla completa y luego se abre
+   hacia la izquierda mientras el formulario se despliega a su lado */
+@keyframes menu-cover {
+  0%, 32% { flex-basis: 100%; }
+  100%    { flex-basis: 50%; }
 }
-@keyframes login-intro-logo {
-  0%   { opacity: 0; transform: scale(.85); }
-  28%  { opacity: 1; transform: scale(1); }
-  45%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.18); }
-}
-@keyframes login-open-left {
-  from { transform: scaleX(0); opacity: 0; }
-  to   { transform: scaleX(1); opacity: 1; }
-}
-@keyframes login-open-right {
-  from { transform: scaleX(0); opacity: 0; }
-  to   { transform: scaleX(1); opacity: 1; }
-}
-
-.login-intro {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  background:
-    radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 22px 22px,
-    linear-gradient(145deg, #1c1406 0%, #0d0d0d 75%);
-  animation: login-intro-cover 1.4s ease forwards;
-}
-.login-intro__logo {
-  width: 360px;
-  height: auto;
-  max-width: 78vw;
-  filter: drop-shadow(0 0 34px rgba(245,166,35,.55));
-  animation: login-intro-logo 1.4s ease forwards;
+@keyframes menu-page {
+  0%, 32% { flex-basis: 0%; opacity: 0; }
+  100%    { flex-basis: 50%; opacity: 1; }
 }
 
 .login-brand-panel {
-  transform-origin: right center;
-  animation: login-open-left .8s cubic-bezier(.22,.9,.24,1) .6s both;
+  min-width: 0;
+  animation: menu-cover 1.4s cubic-bezier(.55,.06,.25,1) both;
 }
 .login-form-panel {
-  transform-origin: left center;
-  animation: login-open-right .8s cubic-bezier(.22,.9,.24,1) .6s both;
+  min-width: 0;
+  overflow: hidden;
+  animation: menu-page 1.4s cubic-bezier(.55,.06,.25,1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .login-intro { display: none; }
   .login-brand-panel,
   .login-form-panel { animation: none; }
 }
