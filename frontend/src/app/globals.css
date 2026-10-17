@@ -323,15 +323,15 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* animacion de apertura en mobile/tablet: primero el logo, luego el formulario */
+/* apertura en mobile/tablet: primero solo el logo, luego se abre verticalmente */
 @keyframes mobile-logo {
   0%   { opacity: 0; transform: scale(.7); }
   55%  { opacity: 1; transform: scale(1); }
   100% { opacity: 1; transform: scale(1); }
 }
-@keyframes mobile-body {
-  0%   { opacity: 0; transform: translateY(16px); }
-  100% { opacity: 1; transform: translateY(0); }
+@keyframes mobile-open {
+  from { grid-template-rows: 0fr; }
+  to   { grid-template-rows: 1fr; }
 }
 
 /* en mobile ocultamos el panel de marca y mostramos el logo pequeño */
@@ -339,7 +339,12 @@ body {
   .login-brand-panel { display: none !important; }
   .login-mobile-logo { display: flex !important; animation: mobile-logo .8s cubic-bezier(.2,.7,.2,1) both; }
   .login-form-panel { flex-basis: 100% !important; animation: none; opacity: 1; }
-  .login-form-body { animation: mobile-body .8s cubic-bezier(.2,.7,.2,1) .35s both; }
+  .login-mobile-collapsible {
+    display: grid;
+    grid-template-rows: 1fr;
+    animation: mobile-open .9s cubic-bezier(.2,.7,.2,1) .4s both;
+  }
+  .login-mobile-collapsible > div { overflow: hidden; }
 }
 
 /* en desktop ocultamos el logo mobile */
