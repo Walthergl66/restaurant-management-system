@@ -175,7 +175,7 @@ export default function LoginForm() {
           <div style={{ textAlign:'center', marginTop:4 }}>
             <button
               type="button"
-              onClick={() => toast('Contacta a un administrador para restablecer tu contraseña', { icon: '🔑' })}
+              onClick={() => toast('Contacta a un administrador para restablecer tu contraseña')}
               style={{ background:'none', border:'none', cursor:'pointer', color:'var(--fuchsia)', fontSize:12, fontWeight:600, padding:'4px 8px' }}
             >
               ¿Olvidaste la contraseña?
