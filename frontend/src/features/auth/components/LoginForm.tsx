@@ -100,8 +100,8 @@ export default function LoginForm() {
         <div>
         <svg
           className="login-mobile-title"
-          viewBox="0 0 320 96"
-          style={{ display:'block', width:'100%', height:'auto', marginBottom:4 }}
+          viewBox="0 0 320 84"
+          style={{ display:'block', width:'100%', height:'auto', marginBottom:0 }}
           role="img"
           aria-label="Bienvenido"
         >
@@ -118,7 +118,7 @@ export default function LoginForm() {
         </div>
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
-        <div style={{ display:'flex', justifyContent:'center', margin:'12px 0 8px' }} className="login-mobile-logo">
+        <div style={{ display:'flex', justifyContent:'center', margin:'12px 0 12px' }} className="login-mobile-logo">
           <div style={{ width:320, maxWidth:'100%' }}>
             <Image
               src="/Estacion-Burger-Logo.png"
