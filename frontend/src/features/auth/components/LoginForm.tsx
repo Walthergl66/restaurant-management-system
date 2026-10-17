@@ -91,10 +91,10 @@ export default function LoginForm() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          padding: '48px 40px',
           background: 'var(--bg)',
         }}
       >
+        <div style={{ padding: '48px 40px' }}>
 
         {/* logo pequeño solo en mobile (cuando el panel izq está oculto) */}
         <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }} className="login-mobile-logo">
@@ -195,7 +195,7 @@ export default function LoginForm() {
           </button>
         </form>
 
-        
+        </div>
       </div>
     </div>
   )
