@@ -82,10 +82,10 @@ class SesionRevocacionIntegrationTest extends AbstractIntegrationTest {
                         .header("Authorization", "Bearer " + loginToken("admin", "admin123"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Usuario Prueba","rolCodigo":"CAJERO"}
+                                {"nombre":"Usuario Prueba","rolCodigo":"COCINA"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rol").value("CAJERO"));
+                .andExpect(jsonPath("$.rol").value("COCINA"));
 
         mockMvc.perform(get("/api/v1/auth/me")
                         .header("Authorization", "Bearer " + tokens[0]))
