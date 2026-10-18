@@ -6,12 +6,14 @@ import { useCuentas, useCerrarCuenta } from '../hooks'
 import type { CuentaResponse } from '../types'
 import CobrarModal from './CobrarModal'
 import AdicionModal from './AdicionModal'
+import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export default function CuentasScreen() {
   const [cobrar, setCobrar] = useState<CuentaResponse | null>(null)
   const [adicion, setAdicion] = useState<CuentaResponse | null>(null)
+  const [cerrando, setCerrando] = useState<CuentaResponse | null>(null)
 
   const { data: cuentas = [], isLoading } = useCuentas()
   const cerrar = useCerrarCuenta()
@@ -64,7 +66,7 @@ export default function CuentasScreen() {
                       <button className="btn-fuchsia" style={{ flex:1, justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setCobrar(c)}>
                         <DollarSign size={12}/> Cobrar
                       </button>
-                      <button className="btn-ghost" style={{ flex:1, justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => { if (confirm('¿Cerrar cuenta?')) cerrar.mutate(c.id) }}>
+                      <button className="btn-ghost" style={{ flex:1, justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setCerrando(c)}>
                         Cerrar
                       </button>
                     </div>
@@ -102,6 +104,17 @@ export default function CuentasScreen() {
 
       {cobrar && <CobrarModal cuenta={cobrar} onClose={() => setCobrar(null)} />}
       {adicion && <AdicionModal cuenta={adicion} onClose={() => setAdicion(null)} />}
+
+      {cerrando && (
+        <ConfirmDialog
+          title="Cerrar cuenta"
+          message={`¿Cerrar la cuenta de la mesa ${cerrando.numeroMesa}? La mesa quedará libre y la cuenta pasará al historial.`}
+          confirmText="Cerrar cuenta"
+          pending={cerrar.isPending}
+          onConfirm={() => cerrar.mutate(cerrando.id, { onSuccess: () => setCerrando(null) })}
+          onClose={() => setCerrando(null)}
+        />
+      )}
     </div>
   )
 }
