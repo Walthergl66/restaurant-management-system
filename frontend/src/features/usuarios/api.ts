@@ -16,6 +16,10 @@ export async function eliminarUsuario(id: number): Promise<void> {
   await api.delete(`/usuarios/${id}`)
 }
 
+export async function cambiarEstadoUsuario(id: number, activo: boolean): Promise<void> {
+  await api.patch(`/usuarios/${id}/estado`, { activo })
+}
+
 export async function crearUsuario(payload: CrearUsuarioPayload): Promise<void> {
   await api.post('/usuarios', payload)
 }
