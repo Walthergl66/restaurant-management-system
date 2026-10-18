@@ -1,15 +1,17 @@
 'use client'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Table2, ShoppingBag, Receipt, ArrowRight, Plus } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { fmt, ESTADO_PEDIDO, ESTADO_MESA } from '@/shared/lib/utils'
 import { useMesas } from '@/features/mesas'
-import { usePedidos } from '@/features/pedidos'
+import { usePedidos, NuevoPedidoModal } from '@/features/pedidos'
 import { useCuentas } from '@/features/cuentas'
 
 /* ================================================================ */
 export default function SalonDashboard() {
   const router = useRouter()
+  const [nuevo, setNuevo] = useState(false)
   const { data: mesas = [], isLoading: loadM } = useMesas()
   const { data: pedidos = [], isLoading: loadP } = usePedidos()
   const { data: cuentas = [], isLoading: loadC } = useCuentas()
@@ -24,7 +26,7 @@ export default function SalonDashboard() {
 
       {/* action bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <button className="btn-fuchsia" onClick={() => router.push('/pedidos')}>
+        <button className="btn-fuchsia" onClick={() => setNuevo(true)}>
           <Plus size={15} /> Nuevo pedido
         </button>
         <button className="btn-ghost" onClick={() => router.push('/cuentas')}>
@@ -109,6 +111,8 @@ export default function SalonDashboard() {
           </button>
         </div>
       </div>
+
+      {nuevo && <NuevoPedidoModal onClose={() => setNuevo(false)} />}
     </div>
   )
 }
