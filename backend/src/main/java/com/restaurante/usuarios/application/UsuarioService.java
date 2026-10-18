@@ -12,12 +12,14 @@ import com.restaurante.usuarios.infrastructure.PermisoRepository;
 import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
 import com.restaurante.usuarios.infrastructure.RolRepository;
 import com.restaurante.usuarios.infrastructure.UsuarioRepository;
+import com.restaurante.usuarios.web.dto.ActualizarEstadoRequest;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
 import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
 import com.restaurante.usuarios.web.dto.RolDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -145,11 +147,35 @@ public class UsuarioService implements Usuarios {
         invalidarSesiones(usuario);
     }
 
+    /**
+     * Borrado definitivo del usuario (distinto de la baja lógica vía
+     * {@link #actualizar}). Borra la fila: refresh tokens, verificaciones y
+     * recuperaciones caen en cascada. Si el usuario tiene perfil de cliente
+     * (FK en {@code comercial.clientes}, sin cascada) no se puede borrar.
+     */
     public void eliminar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-        usuario.desactivar();
+        try {
+            usuarioRepository.delete(usuario);
+            usuarioRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("No se puede eliminar al usuario: tiene un perfil de cliente asociado");
+        }
+    }
+
+    /** Activación/desactivación directa desde la lista, con las mismas
+     *  garantías de revocación de sesiones que una edición completa. */
+    public UsuarioAdminResponse cambiarEstado(Long id, ActualizarEstadoRequest request) {
+        Usuario usuario = usuarioRepository.findByIdWithRol(id)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        if (request.activo()) {
+            usuario.activar();
+        } else {
+            usuario.desactivar();
+        }
         invalidarSesiones(usuario);
+        return UsuarioAdminResponse.from(usuario);
     }
 
     @Transactional(readOnly = true)
