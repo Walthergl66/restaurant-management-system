@@ -377,9 +377,9 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     }
 
     private void aprobarAnulacionDesdeMesa(String codigo, long lineaId) throws Exception {
-        String cajeroToken = asegurarUsuario("cajero_comandas_test", "CAJERO", "clave789");
+        String aprobadorToken = asegurarUsuario("cajero_comandas_test", "ADMIN", "clave789");
         String lista = mockMvc.perform(get("/api/v1/anulaciones?pedidoCodigo=" + codigo)
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + aprobadorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         long anulacionId = -1;
@@ -393,7 +393,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
             throw new AssertionError("No hay anulación solicitada para la línea: " + lineaId);
         }
         mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + aprobadorToken))
                 .andExpect(status().isOk());
     }
 
