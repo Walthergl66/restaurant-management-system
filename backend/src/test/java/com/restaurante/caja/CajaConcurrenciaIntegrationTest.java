@@ -25,13 +25,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *  una caja cerrada; los movimientos registrados son exactamente los aceptados. */
 class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
 
-    private String cajeroToken;
+    private String gestorToken;
     private String adminToken;
 
     @BeforeEach
     void preparar() {
         adminToken = tokenAdmin();
-        cajeroToken = asegurarUsuario("cajero_conc", "CAJERO", "claveConc1");
+        gestorToken = asegurarUsuario("gestor_conc", "ADMIN", "claveConc1");
     }
 
     @Test
@@ -50,7 +50,7 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
                     inicio.await();
                     for (int i = 0; i < totalEgresos; i++) {
                         MvcResult res = mockMvc.perform(post("/api/v1/cajas/" + cajaId + "/egresos")
-                                        .header("Authorization", "Bearer " + cajeroToken)
+                                        .header("Authorization", "Bearer " + gestorToken)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content("""
                                                 {"concepto":"egreso-%d","monto":1.00,"metodo":"EFECTIVO"}
