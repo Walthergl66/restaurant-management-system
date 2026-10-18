@@ -92,6 +92,14 @@ export function useCrearPedido(onCreated?: (codigo: string) => void) {
       queryClient.invalidateQueries({ queryKey: ['cuentas'] })
       onCreated?.(codigo)
     },
-    onError: (e: unknown) => toast.error(errMsg(e, 'Error al crear pedido')),
+    onError: (e: unknown) => {
+      toast.error(errMsg(e, 'Error al crear pedido'))
+      // La creación es secuencial (pedido → ítems → confirmar): si falla a mitad
+      // de camino el borrador ya existe y la mesa puede estar ocupada, así que
+      // hay que reflejar el estado real en las listas.
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+      queryClient.invalidateQueries({ queryKey: ['mesas'] })
+      queryClient.invalidateQueries({ queryKey: ['cuentas'] })
+    },
   })
 }
