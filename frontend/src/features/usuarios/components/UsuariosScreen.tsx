@@ -4,12 +4,16 @@ import { Plus, Pencil, Trash2, Shield, UserCheck, UserX } from 'lucide-react'
 import { useUsuarios, useRoles, useEliminarUsuario, useCambiarEstadoUsuario } from '../hooks'
 import type { UsuarioAdminResponse } from '../types'
 import UsuarioModal from './UsuarioModal'
+import ConfirmDialog from '@/shared/ui/ConfirmDialog'
+
+type Confirmacion = { u: UsuarioAdminResponse; tipo: 'estado' | 'eliminar' }
 
 export default function UsuariosScreen() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing]   = useState<UsuarioAdminResponse | null>(null)
   const [tab, setTab]           = useState<'usuarios' | 'roles'>('usuarios')
   const [filtroRol, setFiltroRol] = useState('TODOS')
+  const [confirma, setConfirma] = useState<Confirmacion | null>(null)
 
   const { data: usuarios = [], isLoading } = useUsuarios()
   const { data: roles = [] } = useRoles()
@@ -78,7 +82,7 @@ export default function UsuariosScreen() {
                             style={{ padding: '6px 8px' }}
                             title={u.activo ? 'Desactivar' : 'Activar'}
                             disabled={cambiarEstado.isPending}
-                            onClick={() => { if (confirm(`¿${u.activo ? 'Desactivar' : 'Activar'} a "${u.username}"?`)) cambiarEstado.mutate({ id: u.id, activo: !u.activo }) }}
+                            onClick={() => setConfirma({ u, tipo: 'estado' })}
                           >
                             {u.activo ? <UserX size={13} /> : <UserCheck size={13} />}
                           </button>
@@ -87,7 +91,7 @@ export default function UsuariosScreen() {
                             style={{ padding: '6px 8px', color: 'var(--error)' }}
                             title="Eliminar definitivamente"
                             disabled={eliminar.isPending}
-                            onClick={() => { if (confirm(`¿Eliminar definitivamente a "${u.username}"? Esta acción no se puede deshacer.`)) eliminar.mutate(u.id) }}
+                            onClick={() => setConfirma({ u, tipo: 'eliminar' })}
                           >
                             <Trash2 size={13} />
                           </button>
@@ -124,6 +128,32 @@ export default function UsuariosScreen() {
       )}
 
       {showForm && <UsuarioModal editing={editing} roles={roles} onClose={() => setShowForm(false)} />}
+
+      {confirma?.tipo === 'estado' && (
+        <ConfirmDialog
+          title={`${confirma.u.activo ? 'Desactivar' : 'Activar'} usuario`}
+          message={`¿${confirma.u.activo ? 'Desactivar' : 'Activar'} a "${confirma.u.username}"? Se cerrarán todas sus sesiones activas.`}
+          confirmText={confirma.u.activo ? 'Desactivar' : 'Activar'}
+          variant={confirma.u.activo ? 'danger' : 'primary'}
+          pending={cambiarEstado.isPending}
+          onConfirm={() => cambiarEstado.mutate(
+            { id: confirma.u.id, activo: !confirma.u.activo },
+            { onSuccess: () => setConfirma(null) },
+          )}
+          onClose={() => setConfirma(null)}
+        />
+      )}
+
+      {confirma?.tipo === 'eliminar' && (
+        <ConfirmDialog
+          title="Eliminar usuario"
+          message={`¿Eliminar definitivamente a "${confirma.u.username}"? Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          pending={eliminar.isPending}
+          onConfirm={() => eliminar.mutate(confirma.u.id, { onSuccess: () => setConfirma(null) })}
+          onClose={() => setConfirma(null)}
+        />
+      )}
     </div>
   )
 }
