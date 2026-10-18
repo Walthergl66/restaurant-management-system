@@ -25,13 +25,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *  una caja cerrada; los movimientos registrados son exactamente los aceptados. */
 class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
 
-    private String cajeroToken;
+    private String gestorToken;
     private String adminToken;
 
     @BeforeEach
     void preparar() {
         adminToken = tokenAdmin();
-        cajeroToken = asegurarUsuario("cajero_conc", "CAJERO", "claveConc1");
+        gestorToken = asegurarUsuario("gestor_conc", "ADMIN", "claveConc1");
     }
 
     @Test
@@ -50,7 +50,7 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
                     inicio.await();
                     for (int i = 0; i < totalEgresos; i++) {
                         MvcResult res = mockMvc.perform(post("/api/v1/cajas/" + cajaId + "/egresos")
-                                        .header("Authorization", "Bearer " + cajeroToken)
+                                        .header("Authorization", "Bearer " + gestorToken)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content("""
                                                 {"concepto":"egreso-%d","monto":1.00,"metodo":"EFECTIVO"}
@@ -71,7 +71,7 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
                     inicio.await();
                     // Cierre mientras los egresos siguen llegando.
                     mockMvc.perform(post("/api/v1/cajas/" + cajaId + "/cierre")
-                                    .header("Authorization", "Bearer " + cajeroToken)
+                                    .header("Authorization", "Bearer " + gestorToken)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content("{\"montoReal\":0}"))
                             .andExpect(status().isOk());
@@ -90,14 +90,14 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
 
         // La caja quedó cerrada
         mockMvc.perform(get("/api/v1/cajas/" + cajaId)
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("CERRADA"));
 
         // Los movimientos registrados son exactamente los egresos aceptados
         // (los rechazados no se persistieron): no quedan movimientos "colgados".
         MvcResult movs = mockMvc.perform(get("/api/v1/cajas/" + cajaId + "/movimientos")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andReturn();
         JsonNode movimientos = objectMapper.readTree(movs.getResponse().getContentAsString());
@@ -106,7 +106,7 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
 
         // Y un egreso posterior sobre caja cerrada se rechaza (movimiento contra caja cerrada)
         mockMvc.perform(post("/api/v1/cajas/" + cajaId + "/egresos")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"concepto":"post-cierre","monto":1.00,"metodo":"EFECTIVO"}
@@ -119,7 +119,7 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
 
     private void abrirCaja() throws Exception {
         mockMvc.perform(post("/api/v1/cajas/apertura")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"montoInicial\":0}"))
                 .andExpect(status().isCreated());
@@ -127,7 +127,7 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
 
     private long cajaAbiertaId() throws Exception {
         MvcResult res = mockMvc.perform(get("/api/v1/cajas/abierta")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andReturn();
         return objectMapper.readTree(res.getResponse().getContentAsString()).path("id").asLong();

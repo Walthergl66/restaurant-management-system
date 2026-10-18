@@ -91,6 +91,19 @@ SELECT setval('seguridad.roles_id_seq', (SELECT MAX(id) FROM seguridad.roles));
 SELECT setval('seguridad.permisos_id_seq', (SELECT MAX(id) FROM seguridad.permisos));
 
 -- ---------------------------------------------------------------
+-- CAJERO deja de existir como rol: sus funciones pasan al ADMIN.
+-- Se borra junto con sus asignaciones de permiso. Idempotente/defensivo:
+-- si el rol no existe (p. ej. una BD que ya lo había eliminado), no hace nada.
+-- ---------------------------------------------------------------
+DELETE FROM seguridad.roles_permisos
+WHERE rol_id = (SELECT id FROM seguridad.roles WHERE codigo = 'CAJERO');
+
+DELETE FROM seguridad.roles WHERE codigo = 'CAJERO';
+
+-- La secuencia se ajusta de nuevo tras la baja (el id 4 quedó libre).
+SELECT setval('seguridad.roles_id_seq', (SELECT MAX(id) FROM seguridad.roles));
+
+-- ---------------------------------------------------------------
 -- Parámetros por defecto del restaurante
 -- ---------------------------------------------------------------
 INSERT INTO configuracion.parametros (clave, valor, tipo, descripcion) VALUES

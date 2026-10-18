@@ -32,13 +32,13 @@ class AuditoriaFinanzasReportesApiIntegrationTest extends AbstractIntegracionApi
 
     private String administradorToken;
     private String meseroToken;
-    private String cajeroToken;
+    private String gestorToken;
 
     @BeforeEach
-    void prepararTokens() {
+    void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        cajeroToken = asegurarUsuario("cajero_f6", "CAJERO", "clave678");
+        gestorToken = asegurarUsuario("gestor_f6", "ADMIN", "clave678");
     }
 
     @AfterEach
@@ -48,7 +48,7 @@ class AuditoriaFinanzasReportesApiIntegrationTest extends AbstractIntegracionApi
         // interferir con el siguiente.
         try {
             MvcResult abierta = mockMvc.perform(get("/api/v1/cajas/abierta")
-                            .header("Authorization", "Bearer " + cajeroToken))
+                            .header("Authorization", "Bearer " + gestorToken))
                     .andExpect(result -> {
                         int status = result.getResponse().getStatus();
                         if (status != 200 && status != 404) {
@@ -60,7 +60,7 @@ class AuditoriaFinanzasReportesApiIntegrationTest extends AbstractIntegracionApi
                 long cajaId = objectMapper.readTree(abierta.getResponse().getContentAsString())
                         .path("id").asLong();
                 mockMvc.perform(post("/api/v1/cajas/" + cajaId + "/cierre")
-                                .header("Authorization", "Bearer " + cajeroToken)
+                                .header("Authorization", "Bearer " + gestorToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"montoReal\":0}"))
                         .andExpect(status().isOk());
@@ -215,7 +215,7 @@ class AuditoriaFinanzasReportesApiIntegrationTest extends AbstractIntegracionApi
 
     private void abrirCaja(String monto) throws Exception {
         mockMvc.perform(post("/api/v1/cajas/apertura")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"montoInicial\":" + monto + "}"))
                 .andExpect(status().isCreated());
@@ -223,7 +223,7 @@ class AuditoriaFinanzasReportesApiIntegrationTest extends AbstractIntegracionApi
 
     private void cobrar(long cuentaId, String monto) throws Exception {
         mockMvc.perform(post("/api/v1/cuentas/" + cuentaId + "/cobros")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"pagos\":[{\"metodo\":\"EFECTIVO\",\"monto\":" + monto + "}]}"))
                 .andExpect(status().isCreated());

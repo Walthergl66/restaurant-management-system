@@ -13,6 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     private String cocineroToken;
     private String meseroToken;
     private String administradorToken;
+    private static final AtomicInteger MESA_BASE = new AtomicInteger(20000);
 
     @Autowired
     private ComandaRepository comandaRepository;
@@ -377,9 +379,9 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     }
 
     private void aprobarAnulacionDesdeMesa(String codigo, long lineaId) throws Exception {
-        String cajeroToken = asegurarUsuario("cajero_comandas_test", "CAJERO", "clave789");
+        String aprobadorToken = asegurarUsuario("cajero_comandas_test", "ADMIN", "clave789");
         String lista = mockMvc.perform(get("/api/v1/anulaciones?pedidoCodigo=" + codigo)
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + aprobadorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         long anulacionId = -1;
@@ -393,7 +395,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
             throw new AssertionError("No hay anulación solicitada para la línea: " + lineaId);
         }
         mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + aprobadorToken))
                 .andExpect(status().isOk());
     }
 
@@ -563,7 +565,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (1000 + System.nanoTime() % 5000))))
+                                """.formatted(MESA_BASE.addAndGet(1))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();

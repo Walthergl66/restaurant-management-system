@@ -5,12 +5,15 @@ import { useCrearUsuario, useActualizarUsuario } from '../hooks'
 import type { RolDto, UsuarioAdminResponse } from '../types'
 
 export default function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminResponse | null; roles: RolDto[]; onClose: () => void }) {
+  // CLIENTE no se asigna desde el panel: es el rol de auto-registro de la app.
+  // Al editar un usuario que ya es CLIENTE se conserva su rol como opción.
+  const rolesSeleccionables = roles.filter(r => r.codigo !== 'CLIENTE' || r.codigo === editing?.rol)
   const [username, setUsername] = useState(editing?.username ?? '')
   const [nombre,   setNombre]   = useState(editing?.nombre ?? '')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [activo,   setActivo]   = useState(editing?.activo ?? true)
-  const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? roles[0]?.codigo ?? '')
+  const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? rolesSeleccionables[0]?.codigo ?? '')
 
   const crear = useCrearUsuario({ onSaved: onClose })
   const actualizar = useActualizarUsuario({ onSaved: onClose })
@@ -69,7 +72,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
           <div>
             <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>ROL</label>
             <select value={rolCodigo} onChange={e => setRolCodigo(e.target.value)} className="input">
-              {roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
+              {rolesSeleccionables.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
             </select>
           </div>
           {editing && (

@@ -4,11 +4,13 @@ import { AlertCircle, CheckCircle2, Pencil, Plus, Power, RefreshCw, Users } from
 import { useCambiarHabilitacionMesa, useMesas } from '../hooks'
 import type { Mesa } from '../types'
 import MesaModal from './MesaModal'
+import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { hasPermiso, useAuthStore } from '@/features/auth'
 
 export default function MesasScreen() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Mesa | null>(null)
+  const [alternar, setAlternar] = useState<Mesa | null>(null)
   const user = useAuthStore(state => state.user)
   const { data: mesas = [], isLoading, isError, refetch } = useMesas()
   const cambiarHabilitacion = useCambiarHabilitacionMesa()
@@ -26,11 +28,7 @@ export default function MesasScreen() {
     setShowForm(true)
   }
 
-  const alternarHabilitacion = (mesa: Mesa) => {
-    const accion = mesa.activo ? 'deshabilitar' : 'habilitar'
-    if (!confirm(`¿Deseas ${accion} la mesa ${mesa.numero}?`)) return
-    cambiarHabilitacion.mutate({ id: mesa.id, habilitada: !mesa.activo })
-  }
+  const alternarHabilitacion = (mesa: Mesa) => setAlternar(mesa)
 
   if (!puedeGestionar) {
     return (
@@ -109,6 +107,21 @@ export default function MesasScreen() {
       )}
 
       {showForm && <MesaModal editing={editing} onClose={() => setShowForm(false)} />}
+
+      {alternar && (
+        <ConfirmDialog
+          title={`${alternar.activo ? 'Deshabilitar' : 'Habilitar'} mesa ${alternar.numero}`}
+          message={`¿Deseas ${alternar.activo ? 'deshabilitar' : 'habilitar'} la mesa ${alternar.numero}?`}
+          confirmText={alternar.activo ? 'Deshabilitar' : 'Habilitar'}
+          variant={alternar.activo ? 'danger' : 'primary'}
+          pending={cambiarHabilitacion.isPending}
+          onConfirm={() => cambiarHabilitacion.mutate(
+            { id: alternar.id, habilitada: !alternar.activo },
+            { onSuccess: () => setAlternar(null) },
+          )}
+          onClose={() => setAlternar(null)}
+        />
+      )}
     </div>
   )
 }
