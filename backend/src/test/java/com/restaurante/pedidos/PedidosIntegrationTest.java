@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,6 +28,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
     private String meseroToken;
     private String administradorToken;
+    private static final AtomicInteger MESA_BASE = new AtomicInteger(10000);
 
     @BeforeEach
     void preparar() {
@@ -373,7 +375,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (1000 + System.nanoTime() % 5000))))
+                                """.formatted(MESA_BASE.addAndGet(1))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
