@@ -26,13 +26,13 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
 
     private String administradorToken;
     private String meseroToken;
-    private String cajeroToken;
+    private String gestorToken;
 
     @BeforeEach
     void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        cajeroToken = asegurarUsuario("cajero_f5", "CAJERO", "clave789");
+        gestorToken = asegurarUsuario("gestor_f5", "ADMIN", "clave789");
     }
 
     @AfterEach
@@ -42,7 +42,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         // interferir con el siguiente.
         try {
             MvcResult abierta = mockMvc.perform(get("/api/v1/cajas/abierta")
-                            .header("Authorization", "Bearer " + cajeroToken))
+                            .header("Authorization", "Bearer " + gestorToken))
                     .andExpect(result -> {
                         int status = result.getResponse().getStatus();
                         if (status != 200 && status != 404) {
@@ -54,7 +54,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
                 long cajaId = objectMapper.readTree(abierta.getResponse().getContentAsString())
                         .path("id").asLong();
                 mockMvc.perform(post("/api/v1/cajas/" + cajaId + "/cierre")
-                                .header("Authorization", "Bearer " + cajeroToken)
+                                .header("Authorization", "Bearer " + gestorToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"montoReal\":0}"))
                         .andExpect(status().isOk());
@@ -74,7 +74,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         long cuentaId = cuentaAbiertaDe(mesaId);
 
         mockMvc.perform(post("/api/v1/cuentas/" + cuentaId + "/cobros")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"pagos":[{"metodo":"EFECTIVO","monto":5.00}],"documento":null}
@@ -94,7 +94,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         long cuentaId = cuentaAbiertaDe(mesaId);
 
         MvcResult cobro = mockMvc.perform(post("/api/v1/cuentas/" + cuentaId + "/cobros")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"pagos":[{"metodo":"EFECTIVO","monto":12.00},{"metodo":"TARJETA","monto":8.00}],
@@ -121,7 +121,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
 
         // Comprobante emitido con datos del cliente
         String comprobantes = mockMvc.perform(get("/api/v1/comprobantes?cuentaId=" + cuentaId)
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertTrue(comprobantes.contains(correlativo));
@@ -131,7 +131,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         // Dos movimientos de ingreso en la caja
         long cajaId = body.path("cajaId").asLong();
         String movimientos = mockMvc.perform(get("/api/v1/cajas/" + cajaId + "/movimientos")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         JsonNode movs = objectMapper.readTree(movimientos);
@@ -151,7 +151,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         long cuentaId = cuentaAbiertaDe(mesaId);
 
         mockMvc.perform(post("/api/v1/cuentas/" + cuentaId + "/cobros")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"pagos":[{"metodo":"EFECTIVO","monto":5.00}]}
@@ -170,7 +170,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         long cuentaId = cuentaAbiertaDe(mesaId);
 
         mockMvc.perform(post("/api/v1/cuentas/" + cuentaId + "/cobros")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"pagos":[{"metodo":"EFECTIVO","monto":3.00}]}
@@ -178,7 +178,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/v1/cuentas/" + cuentaId + "/cobros")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"pagos":[{"metodo":"EFECTIVO","monto":3.00}]}
@@ -190,7 +190,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
     void aperturaDobleYSegundoCobroSinCaja() throws Exception {
         abrirCaja("50.00");
         mockMvc.perform(post("/api/v1/cajas/apertura")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"montoInicial\":5.00}"))
                 .andExpect(status().isUnprocessableEntity());
@@ -208,7 +208,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
         long cuentaId = cuentaAbiertaDe(mesaId);
 
         MvcResult cobro = mockMvc.perform(post("/api/v1/cuentas/" + cuentaId + "/cobros")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"pagos":[{"metodo":"EFECTIVO","monto":20.00}]}
@@ -220,7 +220,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
 
         // apertura 10 + cobro 20 = 30 esperado; se declaran 30 reales → sin diferencia
         mockMvc.perform(post("/api/v1/cajas/" + cajaId + "/cierre")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"montoReal\":30.00}"))
                 .andExpect(status().isOk())
@@ -232,7 +232,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
 
     private void abrirCaja(String monto) throws Exception {
         mockMvc.perform(post("/api/v1/cajas/apertura")
-                        .header("Authorization", "Bearer " + cajeroToken)
+                        .header("Authorization", "Bearer " + gestorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"montoInicial\":" + monto + "}"))
                 .andExpect(status().isCreated())
