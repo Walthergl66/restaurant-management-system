@@ -55,7 +55,7 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
                             .header("Authorization", "Bearer " + tokenAdmin())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"mesero_test","nombre":"Mesero Test","password":"clave123","rolCodigo":"MESERO"}
+                                    {"username":"mesero_test","nombre":"Mesero Test","password":"clave123","rolCodigo":"EMPLEADO"}
                                     """))
                     .andExpect(result -> {
                         int status = result.getResponse().getStatus();
