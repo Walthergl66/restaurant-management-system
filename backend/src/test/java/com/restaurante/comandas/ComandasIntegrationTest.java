@@ -441,9 +441,11 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
 
         long comandaId = buscar(codigo, null).path(0).path("id").asLong();
 
-        // Mesero no tiene permiso de marcar en preparación
+        // Empleado sin permiso de marcar en preparación → 403
+        String empleadoSinPreparacion = tokenEmpleadoConPermisos(
+                "sin_prep_" + System.nanoTime(), "comandas:ver");
         mockMvc.perform(post("/api/v1/comandas/" + comandaId + "/en-preparacion")
-                        .header("Authorization", "Bearer " + meseroToken))
+                        .header("Authorization", "Bearer " + empleadoSinPreparacion))
                 .andExpect(status().isForbidden());
 
         // Reimpresión: se crea una nueva orden de impresión
