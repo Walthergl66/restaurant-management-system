@@ -50,7 +50,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        cocineroToken = asegurarUsuario("cocina_test", "EMPLEADO", "clave456");
+        cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
     }
 
     @Test
@@ -442,7 +442,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         long comandaId = buscar(codigo, null).path(0).path("id").asLong();
 
         // Empleado sin permiso de marcar en preparación → 403
-        String empleadoSinPreparacion = tokenEmpleadoConPermisos(
+        String empleadoSinPreparacion = tokenMeseroConPermisos(
                 "sin_prep_" + System.nanoTime(), "comandas:ver");
         mockMvc.perform(post("/api/v1/comandas/" + comandaId + "/en-preparacion")
                         .header("Authorization", "Bearer " + empleadoSinPreparacion))

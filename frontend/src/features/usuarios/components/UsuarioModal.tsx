@@ -4,8 +4,9 @@ import { X, Check, Eye, EyeOff } from 'lucide-react'
 import { useCrearUsuario, useActualizarUsuario, usePermisos } from '../hooks'
 import type { RolDto, UsuarioAdminResponse } from '../types'
 
-/* Roles cuyas funcionalidades puede ajustar el administrador por usuario. */
-const ROLES_CONFIGURABLES = ['EMPLEADO', 'DELIVERY']
+/* Roles cuyas funcionalidades puede ajustar el administrador por usuario.
+ * ADMIN y CLIENTE quedan fijos (ADMIN con todo, CLIENTE con lo suyo). */
+const ROLES_CONFIGURABLES = ['MESERO', 'COCINA', 'DELIVERY']
 
 export default function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminResponse | null; roles: RolDto[]; onClose: () => void }) {
   // CLIENTE no se asigna desde el panel: es el rol de auto-registro de la app.

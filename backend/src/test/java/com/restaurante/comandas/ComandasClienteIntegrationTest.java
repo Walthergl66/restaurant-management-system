@@ -38,7 +38,7 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
     @BeforeEach
     void preparar() {
         administradorToken = tokenAdmin();
-        cocineroToken = asegurarUsuario("cocina_clicom", "EMPLEADO", "clave456");
+        cocineroToken = asegurarUsuario("cocina_clicom", "COCINA", "clave456");
         clienteToken = asegurarCliente("cliente_anticom", "claveAnt123");
     }
 
