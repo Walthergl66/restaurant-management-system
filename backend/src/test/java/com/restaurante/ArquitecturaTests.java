@@ -80,10 +80,13 @@ class ArquitecturaTests {
      * (CrearPedidoClienteRequest, ConfirmarPedidoClienteRequest,
      * NuevaDireccionClienteRequest e ItemRequest) como contrato de entrada, y
      * luego al agregar ActualizarEstadoRequest en UsuarioService (contrato del
-     * PATCH /usuarios/{id}/estado). Si se migra un servicio a Command/Result,
-     * hay que bajar aqui los dos numeros en el mismo commit.
+     * PATCH /usuarios/{id}/estado). Se volvio a subir a 53 al agregar
+     * PermisoDto en UsuarioService (catalogo de funcionalidades para el panel
+     * de usuarios); sigue siendo el mismo numero de clases (17). Si se migra un
+     * servicio a Command/Result, hay que bajar aqui los dos numeros en el mismo
+     * commit.
      */
-    private static final int MAX_IMPORTS_DE_APPLICATION_A_WEB = 52;
+    private static final int MAX_IMPORTS_DE_APPLICATION_A_WEB = 53;
     private static final int MAX_CLASES_DE_APPLICATION_CON_DTO_WEB = 17;
 
     // ---------------------------------------------------------------------

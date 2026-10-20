@@ -68,4 +68,28 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
         }
         return loginToken("mesero_test", "clave123");
     }
+
+    /**
+     * Crea un usuario EMPLEADO con permisos explícitos acotados (sin los
+     * defaults del rol) y devuelve su token. Sirve para probar el 403 de un
+     * empleado al que el administrador no le habilitó esa funcionalidad.
+     * El username debe ser único por test: no es idempotente.
+     */
+    protected String tokenEmpleadoConPermisos(String username, String... permisos) {
+        String jsonPermisos = java.util.Arrays.stream(permisos)
+                .map(p -> "\"" + p + "\"")
+                .collect(java.util.stream.Collectors.joining(","));
+        try {
+            mockMvc.perform(post("/api/v1/usuarios")
+                            .header("Authorization", "Bearer " + tokenAdmin())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"username":"%s","nombre":"Empleado Acotado","password":"clave123","rolCodigo":"EMPLEADO","permisos":[%s]}
+                                    """.formatted(username, jsonPermisos)))
+                    .andExpect(status().isCreated());
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo crear el empleado acotado " + username, e);
+        }
+        return loginToken(username, "clave123");
+    }
 }
