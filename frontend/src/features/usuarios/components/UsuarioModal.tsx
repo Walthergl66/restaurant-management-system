@@ -1,8 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X, Check, Eye, EyeOff } from 'lucide-react'
-import { useCrearUsuario, useActualizarUsuario } from '../hooks'
+import { useCrearUsuario, useActualizarUsuario, usePermisos } from '../hooks'
 import type { RolDto, UsuarioAdminResponse } from '../types'
+
+/* Roles cuyas funcionalidades puede ajustar el administrador por usuario. */
+const ROLES_CONFIGURABLES = ['EMPLEADO', 'DELIVERY']
 
 export default function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminResponse | null; roles: RolDto[]; onClose: () => void }) {
   // CLIENTE no se asigna desde el panel: es el rol de auto-registro de la app.
@@ -15,15 +18,61 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
   const [activo,   setActivo]   = useState(editing?.activo ?? true)
   const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? rolesSeleccionables[0]?.codigo ?? '')
 
+  const { data: permisosCatalogo = [] } = usePermisos()
+
+  /* Set editable de funcionalidades. Al cambiar de rol se re-marc los
+   * defaults del nuevo rol; al editar, si el usuario ya tiene permisos
+   * explícitos se cargan esos. */
+  const defaultsDeRol = (codigo: string) => roles.find(r => r.codigo === codigo)?.permisos ?? []
+  const [permisos, setPermisos] = useState<string[]>(
+    editing?.permisos?.length ? editing.permisos : defaultsDeRol(editing?.rol ?? rolCodigo),
+  )
+
+  useEffect(() => {
+    if (!ROLES_CONFIGURABLES.includes(rolCodigo)) return
+    // Solo se re-marcan defaults si el set actual aún coincide con los
+    // defaults de algún rol (es decir, el admin no lo personalizó a mano).
+    const actuales = new Set(permisos)
+    const esSetDe = (codigo: string) => {
+      const delRol = defaultsDeRol(codigo)
+      return delRol.length === permisos.length && delRol.every(p => actuales.has(p))
+    }
+    if (!esSetDe(rolCodigo) && !esSetDe(editing?.rol ?? '')) return
+    setPermisos(defaultsDeRol(rolCodigo))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rolCodigo])
+
+  const togglePermiso = (codigo: string) =>
+    setPermisos(lista => lista.includes(codigo) ? lista.filter(p => p !== codigo) : [...lista, codigo])
+
+  /* Agrupa el catálogo por módulo para mostrarlo por secciones. */
+  const porModulo = useMemo(() => {
+    const grupos = new Map<string, { codigo: string; descripcion: string }[]>()
+    for (const p of permisosCatalogo) {
+      const lista = grupos.get(p.modulo) ?? []
+      lista.push({ codigo: p.codigo, descripcion: p.descripcion })
+      grupos.set(p.modulo, lista)
+    }
+    return [...grupos.entries()]
+  }, [permisosCatalogo])
+
   const crear = useCrearUsuario({ onSaved: onClose })
   const actualizar = useActualizarUsuario({ onSaved: onClose })
   const isPending = crear.isPending || actualizar.isPending
 
   const guardar = () => {
     if (editing) {
-      actualizar.mutate({ id: editing.id, payload: { nombre, rolCodigo, activo } })
+      actualizar.mutate({
+        id: editing.id,
+        payload: ROLES_CONFIGURABLES.includes(rolCodigo)
+          ? { nombre, rolCodigo, activo, permisos }
+          : { nombre, rolCodigo, activo },
+      })
     } else {
-      crear.mutate({ username, nombre, password, rolCodigo })
+      crear.mutate({
+        username, nombre, password, rolCodigo,
+        ...(ROLES_CONFIGURABLES.includes(rolCodigo) ? { permisos } : {}),
+      })
     }
   }
 
@@ -31,9 +80,11 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
     ? [{ label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }]
     : [{ label: 'USUARIO', value: username, set: setUsername, type: 'text' }, { label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }, { label: 'CONTRASEÑA', value: password, set: setPassword, type: 'password' }]
 
+  const muestraChecklist = ROLES_CONFIGURABLES.includes(rolCodigo) && permisosCatalogo.length > 0
+
   return (
     <div className="overlay">
-      <div style={{ width: '100%', maxWidth: 420, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 480, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 style={{ fontWeight: 700, fontSize: 16 }}>{editing ? 'Editar usuario' : 'Nuevo usuario'}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><X size={18} /></button>
@@ -81,9 +132,37 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
               Activo
             </label>
           )}
+
+          {muestraChecklist && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase' }}>FUNCIONALIDADES</label>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>{permisos.length} seleccionadas</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {porModulo.map(([modulo, items]) => (
+                  <div key={modulo}>
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--yellow)', marginBottom: 4 }}>{modulo}</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {items.map(p => (
+                        <label key={p.codigo} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--muted)', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={permisos.includes(p.codigo)}
+                            onChange={() => togglePermiso(p.codigo)}
+                          />
+                          {p.descripcion}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={guardar} disabled={isPending || !nombre || (!editing && !username)}>
+          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={guardar} disabled={isPending || !nombre || (!editing && !username) || (muestraChecklist && permisos.length === 0)}>
             <Check size={14} /> {isPending ? 'Guardando…' : 'Guardar'}
           </button>
           <button className="btn-ghost" onClick={onClose}>Cancelar</button>
