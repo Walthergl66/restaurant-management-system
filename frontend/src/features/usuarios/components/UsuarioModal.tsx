@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { X, Check, Eye, EyeOff } from 'lucide-react'
 import { useCrearUsuario, useActualizarUsuario, usePermisos } from '../hooks'
 import type { RolDto, UsuarioAdminResponse } from '../types'
@@ -20,7 +20,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
 
   const { data: permisosCatalogo = [] } = usePermisos()
 
-  /* Set editable de funcionalidades. Al cambiar de rol se re-marc los
+  /* Set editable de funcionalidades. Al cambiar de rol se re-marcan los
    * defaults del nuevo rol; al editar, si el usuario ya tiene permisos
    * explícitos se cargan esos. */
   const defaultsDeRol = (codigo: string) => roles.find(r => r.codigo === codigo)?.permisos ?? []
@@ -28,19 +28,20 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
     editing?.permisos?.length ? editing.permisos : defaultsDeRol(editing?.rol ?? rolCodigo),
   )
 
-  useEffect(() => {
-    if (!ROLES_CONFIGURABLES.includes(rolCodigo)) return
-    // Solo se re-marcan defaults si el set actual aún coincide con los
-    // defaults de algún rol (es decir, el admin no lo personalizó a mano).
+  /* Cambio de rol: si el set actual aún coincide con los defaults de algún
+   * rol (el admin no lo personalizó), se reemplaza por los del rol nuevo.
+   * Se hace en el handler, no en un efecto, para evitar renders en cascada. */
+  const cambiarRol = (nuevoRol: string) => {
     const actuales = new Set(permisos)
     const esSetDe = (codigo: string) => {
       const delRol = defaultsDeRol(codigo)
       return delRol.length === permisos.length && delRol.every(p => actuales.has(p))
     }
-    if (!esSetDe(rolCodigo) && !esSetDe(editing?.rol ?? '')) return
-    setPermisos(defaultsDeRol(rolCodigo))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rolCodigo])
+    if (esSetDe(rolCodigo) || esSetDe(editing?.rol ?? '')) {
+      setPermisos(defaultsDeRol(nuevoRol))
+    }
+    setRolCodigo(nuevoRol)
+  }
 
   const togglePermiso = (codigo: string) =>
     setPermisos(lista => lista.includes(codigo) ? lista.filter(p => p !== codigo) : [...lista, codigo])
@@ -122,7 +123,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
           ))}
           <div>
             <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>ROL</label>
-            <select value={rolCodigo} onChange={e => setRolCodigo(e.target.value)} className="input">
+            <select value={rolCodigo} onChange={e => cambiarRol(e.target.value)} className="input">
               {rolesSeleccionables.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
             </select>
           </div>
