@@ -46,7 +46,7 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
     }
 
     /**
-     * Crea (si no existe) un usuario mesero vía API y devuelve su token.
+     * Crea (si no existe) un usuario MESERO vía API y devuelve su token.
      * Idempotente: el contenedor compartido persiste entre clases de test.
      */
     protected String tokenMesero() {
@@ -55,7 +55,7 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
                             .header("Authorization", "Bearer " + tokenAdmin())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"mesero_test","nombre":"Mesero Test","password":"clave123","rolCodigo":"EMPLEADO"}
+                                    {"username":"mesero_test","nombre":"Mesero Test","password":"clave123","rolCodigo":"MESERO"}
                                     """))
                     .andExpect(result -> {
                         int status = result.getResponse().getStatus();
@@ -70,12 +70,12 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
     }
 
     /**
-     * Crea un usuario EMPLEADO con permisos explícitos acotados (sin los
+     * Crea un usuario MESERO con permisos explícitos acotados (sin los
      * defaults del rol) y devuelve su token. Sirve para probar el 403 de un
      * empleado al que el administrador no le habilitó esa funcionalidad.
      * El username debe ser único por test: no es idempotente.
      */
-    protected String tokenEmpleadoConPermisos(String username, String... permisos) {
+    protected String tokenMeseroConPermisos(String username, String... permisos) {
         String jsonPermisos = java.util.Arrays.stream(permisos)
                 .map(p -> "\"" + p + "\"")
                 .collect(java.util.stream.Collectors.joining(","));
@@ -84,7 +84,7 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
                             .header("Authorization", "Bearer " + tokenAdmin())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"%s","nombre":"Empleado Acotado","password":"clave123","rolCodigo":"EMPLEADO","permisos":[%s]}
+                                    {"username":"%s","nombre":"Empleado Acotado","password":"clave123","rolCodigo":"MESERO","permisos":[%s]}
                                     """.formatted(username, jsonPermisos)))
                     .andExpect(status().isCreated());
         } catch (Exception e) {

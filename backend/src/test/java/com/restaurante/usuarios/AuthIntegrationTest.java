@@ -158,31 +158,31 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
             String adminToken = login("admin", "admin123");
             String mesero = "mesero_" + System.nanoTime();
 
-            // Se crea un EMPLEADO con el token de administrador (permiso usuarios:crear)
+            // Se crea un MESERO con el token de administrador (permiso usuarios:crear)
             mockMvc.perform(post("/api/v1/usuarios")
                             .header("Authorization", "Bearer " + adminToken)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"%s","nombre":"Mesero Prueba","password":"clave123","rolCodigo":"EMPLEADO"}
+                                    {"username":"%s","nombre":"Mesero Prueba","password":"clave123","rolCodigo":"MESERO"}
                                     """.formatted(mesero)))
                     .andExpect(status().isCreated());
 
-            // El EMPLEADO no puede crear usuarios → 403 con ProblemDetail
+            // El MESERO no puede crear usuarios → 403 con ProblemDetail
             String meseroToken = login(mesero, "clave123");
             mockMvc.perform(post("/api/v1/usuarios")
                             .header("Authorization", "Bearer " + meseroToken)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"otro","nombre":"Otro","password":"clave123","rolCodigo":"EMPLEADO"}
+                                    {"username":"otro","nombre":"Otro","password":"clave123","rolCodigo":"MESERO"}
                                     """))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.type").value("urn:problem:restaurante:acceso-denegado"));
 
-            // El EMPLEADO sí puede ver su propia sesión
+            // El MESERO sí puede ver su propia sesión
             mockMvc.perform(get("/api/v1/auth/me")
                             .header("Authorization", "Bearer " + meseroToken))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rol").value("EMPLEADO"));
+                    .andExpect(jsonPath("$.rol").value("MESERO"));
         }
 
         @Test
@@ -192,7 +192,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
                             .header("Authorization", "Bearer " + adminToken)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username":"AdMiN","nombre":"Prueba","password":"clave123","rolCodigo":"EMPLEADO"}
+                                    {"username":"AdMiN","nombre":"Prueba","password":"clave123","rolCodigo":"MESERO"}
                                     """))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.type").value("urn:problem:restaurante:conflicto"));

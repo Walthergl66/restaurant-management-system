@@ -191,7 +191,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isUnauthorized());
 
         // Empleado sin permiso de crear → 403 (el admin no le habilitó pedidos:crear)
-        String cocineroToken = tokenEmpleadoConPermisos("cocina_test_" + System.nanoTime(), "comandas:ver", "pedidos:estado-preparacion");
+        String cocineroToken = tokenMeseroConPermisos("cocina_test_" + System.nanoTime(), "comandas:ver", "pedidos:estado-preparacion");
         mockMvc.perform(post("/api/v1/pedidos")
                         .header("Authorization", "Bearer " + cocineroToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -262,7 +262,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
         // La cocina avanza el pedido; el reintento con la MISMA llave sigue
         // siendo idempotente (RNF-17) y una llave distinta es conflicto.
-        String cocineroToken = tokenEmpleadoConPermisos("cocina_avanza_" + System.nanoTime(),
+        String cocineroToken = tokenMeseroConPermisos("cocina_avanza_" + System.nanoTime(),
                 "comandas:ver", "pedidos:estado-preparacion", "pedidos:estado-listo");
         String body = mockMvc.perform(get("/api/v1/comandas")
                         .header("Authorization", "Bearer " + cocineroToken))
