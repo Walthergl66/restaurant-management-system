@@ -28,10 +28,11 @@ import logo from '../../public/Estacion-Burger-Logo.png';
 export default function LoginScreen() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
-  const [viewport, setViewport] = useState({ width, height });
-  // Usa la vista disponible dentro del área segura, también en modales de iOS.
-  const compact = viewport.height < 740;
-  const logoHeight = Math.min(compact ? 100 : 130, (viewport.width - 40) * 937 / 1678);
+  // useWindowDimensions ya entrega el tamaño de la ventana; con
+  // softwareKeyboardLayoutMode: "pan" la ventana no se redimensiona al
+  // abrir el teclado en Android, así que no hay re-render que cierre el foco.
+  const compact = height < 740;
+  const logoHeight = Math.min(compact ? 100 : 130, (width - 40) * 937 / 1678);
   const logoWidth = logoHeight * 1678 / 937;
   const { login } = useAuth();
 
