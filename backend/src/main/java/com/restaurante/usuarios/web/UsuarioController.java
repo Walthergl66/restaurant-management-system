@@ -6,6 +6,7 @@ import com.restaurante.usuarios.web.dto.ActualizarEstadoRequest;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
 import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
+import com.restaurante.usuarios.web.dto.PermisoDto;
 import com.restaurante.usuarios.web.dto.RolDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -107,5 +108,12 @@ public class UsuarioController {
     @Operation(summary = "Lista roles activos con sus permisos")
     public List<RolDto> roles() {
         return usuarioService.listarRoles();
+    }
+
+    @GetMapping("/permisos")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.USUARIOS_VER + "')")
+    @Operation(summary = "Catálogo de permisos activos (para asignar funcionalidades a usuarios)")
+    public List<PermisoDto> permisos() {
+        return usuarioService.listarPermisos();
     }
 }

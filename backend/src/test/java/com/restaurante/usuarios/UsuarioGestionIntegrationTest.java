@@ -37,7 +37,7 @@ class UsuarioGestionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void eliminarDefinitivoBorraElUsuarioYSusSesiones() throws Exception {
         String username = "borra_def_" + System.nanoTime() % 1_000_000_000L;
-        Long id = crearUsuario(username, "MESERO");
+        Long id = crearUsuario(username, "EMPLEADO");
 
         mockMvc.perform(delete("/api/v1/usuarios/{id}", id)
                         .header("Authorization", "Bearer " + loginToken("admin", "admin123")))
@@ -58,7 +58,7 @@ class UsuarioGestionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void eliminarUsuarioConPerfilClienteDevuelve409YNoBorra() throws Exception {
         String username = "borra_cli_" + System.nanoTime() % 1_000_000_000L;
-        Long id = crearUsuario(username, "MESERO");
+        Long id = crearUsuario(username, "EMPLEADO");
         String uid = String.valueOf(System.nanoTime() % 1_000_000_000L);
         jdbc.update("""
                         INSERT INTO comercial.clientes (usuario_id, cedula, telefono, nombre, version, creado_at, actualizado_at)
@@ -79,7 +79,7 @@ class UsuarioGestionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void cambiarEstadoActivaYDesactivaSinPasarPorElModal() throws Exception {
         String username = "estado_dir_" + System.nanoTime() % 1_000_000_000L;
-        Long id = crearUsuario(username, "MESERO");
+        Long id = crearUsuario(username, "EMPLEADO");
         String adminToken = loginToken("admin", "admin123");
 
         mockMvc.perform(patch("/api/v1/usuarios/{id}/estado", id)
@@ -119,9 +119,9 @@ class UsuarioGestionIntegrationTest extends AbstractIntegrationTest {
     void meseroNoPuedeEliminarNiCambiarEstado() throws Exception {
         String uid = String.valueOf(System.nanoTime() % 1_000_000_000L);
         String meseroUsername = "mesero_perm_" + uid;
-        Long meseroId = crearUsuario(meseroUsername, "MESERO");
+        Long meseroId = crearUsuario(meseroUsername, "EMPLEADO");
         String victimaUsername = "victima_" + uid;
-        Long victimaId = crearUsuario(victimaUsername, "COCINA");
+        Long victimaId = crearUsuario(victimaUsername, "DELIVERY");
         String meseroToken = loginToken(meseroUsername, "clave123");
 
         mockMvc.perform(delete("/api/v1/usuarios/{id}", victimaId)

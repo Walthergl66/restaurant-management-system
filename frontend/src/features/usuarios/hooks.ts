@@ -3,8 +3,8 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { queryClient } from '@/shared/api/queryClient'
 import { errMsg } from '@/shared/lib/utils'
-import { listarUsuarios, listarRoles, eliminarUsuario, cambiarEstadoUsuario, crearUsuario, actualizarUsuario } from './api'
-import type { ActualizarUsuarioPayload, CrearUsuarioPayload, RolDto, UsuarioAdminResponse } from './types'
+import { listarUsuarios, listarRoles, listarPermisos, eliminarUsuario, cambiarEstadoUsuario, crearUsuario, actualizarUsuario } from './api'
+import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, RolDto, UsuarioAdminResponse } from './types'
 
 export function useUsuarios() {
   return useQuery<UsuarioAdminResponse[]>({
@@ -17,6 +17,13 @@ export function useRoles() {
   return useQuery<RolDto[]>({
     queryKey: ['roles'],
     queryFn: listarRoles,
+  })
+}
+
+export function usePermisos() {
+  return useQuery<PermisoDto[]>({
+    queryKey: ['permisos'],
+    queryFn: listarPermisos,
   })
 }
 

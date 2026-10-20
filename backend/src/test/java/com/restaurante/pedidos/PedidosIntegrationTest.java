@@ -191,7 +191,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isUnauthorized());
 
         // Cocinero sin permiso de crear → 403
-        String cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
+        String cocineroToken = asegurarUsuario("cocina_test", "EMPLEADO", "clave456");
         mockMvc.perform(post("/api/v1/pedidos")
                         .header("Authorization", "Bearer " + cocineroToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -262,7 +262,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
         // La cocina avanza el pedido; el reintento con la MISMA llave sigue
         // siendo idempotente (RNF-17) y una llave distinta es conflicto.
-        String cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
+        String cocineroToken = asegurarUsuario("cocina_test", "EMPLEADO", "clave456");
         String body = mockMvc.perform(get("/api/v1/comandas")
                         .header("Authorization", "Bearer " + cocineroToken))
                 .andExpect(status().isOk())

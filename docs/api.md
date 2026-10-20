@@ -18,9 +18,14 @@ Rate limit: `POST /login` → 5/min por IP (429 `urn:problem:restaurante:rate-li
 | Módulo | Prefijo | Permisos |
 |---|---|---|
 | usuarios | `/api/v1/usuarios`, `/api/v1/auth` | `usuarios:ver/crear/editar/eliminar`, `roles:asignar` |
+
+Roles del sistema: `ADMIN` (acceso total), `EMPLEADO`, `DELIVERY` y `CLIENTE`.
+El administrador asigna funcionalidades por usuario
+(`GET /api/v1/usuarios/permisos` para el catálogo); si un usuario no tiene
+permisos explícitos, rigen los de su rol.
 | catalogo | `/api/v1/categorias`, `/api/v1/areas`, `/api/v1/extras`, `/api/v1/productos` | `catalogo:ver/gestionar` |
 | mesas | `/api/v1/mesas` | `mesas:ver/gestionar` |
-| pedidos | `/api/v1/pedidos` | `pedidos:ver/crear/editar/confirmar`, `pedidos:estado-preparacion/listo` |
+| pedidos | `/api/v1/pedidos` | `pedidos:ver/crear/editar/confirmar`, `pedidos:estado-preparacion/listo`, `pedidos:entregar`, `pedidos:retiro-mostrador` |
 | comandas | `/api/v1/comandas`, `/api/v1/comandas/impresion/pendientes` | `comandas:ver/reenviar` |
 | clientes | `/api/v1/clientes` (carrito, pedidos, historial, direcciones) | `clientes:menu-ver`, `clientes:carrito-gestionar`, `clientes:pedido-crear/confirmar`, `clientes:historial-ver`, `clientes:cuenta-nueva` |
 | cuentas | `/api/v1/cuentas` | `cuentas:ver/gestionar` |
