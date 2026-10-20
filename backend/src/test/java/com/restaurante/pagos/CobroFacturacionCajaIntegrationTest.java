@@ -24,6 +24,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
 
+    /** Numerador de mesas propio del test: evita colisiones de `numero` con
+     *  otras clases que comparten el mismo contenedor de PostgreSQL. La base
+     *  (400000) queda fuera de los rangos de Pedidos (10000), Comandas (20000)
+     *  y AnulacionesCuentas (300000). */
+    private static final java.util.concurrent.atomic.AtomicInteger MESA_SECUENCIA =
+            new java.util.concurrent.atomic.AtomicInteger(400000);
+
     private String administradorToken;
     private String meseroToken;
     private String gestorToken;
@@ -288,7 +295,7 @@ class CobroFacturacionCajaIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (2000 + System.nanoTime() % 5000))))
+                                """.formatted(MESA_SECUENCIA.incrementAndGet())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
