@@ -17,6 +17,7 @@ import com.restaurante.usuarios.web.dto.ActualizarEstadoRequest;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
 import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
+import com.restaurante.usuarios.web.dto.PermisoDto;
 import com.restaurante.usuarios.web.dto.RolDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
 import org.springframework.context.ApplicationEventPublisher;
@@ -219,6 +220,17 @@ public class UsuarioService implements Usuarios {
         return rolRepository.findAll().stream()
                 .filter(Rol::isActivo)
                 .map(r -> new RolDto(r.getId(), r.getCodigo(), r.getDescripcion(), r.getPermisoCodigos()))
+                .toList();
+    }
+
+    /** Catálogo completo de permisos para el checklist del panel. */
+    @Transactional(readOnly = true)
+    public List<PermisoDto> listarPermisos() {
+        return permisoRepository.findAll().stream()
+                .filter(Permiso::isActivo)
+                .map(p -> new PermisoDto(p.getCodigo(), p.getModulo(), p.getDescripcion()))
+                .sorted(java.util.Comparator.comparing(PermisoDto::modulo)
+                        .thenComparing(PermisoDto::codigo))
                 .toList();
     }
 
