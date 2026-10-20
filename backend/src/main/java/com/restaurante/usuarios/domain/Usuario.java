@@ -6,10 +6,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -46,6 +49,18 @@ public class Usuario extends AuditableEntity {
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
+
+    /**
+     * Permisos explícitos asignados por administración (usuarios_permisos).
+     * Cuando tiene filas, mandan sobre los del rol: el administrador puede
+     * agregar o quitar funcionalidades por usuario desde el panel. Vacío
+     * (por defecto) = rigen los permisos por defecto del rol.
+     */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "usuarios_permisos", schema = "seguridad",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "permiso_id"))
+    private Set<Permiso> permisosExplicitos = new LinkedHashSet<>();
 
     protected Usuario() {
     }
@@ -91,13 +106,33 @@ public class Usuario extends AuditableEntity {
     }
 
     /**
-     * Permisos efectivos: los del rol si está activo.
+     * Permisos efectivos: si el administrador asignó permisos explícitos al
+     * usuario, esos mandan (agregar/quitar funcionalidades por usuario);
+     * si no, rigen los permisos por defecto del rol.
      */
     public Set<String> getPermisoCodigos() {
         if (!activo) {
             return Collections.emptySet();
         }
+        if (!permisosExplicitos.isEmpty()) {
+            return permisosExplicitos.stream().map(Permiso::getCodigo)
+                    .collect(java.util.stream.Collectors.toUnmodifiableSet());
+        }
         return rol.getPermisoCodigos();
+    }
+
+    /** Permisos explícitos asignados por administración (vacío = defaults del rol). */
+    public Set<String> getPermisosExplicitosCodigos() {
+        return permisosExplicitos.stream().map(Permiso::getCodigo)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    /** Reemplaza el set explícito de permisos del usuario. */
+    public void asignarPermisosExplicitos(Set<Permiso> permisos) {
+        this.permisosExplicitos.clear();
+        if (permisos != null) {
+            this.permisosExplicitos.addAll(permisos);
+        }
     }
 
     public long getSesionVersion() {
