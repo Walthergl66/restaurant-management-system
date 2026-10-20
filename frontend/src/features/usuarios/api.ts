@@ -1,6 +1,6 @@
 'use client'
 import api from '@/shared/api/client'
-import type { ActualizarUsuarioPayload, CrearUsuarioPayload, RolDto, UsuarioAdminResponse } from './types'
+import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, RolDto, UsuarioAdminResponse } from './types'
 
 export async function listarUsuarios(): Promise<UsuarioAdminResponse[]> {
   const { data } = await api.get('/usuarios', { params: { pagina: 0, tamanio: 100 } })
@@ -9,6 +9,11 @@ export async function listarUsuarios(): Promise<UsuarioAdminResponse[]> {
 
 export async function listarRoles(): Promise<RolDto[]> {
   const { data } = await api.get('/usuarios/roles')
+  return data
+}
+
+export async function listarPermisos(): Promise<PermisoDto[]> {
+  const { data } = await api.get('/usuarios/permisos')
   return data
 }
 
