@@ -50,7 +50,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
+        cocineroToken = asegurarUsuario("cocina_test", "EMPLEADO", "clave456");
     }
 
     @Test
