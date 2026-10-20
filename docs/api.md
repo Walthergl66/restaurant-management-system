@@ -19,10 +19,12 @@ Rate limit: `POST /login` → 5/min por IP (429 `urn:problem:restaurante:rate-li
 |---|---|---|
 | usuarios | `/api/v1/usuarios`, `/api/v1/auth` | `usuarios:ver/crear/editar/eliminar`, `roles:asignar` |
 
-Roles del sistema: `ADMIN` (acceso total), `EMPLEADO`, `DELIVERY` y `CLIENTE`.
-El administrador asigna funcionalidades por usuario
+Roles del sistema: `ADMIN` (acceso total), `MESERO`, `COCINA`, `DELIVERY` y `CLIENTE`.
+El administrador asigna funcionalidades por usuario en los roles configurables
+(`MESERO`, `COCINA`, `DELIVERY`) con
 (`GET /api/v1/usuarios/permisos` para el catálogo); si un usuario no tiene
-permisos explícitos, rigen los de su rol.
+permisos explícitos, rigen los de su rol. `ADMIN` y `CLIENTE` nacen con sus
+funcionalidades por defecto y no admiten permisos personalizados (422).
 | catalogo | `/api/v1/categorias`, `/api/v1/areas`, `/api/v1/extras`, `/api/v1/productos` | `catalogo:ver/gestionar` |
 | mesas | `/api/v1/mesas` | `mesas:ver/gestionar` |
 | pedidos | `/api/v1/pedidos` | `pedidos:ver/crear/editar/confirmar`, `pedidos:estado-preparacion/listo`, `pedidos:entregar`, `pedidos:retiro-mostrador` |
