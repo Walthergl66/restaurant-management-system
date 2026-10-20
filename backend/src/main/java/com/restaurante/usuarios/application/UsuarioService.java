@@ -77,6 +77,10 @@ public class UsuarioService implements Usuarios {
                 request.nombre().trim(),
                 rol);
         if (request.permisos() != null && !request.permisos().isEmpty()) {
+            if (!RolCodigo.esConfigurable(rol.getCodigo())) {
+                throw new BusinessRuleException(
+                        "El rol " + rol.getCodigo() + " no admite permisos personalizados: nace con sus funcionalidades por defecto");
+            }
             usuario.asignarPermisosExplicitos(resolverPermisos(request.permisos()));
         }
         return UsuarioAdminResponse.from(usuarioRepository.save(usuario));
@@ -136,6 +140,10 @@ public class UsuarioService implements Usuarios {
             credencialesCambiadas = true;
         }
         if (request.permisos() != null) {
+            if (!RolCodigo.esConfigurable(usuario.getRol().getCodigo())) {
+                throw new BusinessRuleException(
+                        "El rol " + usuario.getRol().getCodigo() + " no admite permisos personalizados");
+            }
             if (request.permisos().isEmpty()) {
                 throw new BusinessRuleException("El usuario debe conservar al menos una funcionalidad");
             }
