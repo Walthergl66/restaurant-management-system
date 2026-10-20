@@ -1,40 +1,77 @@
 -- =====================================================================
--- Revertir la fusión MESERO/COCINA → EMPLEADO.
+-- Restaurar los roles MESERO y COCINA (deshace la fusión en EMPLEADO).
 --
 -- V12__roles_empleados_delivery.sql (ya aplicada en las bases desplegadas
--- desde main) creaba el rol EMPLEADO, movía a los usuarios MESERO/COCINA
--- a EMPLEADO y copiaba los permisos de sus roles antiguos como permisos
--- explícitos del usuario. Ese diseño se descartó: los roles vuelven a ser
--- ADMIN | MESERO | COCINA | DELIVERY | CLIENTE.
+-- desde main) hacía tres cosas que acá se revierten:
+--   1. creaba el rol EMPLEADO (id 6);
+--   2. BORRABA los roles MESERO y COCINA con sus asignaciones;
+--   3. movía a sus usuarios a EMPLEADO copiando los permisos del rol
+--      antiguo como permisos explícitos del usuario.
 --
--- Esta migración es idempotente y ADITIVA (no edita V12, que ya está
+-- Los roles vuelven a ser ADMIN | MESERO | COCINA | DELIVERY | CLIENTE.
+-- Esta migración es idempotente y aditiva (no edita V12, que ya está
 -- aplicada y no puede recalcularse):
---   1. devuelve cada usuario EMPLEADO a su rol original (MESERO si tenía
---      permisos de mesero, COCINA si tenía permisos de cocina) y le borra
---      los permisos explícitos heredados para que rijan los defaults del
---      rol restaurado;
---   2. elimina el rol EMPLEADO y sus asignaciones.
--- En una base recién creada (donde V8__seed ya crea MESERO/COCINA) no hay
--- nada que revertir y esta migración no hace nada.
+--   1. recrea MESERO y COCINA con sus permisos por defecto (los mismos
+--      que define V8__seed.sql);
+--   2. devuelve cada usuario EMPLEADO a su rol original según los
+--      permisos que V12 copió (COCINA si tenía los de cocina, si no
+--      MESERO) y le borra esos permisos explícitos heredados para que
+--      rijan los defaults del rol restaurado;
+--   3. elimina el rol EMPLEADO y sus asignaciones.
 -- =====================================================================
 
 -- ---------------------------------------------------------------
--- 1. Usuarios EMPLEADO → MESERO o COCINA según sus permisos explícitos
---    (los que V12 copió del rol antiguo).
+-- 1. Recrear MESERO y COCINA con sus permisos por defecto
+-- ---------------------------------------------------------------
+INSERT INTO seguridad.roles (codigo, descripcion)
+SELECT 'MESERO', 'Mesero con acceso al flujo de pedidos'
+WHERE NOT EXISTS (SELECT 1 FROM seguridad.roles WHERE codigo = 'MESERO');
+
+INSERT INTO seguridad.roles (codigo, descripcion)
+SELECT 'COCINA', 'Personal de cocina'
+WHERE NOT EXISTS (SELECT 1 FROM seguridad.roles WHERE codigo = 'COCINA');
+
+-- Permisos por defecto de MESERO (los mismos de V8__seed.sql)
+INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
+SELECT r.id, p.id
+FROM seguridad.roles r
+JOIN seguridad.permisos p ON p.codigo IN (
+    'catalogo:ver', 'mesas:ver',
+    'pedidos:ver', 'pedidos:crear', 'pedidos:editar', 'pedidos:confirmar',
+    'pedidos:estado-listo',
+    'comandas:ver',
+    'anulaciones:solicitar',
+    'cuentas:ver', 'cuentas:gestionar',
+    'clientes:gestionar')
+WHERE r.codigo = 'MESERO'
+ON CONFLICT DO NOTHING;
+
+-- Permisos por defecto de COCINA (los mismos de V8__seed.sql)
+INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
+SELECT r.id, p.id
+FROM seguridad.roles r
+JOIN seguridad.permisos p ON p.codigo IN (
+    'catalogo:ver',
+    'pedidos:ver', 'pedidos:estado-preparacion', 'pedidos:estado-listo',
+    'comandas:ver', 'comandas:reenviar',
+    'anulaciones:solicitar')
+WHERE r.codigo = 'COCINA'
+ON CONFLICT DO NOTHING;
+
+-- ---------------------------------------------------------------
+-- 2. Usuarios EMPLEADO → COCINA o MESERO según los permisos que V12
+--    copió del rol antiguo (cocina se distingue por sus permisos
+--    exclusivos, p. ej. pedidos:estado-preparacion / comandas:reenviar).
 -- ---------------------------------------------------------------
 CREATE TEMP TABLE revertir_empleado ON COMMIT DROP AS
 SELECT u.id AS usuario_id,
        CASE
            WHEN EXISTS (
-               SELECT 1 FROM seguridad.roles_permisos rp
-               JOIN seguridad.permisos p ON p.id = rp.permiso_id
-               JOIN seguridad.roles r ON r.id = rp.rol_id
-               WHERE r.codigo = 'COCINA'
-                 AND rp.permiso_id IN (SELECT permiso_id FROM seguridad.usuarios_permisos up
-                                       WHERE up.usuario_id = u.id)
-                 AND rp.permiso_id NOT IN (SELECT permiso_id FROM seguridad.roles_permisos rp2
-                                           JOIN seguridad.roles r2 ON r2.id = rp2.rol_id
-                                           WHERE r2.codigo = 'MESERO')
+               SELECT 1
+               FROM seguridad.usuarios_permisos up
+               JOIN seguridad.permisos p ON p.id = up.permiso_id
+               WHERE up.usuario_id = u.id
+                 AND p.codigo IN ('pedidos:estado-preparacion', 'comandas:reenviar')
            ) THEN 'COCINA'
            ELSE 'MESERO'
        END AS rol_codigo
@@ -54,7 +91,7 @@ USING revertir_empleado rev
 WHERE up.usuario_id = rev.usuario_id;
 
 -- ---------------------------------------------------------------
--- 2. Baja del rol EMPLEADO
+-- 3. Baja del rol EMPLEADO
 -- ---------------------------------------------------------------
 DELETE FROM seguridad.roles_permisos
 WHERE rol_id = (SELECT id FROM seguridad.roles WHERE codigo = 'EMPLEADO');
