@@ -68,6 +68,14 @@ CREATE TABLE seguridad.usuarios (
     updated_by      VARCHAR(50)
 );
 
+-- Permisos explícitos por usuario: si un usuario tiene filas aquí, mandan
+-- sobre los permisos por defecto de su rol (panel de administración).
+CREATE TABLE seguridad.usuarios_permisos (
+    usuario_id BIGINT NOT NULL REFERENCES seguridad.usuarios (id) ON DELETE CASCADE,
+    permiso_id BIGINT NOT NULL REFERENCES seguridad.permisos (id) ON DELETE CASCADE,
+    PRIMARY KEY (usuario_id, permiso_id)
+);
+
 CREATE TABLE seguridad.refresh_tokens (
     id         BIGSERIAL PRIMARY KEY,
     usuario_id BIGINT      NOT NULL REFERENCES seguridad.usuarios (id) ON DELETE CASCADE,
@@ -78,6 +86,7 @@ CREATE TABLE seguridad.refresh_tokens (
 );
 
 CREATE INDEX idx_usuarios_rol ON seguridad.usuarios (rol_id);
+CREATE INDEX idx_usuarios_permisos_usuario ON seguridad.usuarios_permisos (usuario_id);
 CREATE INDEX idx_refresh_tokens_usuario ON seguridad.refresh_tokens (usuario_id);
 
 -- =====================================================================
@@ -698,42 +707,49 @@ INSERT INTO seguridad.permisos (id, codigo, modulo, descripcion) VALUES
  (35, 'clientes:pedido-confirmar',   'clientes', 'Confirmar pedido con idempotencia'),
  (36, 'clientes:pedido-estado-ver',  'clientes', 'Ver estado del pedido en tiempo real'),
  (37, 'clientes:historial-ver',      'clientes', 'Ver historial de pedidos'),
- (38, 'clientes:cuenta-nueva',       'clientes', 'Registrar/recuperar cuenta de cliente');
+ (38, 'clientes:cuenta-nueva',       'clientes', 'Registrar/recuperar cuenta de cliente'),
+ (39, 'pedidos:entregar',        'pedidos', 'Marcar pedido como entregado'),
+ (40, 'pedidos:retiro-mostrador', 'pedidos', 'Confirmar retiro de pedido en mostrador');
 
 -- ---------------------------------------------------------------
--- Roles
+-- Roles (ADMIN | EMPLEADO | DELIVERY | CLIENTE)
 -- ---------------------------------------------------------------
 INSERT INTO seguridad.roles (id, codigo, descripcion) VALUES
- (1, 'ADMIN',   'Administrador del sistema'),
- (2, 'MESERO',  'Mesero con acceso al flujo de pedidos'),
- (3, 'COCINA',  'Personal de cocina'),
- (4, 'CAJERO',  'Cajero que cobra y maneja caja'),
- (5, 'CLIENTE', 'Cliente de la app móvil con QR');
+ (1, 'ADMIN',    'Administrador del sistema'),
+ (5, 'CLIENTE',  'Cliente de la app móvil con QR'),
+ (6, 'EMPLEADO', 'Personal interno: mesero, cocina o caja según sus permisos'),
+ (7, 'DELIVERY', 'Repartidor: entrega pedidos y confirma retiros');
 
 -- ---------------------------------------------------------------
--- Asignaciones rol ↔ permiso
+-- Asignaciones rol ↔ permiso (permisos por defecto; el administrador
+-- puede agregar o quitar funcionalidades por usuario en el panel)
 -- ---------------------------------------------------------------
 -- ADMIN: todos los permisos
 INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
 SELECT 1, id FROM seguridad.permisos;
 
--- MESERO
-INSERT INTO seguridad.roles_permisos (rol_id, permiso_id) VALUES
- (2, 6), (2, 8), (2, 10), (2, 11), (2, 12), (2, 13), (2, 15),
- (2, 16), (2, 18), (2, 20), (2, 21), (2, 30);
+-- EMPLEADO: unión de los defaults de los antiguos MESERO y COCINA
+INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
+SELECT 6, id FROM seguridad.permisos WHERE codigo IN (
+    'catalogo:ver', 'mesas:ver',
+    'pedidos:ver', 'pedidos:crear', 'pedidos:editar', 'pedidos:confirmar',
+    'pedidos:estado-preparacion', 'pedidos:estado-listo',
+    'comandas:ver', 'comandas:reenviar',
+    'anulaciones:solicitar', 'cuentas:ver', 'cuentas:gestionar',
+    'clientes:gestionar');
 
--- COCINA
-INSERT INTO seguridad.roles_permisos (rol_id, permiso_id) VALUES
- (3, 6), (3, 10), (3, 14), (3, 15), (3, 16), (3, 17), (3, 18);
-
--- CAJERO (incluye cuentas:gestionar concedida en V6)
-INSERT INTO seguridad.roles_permisos (rol_id, permiso_id) VALUES
- (4, 6), (4, 8), (4, 10), (4, 16), (4, 18), (4, 19), (4, 20),
- (4, 21), (4, 22), (4, 23), (4, 24), (4, 25), (4, 26), (4, 27), (4, 28);
+-- DELIVERY: ver/fluir pedidos de entrega y consultar catálogo y mesas
+INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
+SELECT 7, id FROM seguridad.permisos WHERE codigo IN (
+    'catalogo:ver', 'mesas:ver',
+    'pedidos:ver', 'pedidos:entregar', 'pedidos:retiro-mostrador');
 
 -- CLIENTE
-INSERT INTO seguridad.roles_permisos (rol_id, permiso_id) VALUES
- (5, 32), (5, 33), (5, 34), (5, 35), (5, 36), (5, 37), (5, 38);
+INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
+SELECT 5, id FROM seguridad.permisos WHERE codigo IN (
+    'clientes:menu-ver', 'clientes:carrito-gestionar', 'clientes:pedido-crear',
+    'clientes:pedido-confirmar', 'clientes:pedido-estado-ver',
+    'clientes:historial-ver', 'clientes:cuenta-nueva');
 
 -- Las inserciones usaron ids explícitos: se pone la secuencia al día.
 SELECT setval('seguridad.roles_id_seq', (SELECT MAX(id) FROM seguridad.roles));
