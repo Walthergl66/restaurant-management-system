@@ -29,7 +29,7 @@ class ClientesIntegrationTest extends AbstractIntegracionApi {
     void preparar() {
         adminToken = tokenAdmin();
         clienteToken = asegurarCliente("cliente_test_cli", "claveCli123");
-        cocinaToken = asegurarUsuario("cocina_cli", "COCINA", "clave456");
+        cocinaToken = asegurarUsuario("cocina_cli", "EMPLEADO", "clave456");
         meseroToken = tokenMesero();
     }
 
