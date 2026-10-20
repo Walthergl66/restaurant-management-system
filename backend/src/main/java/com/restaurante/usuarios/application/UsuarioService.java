@@ -5,6 +5,7 @@ import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.usuarios.ClienteAutoRegistrado;
 import com.restaurante.usuarios.Usuarios;
+import com.restaurante.usuarios.domain.Permiso;
 import com.restaurante.usuarios.domain.Rol;
 import com.restaurante.usuarios.domain.RolCodigo;
 import com.restaurante.usuarios.domain.Usuario;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Administración de usuarios, roles y contraseñas.
@@ -73,6 +75,9 @@ public class UsuarioService implements Usuarios {
                 passwordEncoder.encode(request.password()),
                 request.nombre().trim(),
                 rol);
+        if (request.permisos() != null && !request.permisos().isEmpty()) {
+            usuario.asignarPermisosExplicitos(resolverPermisos(request.permisos()));
+        }
         return UsuarioAdminResponse.from(usuarioRepository.save(usuario));
     }
 
@@ -124,6 +129,16 @@ public class UsuarioService implements Usuarios {
             Rol rol = rolRepository.findByCodigo(request.rolCodigo())
                     .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + request.rolCodigo()));
             usuario.asignarRol(rol);
+            // El set explícito quedó armado sobre el rol anterior: al cambiar de
+            // rol se limpia para que rijan los defaults del nuevo rol.
+            usuario.asignarPermisosExplicitos(Set.of());
+            credencialesCambiadas = true;
+        }
+        if (request.permisos() != null) {
+            if (request.permisos().isEmpty()) {
+                throw new BusinessRuleException("El usuario debe conservar al menos una funcionalidad");
+            }
+            usuario.asignarPermisosExplicitos(resolverPermisos(request.permisos()));
             credencialesCambiadas = true;
         }
         if (request.activo() != null) {
@@ -138,6 +153,27 @@ public class UsuarioService implements Usuarios {
             invalidarSesiones(usuario);
         }
         return UsuarioAdminResponse.from(usuario);
+    }
+
+    /**
+     * Valida los códigos de permiso recibidos y devuelve las entidades.
+     * Un código desconocido o desactivado se rechaza completo (409 de regla
+     * de negocio) para no guardar un permiso que nadie va a poder usar.
+     */
+    private Set<Permiso> resolverPermisos(List<String> codigos) {
+        List<Permiso> encontrados = permisoRepository.findByCodigoIn(codigos);
+        Set<String> encontradosCodigos = encontrados.stream()
+                .filter(Permiso::isActivo)
+                .map(Permiso::getCodigo)
+                .collect(java.util.stream.Collectors.toSet());
+        Set<String> invalidos = codigos.stream()
+                .map(String::trim)
+                .filter(c -> !encontradosCodigos.contains(c))
+                .collect(java.util.stream.Collectors.toSet());
+        if (!invalidos.isEmpty()) {
+            throw new BusinessRuleException("Permisos inválidos: " + String.join(", ", invalidos));
+        }
+        return Set.copyOf(encontrados);
     }
 
     public void cambiarPassword(Long id, CambiarPasswordRequest request) {
