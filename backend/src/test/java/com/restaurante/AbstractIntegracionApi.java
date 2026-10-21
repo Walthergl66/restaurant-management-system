@@ -8,6 +8,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,6 +69,59 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
             throw new IllegalStateException("No se pudo asegurar el usuario mesero", e);
         }
         return loginToken("mesero_test", "clave123");
+    }
+
+    /**
+     * Permisos del empleado de cocina: los que el administrador le habilita
+     * como funcionalidades puntuales. Es el mismo set que deja la migración
+     * V17 a los cocineros existentes (los defaults de MESERO más los dos de
+     * cocina que MESERO no trae).
+     */
+    private static final List<String> PERMISOS_COCINA = List.of(
+            "anulaciones:solicitar",
+            "catalogo:ver",
+            "clientes:gestionar",
+            "comandas:reenviar",
+            "comandas:ver",
+            "cuentas:gestionar",
+            "cuentas:ver",
+            "mesas:ver",
+            "pedidos:confirmar",
+            "pedidos:crear",
+            "pedidos:editar",
+            "pedidos:estado-listo",
+            "pedidos:estado-preparacion",
+            "pedidos:ver");
+
+    /**
+     * Crea (si no existe) un empleado de cocina y devuelve su token.
+     *
+     * La cocina ya no es un rol: es un MESERO al que el administrador le
+     * habilita las funcionalidades de cocina (abrir comandas, marcar la
+     * preparación y reimprimir). Idempotente: el contenedor compartido
+     * persiste entre clases de test.
+     */
+    protected String tokenEmpleadoCocina(String username) {
+        String jsonPermisos = PERMISOS_COCINA.stream()
+                .map(p -> "\"" + p + "\"")
+                .collect(java.util.stream.Collectors.joining(","));
+        try {
+            mockMvc.perform(post("/api/v1/usuarios")
+                            .header("Authorization", "Bearer " + tokenAdmin())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"username":"%s","nombre":"Empleado de cocina","password":"clave456","rolCodigo":"MESERO","permisos":[%s]}
+                                    """.formatted(username, jsonPermisos)))
+                    .andExpect(result -> {
+                        int status = result.getResponse().getStatus();
+                        if (status != 201 && status != 409) {
+                            throw new AssertionError("Esperaba 201 o 409 al crear el empleado de cocina, fue " + status);
+                        }
+                    });
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo asegurar el empleado de cocina " + username, e);
+        }
+        return loginToken(username, "clave456");
     }
 
     /**
