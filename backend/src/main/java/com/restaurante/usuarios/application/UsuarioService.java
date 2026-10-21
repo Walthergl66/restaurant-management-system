@@ -9,6 +9,7 @@ import com.restaurante.usuarios.domain.Permiso;
 import com.restaurante.usuarios.domain.Rol;
 import com.restaurante.usuarios.domain.RolCodigo;
 import com.restaurante.usuarios.domain.Usuario;
+import com.restaurante.usuarios.infrastructure.CategoriaRolRepository;
 import com.restaurante.usuarios.infrastructure.PermisoRepository;
 import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
 import com.restaurante.usuarios.infrastructure.RolRepository;
@@ -16,9 +17,11 @@ import com.restaurante.usuarios.infrastructure.UsuarioRepository;
 import com.restaurante.usuarios.web.dto.ActualizarEstadoRequest;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
 import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
+import com.restaurante.usuarios.web.dto.CategoriaRolDto;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
 import com.restaurante.usuarios.web.dto.PermisoDto;
 import com.restaurante.usuarios.web.dto.RolDto;
+import com.restaurante.usuarios.web.dto.TaxonomiaRolesDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -42,6 +46,7 @@ public class UsuarioService implements Usuarios {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final CategoriaRolRepository categoriaRolRepository;
     private final PermisoRepository permisoRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -49,12 +54,14 @@ public class UsuarioService implements Usuarios {
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           RolRepository rolRepository,
+                          CategoriaRolRepository categoriaRolRepository,
                           PermisoRepository permisoRepository,
                           RefreshTokenRepository refreshTokenRepository,
                           PasswordEncoder passwordEncoder,
                           ApplicationEventPublisher eventPublisher) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
+        this.categoriaRolRepository = categoriaRolRepository;
         this.permisoRepository = permisoRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -223,12 +230,42 @@ public class UsuarioService implements Usuarios {
         return UsuarioAdminResponse.from(usuario);
     }
 
+    /**
+     * Taxonomía de roles para el panel: las categorías con los roles que
+     * contienen y la lista plana de todos ellos. Solo roles activos.
+     */
     @Transactional(readOnly = true)
-    public List<RolDto> listarRoles() {
-        return rolRepository.findAll().stream()
+    public TaxonomiaRolesDto listarTaxonomiaRoles() {
+        List<RolDto> roles = rolRepository.findAll().stream()
                 .filter(Rol::isActivo)
-                .map(r -> new RolDto(r.getId(), r.getCodigo(), r.getDescripcion(), r.getPermisoCodigos()))
+                .sorted(Comparator
+                        .comparing((Rol r) -> r.getCategoria().getCodigo())
+                        .thenComparing(Rol::getCodigo))
+                .map(this::aDtoRol)
                 .toList();
+        List<CategoriaRolDto> categorias = categoriaRolRepository.findAll().stream()
+                .sorted(Comparator.comparing(c -> c.getCodigo()))
+                .map(c -> new CategoriaRolDto(
+                        c.getCodigo(),
+                        c.getDescripcion(),
+                        roles.stream()
+                                .filter(r -> r.categoria().equals(c.getCodigo()))
+                                .toList()))
+                .toList();
+        return new TaxonomiaRolesDto(categorias, roles);
+    }
+
+    private RolDto aDtoRol(Rol rol) {
+        return new RolDto(
+                rol.getId(),
+                rol.getCodigo(),
+                rol.getDescripcion(),
+                rol.getCategoria().getCodigo(),
+                rol.getCategoria().getDescripcion(),
+                rol.isAsignablePorAdmin(),
+                rol.isConfigurable(),
+                rol.getOrigen(),
+                rol.getPermisoCodigos());
     }
 
     /** Catálogo completo de permisos para el checklist del panel. */
