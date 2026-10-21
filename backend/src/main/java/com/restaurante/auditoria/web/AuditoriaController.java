@@ -32,11 +32,12 @@ public class AuditoriaController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('" + PermisoCodigo.AUDITORIA_VER + "')")
-    @Operation(summary = "Eventos de auditoría por período (y opcionalmente por entidad)")
+    @Operation(summary = "Eventos de auditoría por período, entidad o categoría")
     public List<AuditoriaResumen> listar(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant hasta,
-            @RequestParam(required = false) String entidad) {
-        return auditoriaService.listar(desde, hasta, entidad);
+            @RequestParam(required = false) String entidad,
+            @RequestParam(required = false) String categoria) {
+        return auditoriaService.listar(desde, hasta, entidad, categoria);
     }
 }
