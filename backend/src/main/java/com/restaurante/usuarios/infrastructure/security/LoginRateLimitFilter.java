@@ -55,8 +55,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
                 problem.setTitle("Too Many Requests");
                 problem.setProperty("path", request.getRequestURI());
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.getWriter().write(objectMapper.writeValueAsString(problem));
+                ProblemaJson.escribir(response, MediaType.APPLICATION_JSON_VALUE, problem, objectMapper);
                 return;
             }
         }
