@@ -68,7 +68,7 @@ export default function UsuariosScreen() {
               : (
               <table className="tbl">
                 <thead>
-                  <tr>{['Usuario', 'Nombre', 'Rol', 'Estado', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr>
+                  <tr>{['Usuario', 'Nombre', 'Rol', 'Celular', 'Estado', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {usuariosVisibles.map(u => (
@@ -80,6 +80,7 @@ export default function UsuariosScreen() {
                           {u.rol}
                         </span>
                       </td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{u.celular ?? '—'}</td>
                       <td><span className={`badge ${u.activo ? 'badge-abierta' : 'badge-cerrada'}`}>{u.activo ? 'Activo' : 'Inactivo'}</span></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
