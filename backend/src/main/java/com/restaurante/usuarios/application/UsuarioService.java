@@ -77,7 +77,7 @@ public class UsuarioService implements Usuarios {
                 request.nombre().trim(),
                 rol);
         if (request.permisos() != null && !request.permisos().isEmpty()) {
-            if (!RolCodigo.esConfigurable(rol.getCodigo())) {
+            if (!rol.isConfigurable()) {
                 throw new BusinessRuleException(
                         "El rol " + rol.getCodigo() + " no admite permisos personalizados: nace con sus funcionalidades por defecto");
             }
@@ -140,7 +140,7 @@ public class UsuarioService implements Usuarios {
             credencialesCambiadas = true;
         }
         if (request.permisos() != null) {
-            if (!RolCodigo.esConfigurable(usuario.getRol().getCodigo())) {
+            if (!usuario.getRol().isConfigurable()) {
                 throw new BusinessRuleException(
                         "El rol " + usuario.getRol().getCodigo() + " no admite permisos personalizados");
             }
