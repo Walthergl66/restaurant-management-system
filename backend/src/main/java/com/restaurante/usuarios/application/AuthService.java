@@ -106,6 +106,17 @@ public class AuthService {
     }
 
     /**
+     * Registro público de un repartidor (rol DELIVERY): crea la cuenta con su
+     * celular de contacto, pendiente de verificar el correo, y le envía el
+     * código. No inicia sesión: hasta confirmar el código la cuenta no puede
+     * autenticarse. Mismo contrato que el registro de cliente.
+     */
+    public void registroRepartidor(String username, String nombre, String password, String celular) {
+        Usuario usuario = usuarioService.registrarRepartidor(username, password, nombre, celular);
+        enviarCodigoVerificacion(usuario);
+    }
+
+    /**
      * Verifica el correo con el código de un solo uso (RF-45) y, si es válido,
      * activa la cuenta y deja la sesión iniciada (mismo contrato que el login).
      */
