@@ -122,6 +122,35 @@ public class UsuarioService implements Usuarios {
         return guardado;
     }
 
+    /**
+     * Auto-registro público de un repartidor (rol DELIVERY): crea la cuenta
+     * con su celular de contacto, pendiente de verificar el correo.
+     *
+     * <p>El rol DELIVERY no se asigna desde el panel (el administrador solo
+     * lo gestiona), así que este es el único camino para que un repartidor
+     * tenga cuenta. A diferencia del cliente, no publica evento: el
+     * repartidor no tiene perfil en el módulo de clientes.
+     */
+    public Usuario registrarRepartidor(String username, String rawPassword,
+                                       String nombre, String celular) {
+        String limpio = normalizarUsername(username);
+        if (limpio == null || limpio.isBlank()) {
+            throw new BusinessRuleException("El nombre de usuario es obligatorio");
+        }
+        if (usuarioRepository.existsByUsername(limpio)) {
+            throw new ConflictException("Ya existe un usuario con el nombre '" + limpio + "'");
+        }
+        Rol rol = rolRepository.findByCodigo(RolCodigo.DELIVERY)
+                .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + RolCodigo.DELIVERY));
+        if (!rol.isActivo()) {
+            throw new BusinessRuleException("El rol está desactivado");
+        }
+        Usuario usuario = new Usuario(limpio, passwordEncoder.encode(rawPassword), nombre.trim(), rol);
+        usuario.asignarCelular(celular);
+        usuario.requiereVerificacionEmail();
+        return usuarioRepository.save(usuario);
+    }
+
     @Transactional(readOnly = true)
     public Page<UsuarioAdminResponse> listar(Pageable pageable) {
         return usuarioRepository.findAll(pageable).map(UsuarioAdminResponse::from);
