@@ -15,7 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  useWindowDimensions,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -36,7 +36,10 @@ import { ApiError, firstFieldErrorMessage } from '@/shared/api/apiError';
 export default function RegistroScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width, height, fontScale } = useWindowDimensions();
+  // Dimensiones de PANTALLA fijadas una sola vez (no de ventana): en Android
+  // la ventana se encoge al abrir el teclado y, con useWindowDimensions, el
+  // re-render hacía rebotar el foco entre campos. La pantalla es estable.
+  const [{ width, height, fontScale }] = useState(() => Dimensions.get('screen'));
   const shortScreen = height - insets.top - insets.bottom < 680;
   const pairedFields = width >= 360 && fontScale <= 1.2;
   const { registro } = useAuth();

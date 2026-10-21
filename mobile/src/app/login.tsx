@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  useWindowDimensions,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -27,10 +27,12 @@ import logo from '../../public/Estacion-Burger-Logo.png';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
-  // useWindowDimensions ya entrega el tamaño de la ventana; con
-  // softwareKeyboardLayoutMode: "pan" la ventana no se redimensiona al
-  // abrir el teclado en Android, así que no hay re-render que cierre el foco.
+  // Dimensiones de PANTALLA fijadas una sola vez (no de ventana): en Android
+  // la ventana se encoge al abrir el teclado y, con useWindowDimensions, eso
+  // re-renderizaba el formulario y hacía rebotar el foco entre email y
+  // contraseña. La pantalla no cambia con el teclado, y congelarla con el
+  // inicializador de useState evita todo re-render durante la escritura.
+  const [{ width, height }] = useState(() => Dimensions.get('screen'));
   const compact = height < 740;
   const logoHeight = Math.min(compact ? 100 : 130, (width - 40) * 937 / 1678);
   const logoWidth = logoHeight * 1678 / 937;
@@ -70,7 +72,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'right', 'bottom', 'left']}>
+    <SafeAreaView style={styles.container} edges={['top', 'right', 'left']}>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -78,11 +80,7 @@ export default function LoginScreen() {
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        contentInsetAdjustmentBehavior="never"
-        automaticallyAdjustContentInsets={false}
-        automaticallyAdjustKeyboardInsets={false}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
       >
         <View style={styles.content}>
         <View style={[styles.header, compact && styles.headerCompact]}>

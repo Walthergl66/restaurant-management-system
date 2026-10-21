@@ -59,22 +59,15 @@ function RootNavigator() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(waiter)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="login"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="registro"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="verificar"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="recuperar"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
+      {/* Las pantallas de auth NO van como presentation:'modal': en Android el
+          contenedor modal nativo se reanima al abrir/cambiar el teclado y eso
+          le roba el foco al TextInput, haciendo rebotar el foco entre campos.
+          Como pantallas normales del Stack el teclado se comporta de forma
+          estable. El diseño (página completa) no cambia. */}
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="registro" options={{ headerShown: false }} />
+      <Stack.Screen name="verificar" options={{ headerShown: false }} />
+      <Stack.Screen name="recuperar" options={{ headerShown: false }} />
       <Stack.Screen name="product/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="pedido/[codigo]" options={{ headerShown: false }} />
       <Stack.Screen name="direcciones" options={{ headerShown: false }} />
