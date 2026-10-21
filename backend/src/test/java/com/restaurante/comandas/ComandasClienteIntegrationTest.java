@@ -38,7 +38,7 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
     @BeforeEach
     void preparar() {
         administradorToken = tokenAdmin();
-        cocineroToken = asegurarUsuario("cocina_clicom", "COCINA", "clave456");
+        cocineroToken = tokenEmpleadoCocina("cocina_clicom");
         clienteToken = asegurarCliente("cliente_anticom", "claveAnt123");
     }
 
@@ -244,26 +244,6 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
                                 {"idempotencyKey":"%s"}
                                 """.formatted(idem)))
                 .andExpect(status().isOk());
-    }
-
-    private String asegurarUsuario(String username, String rol, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + administradorToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"%s"}
-                                    """.formatted(username, username, password, rol)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar el usuario " + username, e);
-        }
-        return loginToken(username, password);
     }
 
     private String asegurarCliente(String username, String password) {
