@@ -1,15 +1,10 @@
 'use client'
 import api from '@/shared/api/client'
-import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, RolDto, TaxonomiaRolesDto, UsuarioAdminResponse } from './types'
+import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, TaxonomiaRolesDto, UsuarioAdminResponse } from './types'
 
 export async function listarUsuarios(): Promise<UsuarioAdminResponse[]> {
   const { data } = await api.get('/usuarios', { params: { pagina: 0, tamanio: 100 } })
   return data.content ?? data
-}
-
-export async function listarRoles(): Promise<RolDto[]> {
-  const { data } = await api.get('/usuarios/roles')
-  return data.roles
 }
 
 /** Taxonomía de roles: las categorías con sus roles y la lista plana. */
