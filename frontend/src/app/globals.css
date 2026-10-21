@@ -1,6 +1,11 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
+  /* === Paleta original (mantenida 1:1) === */
   --bg:           #0a0a0a;
   --surface:      #111111;
   --surface-2:    #1a1a1a;
@@ -12,10 +17,50 @@
   --fuchsia-dark: #c4186f;
   --text:         #ffffff;
   --muted:        #888888;
-  --dim:          #444444;
+  --dim:          #666666;
   --success:      #22c55e;
   --warning:      #f59e0b;
   --error:        #ef4444;
+
+  /* === Tokens shadcn/ui mapeados a tu paleta (dark) === */
+  --background:           var(--bg);
+  --foreground:           var(--text);
+  --card:                 var(--surface);
+  --card-foreground:      var(--text);
+  --popover:              var(--surface);
+  --popover-foreground:   var(--text);
+  --primary:              var(--yellow);
+  --primary-foreground:   #000000;
+  --secondary:            var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted-foreground:     var(--muted);
+  --accent:               var(--surface-3);
+  --accent-foreground:    var(--text);
+  --destructive:          var(--error);
+  --destructive-foreground: #ffffff;
+  --input:                var(--surface-2);
+  --ring:                 var(--yellow);
+  --border:               var(--border);
+
+  /* Charts (coherentes con marca) */
+  --chart-1:              var(--yellow);
+  --chart-2:              var(--fuchsia);
+  --chart-3:              var(--success);
+  --chart-4:              var(--warning);
+  --chart-5:              var(--yellow-dark);
+
+  /* Radios (coherentes con tus 12–16px) */
+  --radius:               0.75rem;
+
+  /* Sidebar (oscuro, coherente con layout) */
+  --sidebar:              var(--surface);
+  --sidebar-foreground:   var(--text);
+  --sidebar-primary:      var(--yellow);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent:       var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border:       var(--border);
+  --sidebar-ring:         var(--yellow);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -102,6 +147,7 @@ body {
   transition: border-color .15s;
 }
 .input:focus { border-color: var(--yellow); }
+.input::placeholder { color: var(--muted); opacity: .8; }
 
 /* ---- badges ---- */
 .badge {
@@ -263,18 +309,196 @@ body {
   .toolbar-action { width: 100%; margin-left: 0; justify-content: center; }
 }
 
+.tbl td.category-handle-cell { width: 56px; padding: 4px 6px; }
+.category-table-dragging { background: var(--surface-2); outline: 1px solid var(--yellow); outline-offset: -1px; opacity: .8; }
+.category-drag-handle { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--dim); cursor: grab; touch-action: none; user-select: none; }
+.category-drag-handle:hover, .category-drag-handle:focus-visible { color: var(--yellow); background: var(--surface); }
+.category-drag-handle:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.category-drag-handle:active { cursor: grabbing; }
+.category-drag-handle:disabled { cursor: wait; opacity: .4; }
+.category-order-announcement { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
 /* ---- login page responsive ---- */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
+/* apertura en mobile/tablet: primero solo el logo, luego se abre verticalmente */
+@keyframes mobile-logo {
+  0%   { opacity: 0; transform: scale(.6); }
+  100% { opacity: 1; transform: scale(1); }
+}
+/* el titulo sube y el formulario baja al revelarse */
+@keyframes reveal-up {
+  from { grid-template-rows: 0fr; transform: translateY(24px); opacity: 0; }
+  to   { grid-template-rows: 1fr; transform: translateY(0);    opacity: 1; }
+}
+@keyframes reveal-down {
+  from { grid-template-rows: 0fr; transform: translateY(-24px); opacity: 0; }
+  to   { grid-template-rows: 1fr; transform: translateY(0);     opacity: 1; }
+}
+
 /* en mobile ocultamos el panel de marca y mostramos el logo pequeño */
 @media (max-width: 680px) {
   .login-brand-panel { display: none !important; }
-  .login-mobile-logo { display: flex !important; }
+  .login-mobile-logo { display: flex !important; animation: mobile-logo 2s cubic-bezier(.2,.7,.2,1) both; }
+  .login-form-panel { flex-basis: 100% !important; animation: none; opacity: 1; }
+  .login-mobile-reveal-top {
+    display: grid;
+    grid-template-rows: 1fr;
+    animation: reveal-up 1.2s cubic-bezier(.2,.7,.2,1) 2s both;
+  }
+  .login-mobile-reveal-top > div { overflow: hidden; }
+  .login-mobile-reveal-bottom {
+    display: grid;
+    grid-template-rows: 1fr;
+    animation: reveal-down 1.2s cubic-bezier(.2,.7,.2,1) 2s both;
+  }
+  .login-mobile-reveal-bottom > div { overflow: hidden; }
 }
 
 /* en desktop ocultamos el logo mobile */
 @media (min-width: 681px) {
   .login-mobile-logo { display: none !important; }
+}
+
+/* logo del panel: zoom suave y glow al pasar el cursor */
+.login-logo {
+  filter: drop-shadow(0 0 24px rgba(245,166,35,.4));
+  transition: transform .35s ease, filter .35s ease;
+}
+.login-logo:hover {
+  transform: scale(1.07);
+  filter: drop-shadow(0 0 34px rgba(245,166,35,.6));
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-logo { transition: none; }
+  .login-logo:hover { transform: none; }
+}
+
+/* ---- animacion de apertura tipo carta de menu ---- */
+/* el panel del logo (portada) sale primero a pantalla completa y luego se abre
+   hacia la izquierda mientras el formulario se despliega a su lado */
+@keyframes menu-cover {
+  0%, 32% { flex-basis: 100%; }
+  100%    { flex-basis: 50%; }
+}
+@keyframes menu-page {
+  0%, 32% { flex-basis: 0%; opacity: 0; }
+  100%    { flex-basis: 50%; opacity: 1; }
+}
+
+.login-brand-panel {
+  flex: 0 0 100%;
+  min-width: 0;
+  animation: menu-cover 1.4s cubic-bezier(.55,.06,.25,1) both;
+}
+.login-form-panel {
+  flex: 0 0 0%;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  animation: menu-page 1.4s cubic-bezier(.55,.06,.25,1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-brand-panel { animation: none; flex: 0 0 50%; }
+  .login-form-panel { animation: none; flex: 0 0 50%; opacity: 1; }
+  .login-mobile-logo,
+  .login-mobile-reveal-top,
+  .login-mobile-reveal-bottom { animation: none; }
+  .login-mobile-reveal-top,
+  .login-mobile-reveal-bottom { grid-template-rows: 1fr; opacity: 1; transform: none; }
+}
+
+@theme inline {
+  --font-heading:           var(--font-sans);
+  --font-sans:           var(--font-sans);
+  --color-sidebar-ring:           var(--sidebar-ring);
+  --color-sidebar-border:           var(--sidebar-border);
+  --color-sidebar-accent-foreground:           var(--sidebar-accent-foreground);
+  --color-sidebar-accent:           var(--sidebar-accent);
+  --color-sidebar-primary-foreground:           var(--sidebar-primary-foreground);
+  --color-sidebar-primary:           var(--sidebar-primary);
+  --color-sidebar-foreground:           var(--sidebar-foreground);
+  --color-sidebar:           var(--sidebar);
+  --color-chart-5:           var(--chart-5);
+  --color-chart-4:           var(--chart-4);
+  --color-chart-3:           var(--chart-3);
+  --color-chart-2:           var(--chart-2);
+  --color-chart-1:           var(--chart-1);
+  --color-ring:           var(--ring);
+  --color-input:           var(--input);
+  --color-border:           var(--border);
+  --color-destructive:           var(--destructive);
+  --color-accent-foreground:           var(--accent-foreground);
+  --color-accent:           var(--accent);
+  --color-muted-foreground:           var(--muted-foreground);
+  --color-muted:           var(--surface-2);
+  --color-secondary-foreground:           var(--secondary-foreground);
+  --color-secondary:           var(--secondary);
+  --color-primary-foreground:           var(--primary-foreground);
+  --color-primary:           var(--primary);
+  --color-popover-foreground:           var(--popover-foreground);
+  --color-popover:           var(--popover);
+  --color-card-foreground:           var(--card-foreground);
+  --color-card:           var(--card);
+  --color-foreground:           var(--foreground);
+  --color-background:           var(--background);
+  --radius-sm:           calc(var(--radius) * 0.6);
+  --radius-md:           calc(var(--radius) * 0.8);
+  --radius-lg:           var(--radius);
+  --radius-xl:           calc(var(--radius) * 1.4);
+  --radius-2xl:           calc(var(--radius) * 1.8);
+  --radius-3xl:           calc(var(--radius) * 2.2);
+  --radius-4xl:           calc(var(--radius) * 2.6);
+}
+
+.dark {
+  /* Mantén mismo tema oscuro (app ya es dark) */
+  --background:           var(--bg);
+  --foreground:           var(--text);
+  --card:                 var(--surface);
+  --card-foreground:      var(--text);
+  --popover:              var(--surface);
+  --popover-foreground:   var(--text);
+  --primary:              var(--yellow);
+  --primary-foreground:   #000000;
+  --secondary:            var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted-foreground:     var(--muted);
+  --accent:               var(--surface-3);
+  --accent-foreground:    var(--text);
+  --destructive:          var(--error);
+  --destructive-foreground: #ffffff;
+  --input:                var(--surface-2);
+  --ring:                 var(--yellow);
+  --border:               var(--border);
+
+  --chart-1:              var(--yellow);
+  --chart-2:              var(--fuchsia);
+  --chart-3:              var(--success);
+  --chart-4:              var(--warning);
+  --chart-5:              var(--yellow-dark);
+
+  --sidebar:              var(--surface);
+  --sidebar-foreground:   var(--text);
+  --sidebar-primary:      var(--yellow);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent:       var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border:       var(--border);
+  --sidebar-ring:         var(--yellow);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

@@ -1,10 +1,12 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, RefreshCw } from 'lucide-react'
+import { Plus, Search, RefreshCw } from 'lucide-react'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
 import { usePedidos } from '../hooks'
 import type { EstadoPedido } from '../types'
+import NuevoPedidoModal from './NuevoPedidoModal'
+import { useAuthStore, hasPermiso } from '@/features/auth'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -14,6 +16,9 @@ export default function PedidosScreen() {
   const router = useRouter()
   const [search, setSearch]   = useState('')
   const [filtro, setFiltro]   = useState<EstadoPedido | 'TODOS'>('TODOS')
+  const [nuevo, setNuevo]     = useState(false)
+  const user = useAuthStore(state => state.user)
+  const puedeCrear = hasPermiso(user, 'pedidos:crear')
 
   const { data: pedidos = [], isLoading, refetch } = usePedidos()
 
@@ -30,7 +35,12 @@ export default function PedidosScreen() {
       {/* header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
         <h1 style={{ fontSize:20, fontWeight:800 }}>Pedidos</h1>
-        <button className="btn-ghost" onClick={() => refetch()} aria-label="Actualizar pedidos"><RefreshCw size={15}/></button>
+        <div style={{ display:'flex', gap:8 }}>
+          {puedeCrear && (
+            <button className="btn-fuchsia" onClick={() => setNuevo(true)}><Plus size={15}/> Nuevo pedido</button>
+          )}
+          <button className="btn-ghost" onClick={() => refetch()} aria-label="Actualizar pedidos"><RefreshCw size={15}/></button>
+        </div>
       </div>
 
       {/* filters */}
@@ -92,6 +102,8 @@ export default function PedidosScreen() {
             )
         }
       </div>
+
+      {nuevo && <NuevoPedidoModal onClose={() => setNuevo(false)} />}
     </div>
   )
 }

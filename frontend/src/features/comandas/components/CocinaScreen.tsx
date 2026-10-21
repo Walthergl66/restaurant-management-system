@@ -57,8 +57,10 @@ export default function CocinaScreen() {
                           <p style={{ fontSize:11, color:'var(--muted)', marginBottom:8 }}>{cmd.areaNombre}</p>
                           <div style={{ display:'flex', flexDirection:'column', gap:3, marginBottom:10 }}>
                             {cmd.lineas.map((item, i) => (
-                              <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12 }}>
+                              <div key={i} style={{ display:'flex', flexDirection:'column', gap:3, fontSize:12 }}>
                                 <span><strong>{item.cantidad}×</strong> {item.nombreProducto}</span>
+                                {item.extras && <span style={{ color:'var(--muted)', fontSize:11 }}>Extras: {item.extras}</span>}
+                                {item.ingredientes && <strong style={{ color:'var(--yellow)', fontSize:12 }}>Sin: {item.ingredientes}</strong>}
                                 {item.observaciones && <span style={{ color:'var(--muted)', fontSize:11 }}>{item.observaciones}</span>}
                               </div>
                             ))}

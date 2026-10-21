@@ -1,1 +1,1 @@
-export { default } from '@/features/cuentas/components/CuentasScreen'
+export { CuentasScreen as default } from '@/features/cuentas'

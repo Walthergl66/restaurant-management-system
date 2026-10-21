@@ -10,12 +10,13 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   ReactNode,
 } from 'react';
-import { authService } from './authService';
-import { authStorage } from '../../core/storage/authStorage';
-import { apiClient } from '../../core/api/apiClient';
+import { authService } from './api';
+import { authStorage } from '@/shared/storage/authStorage';
+import { apiClient } from '@/shared/api/apiClient';
 import type { RegistroRequest, UsuarioInfo } from './types';
 
 interface AuthContextType {
@@ -124,23 +125,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        usuario,
-        loading,
-        isAuthenticated: !!usuario,
-        login,
-        registro,
-        verificarEmail,
-        reenviarVerificacion,
-        logout,
-        refreshSession,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // Memoizado: sin esto el value es un objeto nuevo en cada render y
+  // re-renderiza a todos los consumidores (login/registro) de forma innecesaria.
+  const value = useMemo(
+    () => ({
+      usuario,
+      loading,
+      isAuthenticated: !!usuario,
+      login,
+      registro,
+      verificarEmail,
+      reenviarVerificacion,
+      logout,
+      refreshSession,
+    }),
+    [usuario, loading, login, registro, verificarEmail, reenviarVerificacion, logout, refreshSession]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

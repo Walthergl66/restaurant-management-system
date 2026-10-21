@@ -13,6 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     private String cocineroToken;
     private String meseroToken;
     private String administradorToken;
+    private static final AtomicInteger MESA_BASE = new AtomicInteger(20000);
 
     @Autowired
     private ComandaRepository comandaRepository;
@@ -55,7 +57,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     void confirmarGeneraUnaComandaPorAreaYOrdenDeImpresion() throws Exception {
         long areaCocina = crearArea("Cocina");
         long areaBarra = crearArea("Barra");
-        long productoA = crearProductoConArea("Lomo Saltado", "11.00", areaCocina);
+        long productoA = crearProductoConArea("Lomo Saltado", "11.00", areaCocina, List.of("sin ají"));
         long productoB = crearProductoConArea("Jugo Natural", "3.00", areaBarra);
 
         long mesaId = crearMesa();
@@ -63,7 +65,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         crearBorrador(mesaId, codigo);
         postItem(codigo, productoA, 2, null, null, null);
         postItem(codigo, productoA, 1, null, null, null);
-        postItem(codigo, productoA, 1, null, "sin ají", null);
+        postItem(codigo, productoA, 1, null, "Sin ají", null);
         postItem(codigo, productoB, 1, null, null, "con hielo");
 
         confirmar(codigo, "key-comandas-1");
@@ -79,7 +81,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         JsonNode agrupada = lineas.get(0);
         assertTrue(agrupada.path("nombreProducto").asText().startsWith("Lomo Saltado"));
         assertEquals(3, agrupada.path("cantidad").asInt(), "1 + 2 = 3");
-        assertTrue(lineas.toString().contains("sin ají"));
+        assertTrue(lineas.toString().contains("Sin ají"));
 
         // Órdenes de impresión en el outbox
         assertEquals(2, buscarPendientes(codigo).size(), "una orden de impresión por comanda");
@@ -377,9 +379,9 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     }
 
     private void aprobarAnulacionDesdeMesa(String codigo, long lineaId) throws Exception {
-        String cajeroToken = asegurarUsuario("cajero_comandas_test", "CAJERO", "clave789");
+        String aprobadorToken = asegurarUsuario("cajero_comandas_test", "ADMIN", "clave789");
         String lista = mockMvc.perform(get("/api/v1/anulaciones?pedidoCodigo=" + codigo)
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + aprobadorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         long anulacionId = -1;
@@ -393,7 +395,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
             throw new AssertionError("No hay anulación solicitada para la línea: " + lineaId);
         }
         mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + aprobadorToken))
                 .andExpect(status().isOk());
     }
 
@@ -439,9 +441,11 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
 
         long comandaId = buscar(codigo, null).path(0).path("id").asLong();
 
-        // Mesero no tiene permiso de marcar en preparación
+        // Empleado sin permiso de marcar en preparación → 403
+        String empleadoSinPreparacion = tokenMeseroConPermisos(
+                "sin_prep_" + System.nanoTime(), "comandas:ver");
         mockMvc.perform(post("/api/v1/comandas/" + comandaId + "/en-preparacion")
-                        .header("Authorization", "Bearer " + meseroToken))
+                        .header("Authorization", "Bearer " + empleadoSinPreparacion))
                 .andExpect(status().isForbidden());
 
         // Reimpresión: se crea una nueva orden de impresión
@@ -563,19 +567,24 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (1000 + System.nanoTime() % 5000))))
+                                """.formatted(MESA_BASE.addAndGet(1))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
     }
 
     private long crearProductoConArea(String nombre, String precio, long areaId) throws Exception {
+        return crearProductoConArea(nombre, precio, areaId, List.of());
+    }
+
+    private long crearProductoConArea(String nombre, String precio, long areaId, List<String> ingredientes) throws Exception {
+        String ingredientesJson = "[\"" + String.join("\",\"", ingredientes) + "\"]";
         String body = mockMvc.perform(post("/api/v1/productos")
                         .header("Authorization", "Bearer " + administradorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"%s-%d","precio":%s,"areaId":%d,"extraIds":[],"ingredientes":[]}
-                                """.formatted(nombre, System.nanoTime() % 100000, precio, areaId)))
+                                {"nombre":"%s-%d","precio":%s,"areaId":%d,"extraIds":[],"ingredientes":%s}
+                                """.formatted(nombre, System.nanoTime() % 100000, precio, areaId, ingredientesJson)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();

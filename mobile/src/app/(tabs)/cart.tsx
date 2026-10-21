@@ -13,11 +13,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
-import { useCart } from '../../features/carrito/CartContext';
-import { CartItemRow } from '../../components/CartItemRow';
-import { Button } from '../../components/ui/Button';
-import { Header } from '../../components/Header';
+import { colors } from '@/theme/colors';
+import { useCart, claveLinea } from '@/features/carrito';
+import { CartItemRow } from '@/components/CartItemRow';
+import { Button } from '@/components/ui/Button';
+import { Header } from '@/components/Header';
 
 export default function CartScreen() {
   const router = useRouter();
@@ -58,7 +58,7 @@ export default function CartScreen() {
       <FlatList
         data={items}
         renderItem={({ item }) => <CartItemRow item={item} />}
-        keyExtractor={item => `${item.producto.id}-${item.extras.map(e => e.id).join(',')}`}
+        keyExtractor={claveLinea}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />

@@ -53,11 +53,11 @@ public class Categoria extends AuditableEntity {
         if (nombre == null || nombre.isBlank()) {
             throw new BusinessRuleException("El nombre de la categoría no puede estar vacío");
         }
-        this.nombre = nombre.trim();
+        this.nombre = TextoCatalogo.normalizar(nombre, TextoCatalogo.Tipo.NOMBRE);
     }
 
     public void cambiarDescripcion(String descripcion) {
-        this.descripcion = descripcion == null || descripcion.isBlank() ? null : descripcion.trim();
+        this.descripcion = TextoCatalogo.normalizar(descripcion, TextoCatalogo.Tipo.DESCRIPCION);
     }
 
     public void cambiarOrden(int orden) {

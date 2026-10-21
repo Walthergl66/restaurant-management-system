@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { InfoPage } from '../components/InfoPage';
+import { InfoPage } from '@/components/InfoPage';
 
 export default function AyudaScreen() {
   return (

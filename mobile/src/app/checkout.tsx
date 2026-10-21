@@ -24,17 +24,17 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { useCart } from '../features/carrito/CartContext';
-import { pedidosService } from '../features/pedidos/pedidosService';
+import { colors } from '@/theme/colors';
+import { useCart, claveLinea } from '@/features/carrito';
+import { pedidosService } from '@/features/pedidos';
 import {
   generarCodigoPedido,
   generarIdempotencyKey,
-} from '../features/pedidos/idempotencia';
-import { CartItemRow } from '../components/CartItemRow';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Header } from '../components/Header';
+} from '@/features/pedidos';
+import { CartItemRow } from '@/components/CartItemRow';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Header } from '@/components/Header';
 
 const METODOS_PAGO = ['EFECTIVO', 'TARJETA'] as const;
 const METODOS_ENTREGA = ['RETIRAR', 'DOMICILIO'] as const;
@@ -98,12 +98,12 @@ export default function CheckoutScreen() {
         metodoEntrega,
         direccionId,
         idempotencyKey: idempotencyKey.current,
-        items: items.map(item => ({
-          productoId: item.producto.id,
-          cantidad: item.cantidad,
-          extraIds: item.extras.map(extra => extra.id),
-          observaciones: item.observaciones,
-        })),
+          items: items.map(item => ({
+            productoId: item.producto.id,
+            cantidad: item.cantidad,
+            extraIds: item.extras.map(extra => extra.id),
+            observaciones: item.observaciones,
+          })),
       });
 
       // 2) Confirmar con la MISMA clave (congela el total)
@@ -171,9 +171,7 @@ export default function CheckoutScreen() {
             <Text style={styles.sectionTitle}>Tu pedido</Text>
             {items.map(item => (
               <CartItemRow
-                key={`${item.producto.id}-${item.extras
-                  .map(e => e.id)
-                  .join(',')}`}
+                key={claveLinea(item)}
                 item={item}
               />
             ))}

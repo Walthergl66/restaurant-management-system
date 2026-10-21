@@ -10,9 +10,10 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider, useAuth } from '../features/auth/AuthContext';
-import { CartProvider } from '../features/carrito/CartContext';
-import { colors } from '../theme/colors';
+import { AuthProvider, useAuth } from '@/features/auth';
+import { puedeAtenderMesas } from '@/features/auth';
+import { CartProvider } from '@/features/carrito';
+import { colors } from '@/theme/colors';
 
 /** Rutas públicas de autenticación (no requieren sesión). */
 const RUTAS_AUTH = ['login', 'registro', 'recuperar', 'verificar'];
@@ -28,7 +29,7 @@ function RootNavigator() {
     const enAuth = RUTAS_AUTH.includes(segments[0] as string);
     const enCliente = segments[0] === '(tabs)';
     const enMesero = segments[0] === '(waiter)';
-    const esMesero = usuario?.rol === 'MESERO' || usuario?.permisos?.includes('pedidos:crear');
+    const esMesero = puedeAtenderMesas(usuario);
     if (!isAuthenticated && !enAuth) {
       router.replace('/login');
     } else if (isAuthenticated && enAuth) {
@@ -58,22 +59,15 @@ function RootNavigator() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(waiter)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="login"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="registro"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="verificar"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="recuperar"
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
+      {/* Las pantallas de auth NO van como presentation:'modal': en Android el
+          contenedor modal nativo se reanima al abrir/cambiar el teclado y eso
+          le roba el foco al TextInput, haciendo rebotar el foco entre campos.
+          Como pantallas normales del Stack el teclado se comporta de forma
+          estable. El diseño (página completa) no cambia. */}
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="registro" options={{ headerShown: false }} />
+      <Stack.Screen name="verificar" options={{ headerShown: false }} />
+      <Stack.Screen name="recuperar" options={{ headerShown: false }} />
       <Stack.Screen name="product/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="pedido/[codigo]" options={{ headerShown: false }} />
       <Stack.Screen name="direcciones" options={{ headerShown: false }} />
@@ -88,12 +82,18 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <StatusBar style="light" />
-        <RootNavigator />
-      </CartProvider>
+      <SessionContent />
     </AuthProvider>
   );
+}
+
+/** El carrito pertenece a una cuenta: se reinicia al salir o cambiar de usuario. */
+function SessionContent() {
+  const { usuario } = useAuth();
+  return <CartProvider key={usuario?.id ?? 'sin-sesion'}>
+    <StatusBar style="light" />
+    <RootNavigator />
+  </CartProvider>;
 }
 
 const styles = StyleSheet.create({

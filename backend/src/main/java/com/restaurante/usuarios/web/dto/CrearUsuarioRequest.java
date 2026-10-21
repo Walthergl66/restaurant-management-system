@@ -3,8 +3,11 @@ package com.restaurante.usuarios.web.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 /**
- * Solicitud para crear un usuario.
+ * Solicitud para crear un usuario. {@code permisos} son funcionalidades
+ * explícitas que ajustan los defaults del rol (null o vacío = defaults).
  */
 public record CrearUsuarioRequest(
         @NotBlank(message = "El nombre de usuario es obligatorio")
@@ -20,5 +23,7 @@ public record CrearUsuarioRequest(
         String password,
 
         @NotBlank(message = "El rol es obligatorio")
-        String rolCodigo) {
+        String rolCodigo,
+
+        List<String> permisos) {
 }

@@ -37,7 +37,7 @@ public class MenuPublicoService {
     }
 
     public MenuDto menu() {
-        List<Categoria> categorias = categoriaRepository.findByActivoTrueOrderByOrdenAscNombreAsc();
+        List<Categoria> categorias = OrdenCategorias.ordenar(categoriaRepository.findByActivoTrueOrderByOrdenAscNombreAsc());
         Map<Long, List<Producto>> porCategoria = agruparPorCategoria();
 
         List<CategoriaMenuDto> categoriasMenu = categorias.stream()

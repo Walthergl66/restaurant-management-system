@@ -46,7 +46,7 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
     }
 
     /**
-     * Crea (si no existe) un usuario mesero vía API y devuelve su token.
+     * Crea (si no existe) un usuario MESERO vía API y devuelve su token.
      * Idempotente: el contenedor compartido persiste entre clases de test.
      */
     protected String tokenMesero() {
@@ -67,5 +67,29 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
             throw new IllegalStateException("No se pudo asegurar el usuario mesero", e);
         }
         return loginToken("mesero_test", "clave123");
+    }
+
+    /**
+     * Crea un usuario MESERO con permisos explícitos acotados (sin los
+     * defaults del rol) y devuelve su token. Sirve para probar el 403 de un
+     * empleado al que el administrador no le habilitó esa funcionalidad.
+     * El username debe ser único por test: no es idempotente.
+     */
+    protected String tokenMeseroConPermisos(String username, String... permisos) {
+        String jsonPermisos = java.util.Arrays.stream(permisos)
+                .map(p -> "\"" + p + "\"")
+                .collect(java.util.stream.Collectors.joining(","));
+        try {
+            mockMvc.perform(post("/api/v1/usuarios")
+                            .header("Authorization", "Bearer " + tokenAdmin())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"username":"%s","nombre":"Empleado Acotado","password":"clave123","rolCodigo":"MESERO","permisos":[%s]}
+                                    """.formatted(username, jsonPermisos)))
+                    .andExpect(status().isCreated());
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo crear el empleado acotado " + username, e);
+        }
+        return loginToken(username, "clave123");
     }
 }

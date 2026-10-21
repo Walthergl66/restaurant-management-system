@@ -7,6 +7,7 @@ import com.restaurante.catalogo.domain.Area;
 import com.restaurante.catalogo.domain.Categoria;
 import com.restaurante.catalogo.domain.Extra;
 import com.restaurante.catalogo.domain.Producto;
+import com.restaurante.catalogo.domain.TextoCatalogo;
 import com.restaurante.catalogo.infrastructure.AreaRepository;
 import com.restaurante.catalogo.infrastructure.CategoriaRepository;
 import com.restaurante.catalogo.infrastructure.ExtraRepository;
@@ -89,6 +90,7 @@ public class ProductoService implements Catalogo {
     }
 
     private void validarNombreDisponible(String nombre, Long id) {
+        nombre = TextoCatalogo.normalizar(nombre, TextoCatalogo.Tipo.NOMBRE);
         boolean duplicado = id == null
                 ? productoRepository.existsByNombreIgnoreCase(nombre.trim())
                 : productoRepository.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), id);
@@ -123,7 +125,8 @@ public class ProductoService implements Catalogo {
                         p.getPrecio(),
                         p.getArea() == null ? null : p.getArea().getId(),
                         p.getArea() == null ? null : p.getArea().getNombre(),
-                        p.isActivo()));
+                        p.isActivo(),
+                        p.getIngredientes().stream().filter(i -> i.isActivo()).map(i -> i.getNombre()).toList()));
     }
 
     @Override
@@ -143,7 +146,8 @@ public class ProductoService implements Catalogo {
                         p.getPrecio(),
                         p.getArea() == null ? null : p.getArea().getId(),
                         p.getArea() == null ? null : p.getArea().getNombre(),
-                        p.isActivo()))
+                        p.isActivo(),
+                        p.getIngredientes().stream().filter(i -> i.isActivo()).map(i -> i.getNombre()).toList()))
                 .toList();
     }
 

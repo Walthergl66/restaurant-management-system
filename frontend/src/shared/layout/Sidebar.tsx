@@ -5,7 +5,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Table2, DollarSign,
   Users, XCircle, ClipboardList, BarChart3, LogOut, ChefHat, Receipt,
 } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/features/auth'
 import { hasPermiso } from '@/shared/lib/permissions'
 import Logo from '@/shared/ui/Logo'
 import toast from 'react-hot-toast'
@@ -69,14 +69,6 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, marginTop: 12 }}>
-        <div style={{ padding: '0 4px', marginBottom: 10 }}>
-          <p style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: 1 }}>Sucursal activa</p>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', marginTop: 2 }}>Estación Centro</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)' }} />
-            <span style={{ fontSize: 11, color: 'var(--success)' }}>Operando</span>
-          </div>
-        </div>
         {user && (
           <div style={{ padding: '0 4px', marginBottom: 8 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{user.username}</p>

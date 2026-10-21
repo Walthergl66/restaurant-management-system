@@ -1,1 +1,1 @@
-export { default } from '@/features/auditoria/components/AuditoriaScreen'
+export { AuditoriaScreen as default } from '@/features/auditoria'

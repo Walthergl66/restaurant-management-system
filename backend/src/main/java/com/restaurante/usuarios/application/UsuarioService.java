@@ -5,6 +5,7 @@ import com.restaurante.shared.domain.exception.ConflictException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.usuarios.ClienteAutoRegistrado;
 import com.restaurante.usuarios.Usuarios;
+import com.restaurante.usuarios.domain.Permiso;
 import com.restaurante.usuarios.domain.Rol;
 import com.restaurante.usuarios.domain.RolCodigo;
 import com.restaurante.usuarios.domain.Usuario;
@@ -12,12 +13,15 @@ import com.restaurante.usuarios.infrastructure.PermisoRepository;
 import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
 import com.restaurante.usuarios.infrastructure.RolRepository;
 import com.restaurante.usuarios.infrastructure.UsuarioRepository;
+import com.restaurante.usuarios.web.dto.ActualizarEstadoRequest;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
 import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
+import com.restaurante.usuarios.web.dto.PermisoDto;
 import com.restaurante.usuarios.web.dto.RolDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Administración de usuarios, roles y contraseñas.
@@ -71,6 +76,13 @@ public class UsuarioService implements Usuarios {
                 passwordEncoder.encode(request.password()),
                 request.nombre().trim(),
                 rol);
+        if (request.permisos() != null && !request.permisos().isEmpty()) {
+            if (!RolCodigo.esConfigurable(rol.getCodigo())) {
+                throw new BusinessRuleException(
+                        "El rol " + rol.getCodigo() + " no admite permisos personalizados: nace con sus funcionalidades por defecto");
+            }
+            usuario.asignarPermisosExplicitos(resolverPermisos(request.permisos()));
+        }
         return UsuarioAdminResponse.from(usuarioRepository.save(usuario));
     }
 
@@ -122,6 +134,20 @@ public class UsuarioService implements Usuarios {
             Rol rol = rolRepository.findByCodigo(request.rolCodigo())
                     .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + request.rolCodigo()));
             usuario.asignarRol(rol);
+            // El set explícito quedó armado sobre el rol anterior: al cambiar de
+            // rol se limpia para que rijan los defaults del nuevo rol.
+            usuario.asignarPermisosExplicitos(Set.of());
+            credencialesCambiadas = true;
+        }
+        if (request.permisos() != null) {
+            if (!RolCodigo.esConfigurable(usuario.getRol().getCodigo())) {
+                throw new BusinessRuleException(
+                        "El rol " + usuario.getRol().getCodigo() + " no admite permisos personalizados");
+            }
+            if (request.permisos().isEmpty()) {
+                throw new BusinessRuleException("El usuario debe conservar al menos una funcionalidad");
+            }
+            usuario.asignarPermisosExplicitos(resolverPermisos(request.permisos()));
             credencialesCambiadas = true;
         }
         if (request.activo() != null) {
@@ -138,6 +164,27 @@ public class UsuarioService implements Usuarios {
         return UsuarioAdminResponse.from(usuario);
     }
 
+    /**
+     * Valida los códigos de permiso recibidos y devuelve las entidades.
+     * Un código desconocido o desactivado se rechaza completo (409 de regla
+     * de negocio) para no guardar un permiso que nadie va a poder usar.
+     */
+    private Set<Permiso> resolverPermisos(List<String> codigos) {
+        List<Permiso> encontrados = permisoRepository.findByCodigoIn(codigos);
+        Set<String> encontradosCodigos = encontrados.stream()
+                .filter(Permiso::isActivo)
+                .map(Permiso::getCodigo)
+                .collect(java.util.stream.Collectors.toSet());
+        Set<String> invalidos = codigos.stream()
+                .map(String::trim)
+                .filter(c -> !encontradosCodigos.contains(c))
+                .collect(java.util.stream.Collectors.toSet());
+        if (!invalidos.isEmpty()) {
+            throw new BusinessRuleException("Permisos inválidos: " + String.join(", ", invalidos));
+        }
+        return Set.copyOf(encontrados);
+    }
+
     public void cambiarPassword(Long id, CambiarPasswordRequest request) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
@@ -145,11 +192,35 @@ public class UsuarioService implements Usuarios {
         invalidarSesiones(usuario);
     }
 
+    /**
+     * Borrado definitivo del usuario (distinto de la baja lógica vía
+     * {@link #actualizar}). Borra la fila: refresh tokens, verificaciones y
+     * recuperaciones caen en cascada. Si el usuario tiene perfil de cliente
+     * (FK en {@code comercial.clientes}, sin cascada) no se puede borrar.
+     */
     public void eliminar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
-        usuario.desactivar();
+        try {
+            usuarioRepository.delete(usuario);
+            usuarioRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("No se puede eliminar al usuario: tiene un perfil de cliente asociado");
+        }
+    }
+
+    /** Activación/desactivación directa desde la lista, con las mismas
+     *  garantías de revocación de sesiones que una edición completa. */
+    public UsuarioAdminResponse cambiarEstado(Long id, ActualizarEstadoRequest request) {
+        Usuario usuario = usuarioRepository.findByIdWithRol(id)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        if (request.activo()) {
+            usuario.activar();
+        } else {
+            usuario.desactivar();
+        }
         invalidarSesiones(usuario);
+        return UsuarioAdminResponse.from(usuario);
     }
 
     @Transactional(readOnly = true)
@@ -157,6 +228,17 @@ public class UsuarioService implements Usuarios {
         return rolRepository.findAll().stream()
                 .filter(Rol::isActivo)
                 .map(r -> new RolDto(r.getId(), r.getCodigo(), r.getDescripcion(), r.getPermisoCodigos()))
+                .toList();
+    }
+
+    /** Catálogo completo de permisos para el checklist del panel. */
+    @Transactional(readOnly = true)
+    public List<PermisoDto> listarPermisos() {
+        return permisoRepository.findAll().stream()
+                .filter(Permiso::isActivo)
+                .map(p -> new PermisoDto(p.getCodigo(), p.getModulo(), p.getDescripcion()))
+                .sorted(java.util.Comparator.comparing(PermisoDto::modulo)
+                        .thenComparing(PermisoDto::codigo))
                 .toList();
     }
 

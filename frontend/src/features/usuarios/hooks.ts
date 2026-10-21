@@ -3,8 +3,8 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { queryClient } from '@/shared/api/queryClient'
 import { errMsg } from '@/shared/lib/utils'
-import { listarUsuarios, listarRoles, eliminarUsuario, crearUsuario, actualizarUsuario } from './api'
-import type { ActualizarUsuarioPayload, CrearUsuarioPayload, RolDto, UsuarioAdminResponse } from './types'
+import { listarUsuarios, listarRoles, listarPermisos, eliminarUsuario, cambiarEstadoUsuario, crearUsuario, actualizarUsuario } from './api'
+import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, RolDto, UsuarioAdminResponse } from './types'
 
 export function useUsuarios() {
   return useQuery<UsuarioAdminResponse[]>({
@@ -20,11 +20,29 @@ export function useRoles() {
   })
 }
 
+export function usePermisos() {
+  return useQuery<PermisoDto[]>({
+    queryKey: ['permisos'],
+    queryFn: listarPermisos,
+  })
+}
+
 export function useEliminarUsuario() {
   return useMutation({
     mutationFn: eliminarUsuario,
     onSuccess: () => {
-      toast.success('Usuario desactivado')
+      toast.success('Usuario eliminado')
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] })
+    },
+    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
+  })
+}
+
+export function useCambiarEstadoUsuario() {
+  return useMutation<void, unknown, { id: number; activo: boolean }>({
+    mutationFn: ({ id, activo }) => cambiarEstadoUsuario(id, activo),
+    onSuccess: (_data, { activo }) => {
+      toast.success(activo ? 'Usuario activado' : 'Usuario desactivado')
       queryClient.invalidateQueries({ queryKey: ['usuarios'] })
     },
     onError: (e: unknown) => toast.error(errMsg(e, 'Error')),

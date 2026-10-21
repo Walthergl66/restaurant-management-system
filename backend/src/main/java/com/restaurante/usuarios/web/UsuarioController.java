@@ -2,9 +2,11 @@ package com.restaurante.usuarios.web;
 
 import com.restaurante.usuarios.PermisoCodigo;
 import com.restaurante.usuarios.application.UsuarioService;
+import com.restaurante.usuarios.web.dto.ActualizarEstadoRequest;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
 import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
+import com.restaurante.usuarios.web.dto.PermisoDto;
 import com.restaurante.usuarios.web.dto.RolDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,9 +90,17 @@ public class UsuarioController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('" + PermisoCodigo.USUARIOS_ELIMINAR + "')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Desactiva lógicamente un usuario")
+    @Operation(summary = "Elimina definitivamente un usuario (409 si tiene perfil de cliente)")
     public void eliminar(@PathVariable Long id) {
         usuarioService.eliminar(id);
+    }
+
+    @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.USUARIOS_EDITAR + "')")
+    @Operation(summary = "Activa o desactiva un usuario directamente")
+    public UsuarioAdminResponse cambiarEstado(@PathVariable Long id,
+                                              @Valid @RequestBody ActualizarEstadoRequest request) {
+        return usuarioService.cambiarEstado(id, request);
     }
 
     @GetMapping("/roles")
@@ -98,5 +108,12 @@ public class UsuarioController {
     @Operation(summary = "Lista roles activos con sus permisos")
     public List<RolDto> roles() {
         return usuarioService.listarRoles();
+    }
+
+    @GetMapping("/permisos")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.USUARIOS_VER + "')")
+    @Operation(summary = "Catálogo de permisos activos (para asignar funcionalidades a usuarios)")
+    public List<PermisoDto> permisos() {
+        return usuarioService.listarPermisos();
     }
 }

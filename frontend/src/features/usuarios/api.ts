@@ -1,6 +1,6 @@
 'use client'
 import api from '@/shared/api/client'
-import type { ActualizarUsuarioPayload, CrearUsuarioPayload, RolDto, UsuarioAdminResponse } from './types'
+import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, RolDto, UsuarioAdminResponse } from './types'
 
 export async function listarUsuarios(): Promise<UsuarioAdminResponse[]> {
   const { data } = await api.get('/usuarios', { params: { pagina: 0, tamanio: 100 } })
@@ -12,8 +12,17 @@ export async function listarRoles(): Promise<RolDto[]> {
   return data
 }
 
+export async function listarPermisos(): Promise<PermisoDto[]> {
+  const { data } = await api.get('/usuarios/permisos')
+  return data
+}
+
 export async function eliminarUsuario(id: number): Promise<void> {
   await api.delete(`/usuarios/${id}`)
+}
+
+export async function cambiarEstadoUsuario(id: number, activo: boolean): Promise<void> {
+  await api.patch(`/usuarios/${id}/estado`, { activo })
 }
 
 export async function crearUsuario(payload: CrearUsuarioPayload): Promise<void> {

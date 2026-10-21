@@ -3,10 +3,8 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { queryClient } from '@/shared/api/queryClient'
 import { errMsg } from '@/shared/lib/utils'
-import { listarMesas } from '@/features/mesas/api'
-import { listarProductos } from '@/features/catalogo/api'
-import type { Mesa } from '@/features/mesas/types'
-import type { Producto } from '@/features/catalogo/types'
+import { listarMesas, type Mesa } from '@/features/mesas'
+import { listarProductos, type Producto } from '@/features/catalogo'
 import {
   listarPedidos,
   obtenerPedido,
@@ -94,6 +92,14 @@ export function useCrearPedido(onCreated?: (codigo: string) => void) {
       queryClient.invalidateQueries({ queryKey: ['cuentas'] })
       onCreated?.(codigo)
     },
-    onError: (e: unknown) => toast.error(errMsg(e, 'Error al crear pedido')),
+    onError: (e: unknown) => {
+      toast.error(errMsg(e, 'Error al crear pedido'))
+      // La creación es secuencial (pedido → ítems → confirmar): si falla a mitad
+      // de camino el borrador ya existe y la mesa puede estar ocupada, así que
+      // hay que reflejar el estado real en las listas.
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] })
+      queryClient.invalidateQueries({ queryKey: ['mesas'] })
+      queryClient.invalidateQueries({ queryKey: ['cuentas'] })
+    },
   })
 }

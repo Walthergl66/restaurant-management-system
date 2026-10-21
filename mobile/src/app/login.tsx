@@ -13,25 +13,28 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  useWindowDimensions,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { useAuth } from '../features/auth/AuthContext';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
-import { ApiError } from '../core/api/apiError';
+import { colors } from '@/theme/colors';
+import { useAuth } from '@/features/auth';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { ApiError } from '@/shared/api/apiError';
 import logo from '../../public/Estacion-Burger-Logo.png';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
-  const [viewport, setViewport] = useState({ width, height });
-  // Usa la vista disponible dentro del área segura, también en modales de iOS.
-  const compact = viewport.height < 740;
-  const logoHeight = Math.min(compact ? 100 : 130, (viewport.width - 40) * 937 / 1678);
+  // Dimensiones de PANTALLA fijadas una sola vez (no de ventana): en Android
+  // la ventana se encoge al abrir el teclado y, con useWindowDimensions, eso
+  // re-renderizaba el formulario y hacía rebotar el foco entre email y
+  // contraseña. La pantalla no cambia con el teclado, y congelarla con el
+  // inicializador de useState evita todo re-render durante la escritura.
+  const [{ width, height }] = useState(() => Dimensions.get('screen'));
+  const compact = height < 740;
+  const logoHeight = Math.min(compact ? 100 : 130, (width - 40) * 937 / 1678);
   const logoWidth = logoHeight * 1678 / 937;
   const { login } = useAuth();
 
@@ -69,24 +72,15 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'right', 'bottom', 'left']}>
+    <SafeAreaView style={styles.container} edges={['top', 'right', 'left']}>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      onLayout={({ nativeEvent: { layout } }) => {
-        setViewport(previous => previous.width === layout.width && previous.height === layout.height
-          ? previous
-          : { width: layout.width, height: layout.height });
-      }}
     >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        contentInsetAdjustmentBehavior="never"
-        automaticallyAdjustContentInsets={false}
-        automaticallyAdjustKeyboardInsets={false}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
       >
         <View style={styles.content}>
         <View style={[styles.header, compact && styles.headerCompact]}>

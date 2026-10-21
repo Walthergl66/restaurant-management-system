@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import tools.jackson.databind.JsonNode;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,20 +55,36 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
             String productoId = objectMapper.readTree(producto.getResponse().getContentAsString())
                     .path("id").asText();
 
-            mockMvc.perform(get("/api/v1/menu"))
+            MvcResult menu = mockMvc.perform(get("/api/v1/menu"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.categorias[0].nombre").value("Platos fuertes"))
-                    .andExpect(jsonPath("$.categorias[0].productos[0].nombre").value("HamburguesaDoble"))
-                    .andExpect(jsonPath("$.categorias[0].productos[0].precio").value(12.50))
-                    .andExpect(jsonPath("$.categorias[0].productos[0].ingredientes[0]").value("cebolla"));
+                    .andReturn();
+            JsonNode platos = platosDe("Platos fuertes", menu);
+            assertEquals(1, platos.size());
+            assertEquals("HamburguesaDoble", platos.get(0).path("nombre").asText());
+            assertEquals(12.50, platos.get(0).path("precio").asDouble());
+            assertEquals("Cebolla", platos.get(0).path("ingredientes").get(0).asText());
 
             mockMvc.perform(delete("/api/v1/productos/" + productoId)
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isNoContent());
 
-            mockMvc.perform(get("/api/v1/menu"))
+            MvcResult menuTrasBorrar = mockMvc.perform(get("/api/v1/menu"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.categorias[0].productos").isEmpty());
+                    .andReturn();
+            assertTrue(platosDe("Platos fuertes", menuTrasBorrar).isEmpty());
+        }
+
+        /** Productos publicados de una categoría del menú, sin depender del orden
+         *  de categorías (la BD Testcontainers es compartida entre clases). */
+        private JsonNode platosDe(String nombre, MvcResult menu) throws Exception {
+            JsonNode categorias = objectMapper.readTree(menu.getResponse().getContentAsString())
+                    .path("categorias");
+            for (var categoria : categorias) {
+                if (nombre.equals(categoria.path("nombre").asText())) {
+                    return categoria.path("productos");
+                }
+            }
+            throw new AssertionError("Categoría '" + nombre + "' no está en el menú");
         }
     }
 
@@ -139,7 +158,7 @@ class CatalogoIntegrationTest extends AbstractIntegracionApi {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.precio").value(6.00))
                     .andExpect(jsonPath("$.extras[0].nombre").value("Tocino"))
-                    .andExpect(jsonPath("$.ingredientes[0]").value("sal"));
+                    .andExpect(jsonPath("$.ingredientes[0]").value("Sal"));
         }
 
         @Test

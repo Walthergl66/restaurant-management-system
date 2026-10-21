@@ -4,8 +4,8 @@
 
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
-import { useCart } from '../../features/carrito/CartContext';
+import { colors } from '@/theme/colors';
+import { useCart } from '@/features/carrito';
 import { View, Text, StyleSheet } from 'react-native';
 
 function TabBarBadge({ count }: { count: number }) {

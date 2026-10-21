@@ -41,6 +41,8 @@ public final class PermisoCodigo {
     public static final String PEDIDOS_CONFIRMAR = "pedidos:confirmar";
     public static final String PEDIDOS_ESTADO_PREPARACION = "pedidos:estado-preparacion";
     public static final String PEDIDOS_ESTADO_LISTO = "pedidos:estado-listo";
+    public static final String PEDIDOS_ENTREGAR = "pedidos:entregar";
+    public static final String PEDIDOS_RETIRO_MOSTRADOR = "pedidos:retiro-mostrador";
 
     // comandas
     public static final String COMANDAS_VER = "comandas:ver";

@@ -1,6 +1,6 @@
 'use client'
 import { Bell } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/features/auth'
 import { getGreeting, getTurno } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -34,10 +34,6 @@ export default function TopBar() {
         aria-label="Notificaciones"
       >
         <Bell size={17} color="var(--muted)" />
-        <span style={{
-          position: 'absolute', top: 7, right: 7, width: 8, height: 8,
-          borderRadius: '50%', background: 'var(--fuchsia)',
-        }} />
       </button>
     </header>
   )

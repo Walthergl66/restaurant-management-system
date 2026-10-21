@@ -30,15 +30,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
 
+    /** Numerador de mesas propio del test: evita colisiones de `numero`
+     *  con otras clases que comparten el mismo contenedor de PostgreSQL.
+     *  La base (300000) queda fuera de los rangos que usan las demas clases
+     *  (10000 en Pedidos, 20000 en Comandas). */
+    private static final java.util.concurrent.atomic.AtomicInteger MESA_SECUENCIA =
+            new java.util.concurrent.atomic.AtomicInteger(300000);
+
     private String administradorToken;
     private String meseroToken;
-    private String cajeroToken;
+    private String gestorToken;
 
     @BeforeEach
     void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        cajeroToken = asegurarUsuario("cajero_test", "CAJERO", "clave789");
+        gestorToken = asegurarUsuario("gestor_test", "ADMIN", "clave789");
     }
 
     @Test
@@ -126,7 +133,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
         long anulacionId = objectMapper.readTree(solicitud.getResponse().getContentAsString()).path("id").asLong();
 
         mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/rechazar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("RECHAZADA"));
 
@@ -181,7 +188,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
 
         // La primera sigue siendo aprobable y descuenta lo suyo.
         mockMvc.perform(patch("/api/v1/anulaciones/" + primeraId + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("APROBADA"));
 
@@ -203,7 +210,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
         // Al aprobar la segunda el total llega a 0.00 exactos: el máximo
         // anulable es lo pedido, y la cuenta nunca queda negativa.
         mockMvc.perform(patch("/api/v1/anulaciones/" + segundaId + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("APROBADA"));
 
@@ -213,7 +220,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
     }
 
     /**
-     * Regresión del RNF-16 bajo concurrencia: dos cajeros aprueban al mismo
+     * Regresión del RNF-16 bajo concurrencia: dos gestores aprueban al mismo
      * tiempo dos solicitudes sobre la misma línea. Con el saldo leído sin
      * bloqueo, ambos leen lo mismo y los dos aprueban, con lo que la cuenta
      * queda descuenciada por encima de lo pedido.
@@ -299,9 +306,9 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
 
         int[] estados = enParalelo(
                 () -> mockMvc.perform(patch("/api/v1/anulaciones/" + idA + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken)),
+                        .header("Authorization", "Bearer " + gestorToken)),
                 () -> mockMvc.perform(patch("/api/v1/anulaciones/" + idB + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken)));
+                        .header("Authorization", "Bearer " + gestorToken)));
 
         assertEquals(200, estados[0], "Aprobación A: " + estados[0]);
         assertEquals(200, estados[1], "Aprobación B: " + estados[1]);
@@ -349,7 +356,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
     private int aprobarEnParalelo(long anulacionId, CountDownLatch arranque) throws Exception {
         arranque.await(10, TimeUnit.SECONDS);
         return mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andReturn().getResponse().getStatus();
     }
 
@@ -386,12 +393,12 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
         String adicion = crearAdicion(cuentaId);
         postItem(adicion, productoId, 1);
         mockMvc.perform(patch("/api/v1/cuentas/" + cuentaId + "/cerrar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isUnprocessableEntity());
 
         confirmar(adicion);
         mockMvc.perform(patch("/api/v1/cuentas/" + cuentaId + "/cerrar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("CERRADA"))
                 .andExpect(jsonPath("$.total").value(5.00));
@@ -469,7 +476,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
 
         // Cerrar la cuenta permite iniciar una nueva agrupación de consumo.
         mockMvc.perform(patch("/api/v1/cuentas/" + cuenta1 + "/cerrar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("CERRADA"));
 
@@ -578,7 +585,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
 
     private void aprobarAnulacionDesdeMesa(String codigo, long lineaId) throws Exception {
         String lista = mockMvc.perform(get("/api/v1/anulaciones?pedidoCodigo=" + codigo)
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         long anulacionId = -1;
@@ -592,7 +599,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
             throw new AssertionError("No hay anulación solicitada para la línea: " + lineaId);
         }
         mockMvc.perform(patch("/api/v1/anulaciones/" + anulacionId + "/aprobar")
-                        .header("Authorization", "Bearer " + cajeroToken))
+                        .header("Authorization", "Bearer " + gestorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("APROBADA"));
     }
@@ -635,7 +642,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (1000 + System.nanoTime() % 5000))))
+                                """.formatted(MESA_SECUENCIA.incrementAndGet())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();

@@ -13,9 +13,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import type { ProductoMenu } from '../features/menu/types';
-import { useCart } from '../features/carrito/CartContext';
+import { colors } from '@/theme/colors';
+import type { ProductoMenu } from '@/features/menu';
+import { useCart } from '@/features/carrito';
 
 const CARD_WIDTH = 160;
 

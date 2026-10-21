@@ -1,18 +1,26 @@
 'use client'
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, Shield } from 'lucide-react'
-import { useUsuarios, useRoles, useEliminarUsuario } from '../hooks'
+import { Plus, Pencil, Trash2, Shield, UserCheck, UserX } from 'lucide-react'
+import { useUsuarios, useRoles, useEliminarUsuario, useCambiarEstadoUsuario } from '../hooks'
 import type { UsuarioAdminResponse } from '../types'
 import UsuarioModal from './UsuarioModal'
+import ConfirmDialog from '@/shared/ui/ConfirmDialog'
+
+type Confirmacion = { u: UsuarioAdminResponse; tipo: 'estado' | 'eliminar' }
 
 export default function UsuariosScreen() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing]   = useState<UsuarioAdminResponse | null>(null)
   const [tab, setTab]           = useState<'usuarios' | 'roles'>('usuarios')
+  const [filtroRol, setFiltroRol] = useState('TODOS')
+  const [confirma, setConfirma] = useState<Confirmacion | null>(null)
 
   const { data: usuarios = [], isLoading } = useUsuarios()
   const { data: roles = [] } = useRoles()
   const eliminar = useEliminarUsuario()
+  const cambiarEstado = useCambiarEstadoUsuario()
+
+  const usuariosVisibles = usuarios.filter(u => filtroRol === 'TODOS' || u.rol === filtroRol)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -35,16 +43,28 @@ export default function UsuariosScreen() {
       </div>
 
       {tab === 'usuarios' ? (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <>
+          <div className="filter-row">
+            <select className="input filter-select" value={filtroRol} onChange={e => setFiltroRol(e.target.value)} aria-label="Filtrar por rol">
+              <option value="TODOS">Todos los roles</option>
+              {roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
+            </select>
+            {filtroRol !== 'TODOS' && (
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>{usuariosVisibles.length} usuario(s) con rol {filtroRol}</span>
+            )}
+          </div>
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           {isLoading
             ? <p style={{ padding: 32, textAlign: 'center', color: 'var(--dim)' }}>Cargando…</p>
-            : (
+            : usuariosVisibles.length === 0
+              ? <p style={{ padding: 32, textAlign: 'center', color: 'var(--dim)' }}>No hay usuarios con ese rol.</p>
+              : (
               <table className="tbl">
                 <thead>
                   <tr>{['Usuario', 'Nombre', 'Rol', 'Estado', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
-                  {usuarios.map(u => (
+                  {usuariosVisibles.map(u => (
                     <tr key={u.id}>
                       <td style={{ fontWeight: 700, color: 'var(--yellow)' }}>{u.username}</td>
                       <td style={{ textTransform: 'uppercase' }}>{u.nombre}</td>
@@ -56,8 +76,25 @@ export default function UsuariosScreen() {
                       <td><span className={`badge ${u.activo ? 'badge-abierta' : 'badge-cerrada'}`}>{u.activo ? 'Activo' : 'Inactivo'}</span></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <button className="btn-ghost" style={{ padding: '6px 8px' }} onClick={() => { setEditing(u); setShowForm(true) }}><Pencil size={13} /></button>
-                          <button className="btn-ghost" style={{ padding: '6px 8px', color: 'var(--error)' }} onClick={() => { if (confirm(`¿Desactivar a "${u.username}"?`)) eliminar.mutate(u.id) }}><Trash2 size={13} /></button>
+                          <button className="btn-ghost" style={{ padding: '6px 8px' }} title="Editar" onClick={() => { setEditing(u); setShowForm(true) }}><Pencil size={13} /></button>
+                          <button
+                            className="btn-ghost"
+                            style={{ padding: '6px 8px' }}
+                            title={u.activo ? 'Desactivar' : 'Activar'}
+                            disabled={cambiarEstado.isPending}
+                            onClick={() => setConfirma({ u, tipo: 'estado' })}
+                          >
+                            {u.activo ? <UserX size={13} /> : <UserCheck size={13} />}
+                          </button>
+                          <button
+                            className="btn-ghost"
+                            style={{ padding: '6px 8px', color: 'var(--error)' }}
+                            title="Eliminar definitivamente"
+                            disabled={eliminar.isPending}
+                            onClick={() => setConfirma({ u, tipo: 'eliminar' })}
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -66,7 +103,8 @@ export default function UsuariosScreen() {
               </table>
             )
           }
-        </div>
+          </div>
+        </>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
           {roles.map(r => (
@@ -90,6 +128,32 @@ export default function UsuariosScreen() {
       )}
 
       {showForm && <UsuarioModal editing={editing} roles={roles} onClose={() => setShowForm(false)} />}
+
+      {confirma?.tipo === 'estado' && (
+        <ConfirmDialog
+          title={`${confirma.u.activo ? 'Desactivar' : 'Activar'} usuario`}
+          message={`¿${confirma.u.activo ? 'Desactivar' : 'Activar'} a "${confirma.u.username}"? Se cerrarán todas sus sesiones activas.`}
+          confirmText={confirma.u.activo ? 'Desactivar' : 'Activar'}
+          variant={confirma.u.activo ? 'danger' : 'primary'}
+          pending={cambiarEstado.isPending}
+          onConfirm={() => cambiarEstado.mutate(
+            { id: confirma.u.id, activo: !confirma.u.activo },
+            { onSuccess: () => setConfirma(null) },
+          )}
+          onClose={() => setConfirma(null)}
+        />
+      )}
+
+      {confirma?.tipo === 'eliminar' && (
+        <ConfirmDialog
+          title="Eliminar usuario"
+          message={`¿Eliminar definitivamente a "${confirma.u.username}"? Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          pending={eliminar.isPending}
+          onConfirm={() => eliminar.mutate(confirma.u.id, { onSuccess: () => setConfirma(null) })}
+          onClose={() => setConfirma(null)}
+        />
+      )}
     </div>
   )
 }

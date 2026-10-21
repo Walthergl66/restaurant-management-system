@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,6 +28,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
     private String meseroToken;
     private String administradorToken;
+    private static final AtomicInteger MESA_BASE = new AtomicInteger(10000);
 
     @BeforeEach
     void preparar() {
@@ -42,7 +44,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
         String codigo = crearBorrador(mesaId);
 
-        postItem(codigo, productoId, 2, extraId, "sin sal", "poco hecha");
+        postItem(codigo, productoId, 2, extraId, "Cebolla", "poco hecha");
 
         MvcResult resumen = getPedido(codigo);
         JsonNode lineas = objectMapper.readTree(resumen.getResponse().getContentAsString()).path("lineas");
@@ -54,7 +56,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
         assertEquals(2, linea.path("cantidad").asInt());
         // (12.50 * 2) + (1.50 * 2)
         assertEquals(0, new BigDecimal("28.00").compareTo(linea.path("subtotal").decimalValue()));
-        assertTrue(linea.path("ingredientesRemovidos").toString().contains("sin sal"));
+        assertTrue(linea.path("ingredientesRemovidos").toString().contains("cebolla"));
         assertEquals(1, linea.path("extras").size());
         assertEquals("Extra Queso", linea.path("extras").get(0).path("nombre").asText());
         assertEquals(0, new BigDecimal("28.00").compareTo(
@@ -188,8 +190,8 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                                 """.formatted(mesaId)))
                 .andExpect(status().isUnauthorized());
 
-        // Cocinero sin permiso de crear → 403
-        String cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
+        // Empleado sin permiso de crear → 403 (el admin no le habilitó pedidos:crear)
+        String cocineroToken = tokenMeseroConPermisos("cocina_test_" + System.nanoTime(), "comandas:ver", "pedidos:estado-preparacion");
         mockMvc.perform(post("/api/v1/pedidos")
                         .header("Authorization", "Bearer " + cocineroToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -260,7 +262,8 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
         // La cocina avanza el pedido; el reintento con la MISMA llave sigue
         // siendo idempotente (RNF-17) y una llave distinta es conflicto.
-        String cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
+        String cocineroToken = tokenMeseroConPermisos("cocina_avanza_" + System.nanoTime(),
+                "comandas:ver", "pedidos:estado-preparacion", "pedidos:estado-listo");
         String body = mockMvc.perform(get("/api/v1/comandas")
                         .header("Authorization", "Bearer " + cocineroToken))
                 .andExpect(status().isOk())
@@ -373,7 +376,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (1000 + System.nanoTime() % 5000))))
+                                """.formatted(MESA_BASE.addAndGet(1))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
@@ -401,25 +404,5 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
-    }
-
-    private String asegurarUsuario(String username, String rol, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + administradorToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"%s"}
-                                    """.formatted(username, username, password, rol)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar el usuario " + username, e);
-        }
-        return loginToken(username, password);
     }
 }

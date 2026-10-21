@@ -11,9 +11,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import type { CartItem } from '../features/carrito/types';
-import { useCart } from '../features/carrito/CartContext';
+import { colors } from '@/theme/colors';
+import type { CartItem } from '@/features/carrito';
+import { useCart } from '@/features/carrito';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -50,7 +50,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
             {item.producto.nombre}
           </Text>
           <TouchableOpacity
-            onPress={() => removeItem(item.producto.id, item.extras)}
+            onPress={() => removeItem(item.producto.id, item.extras, item.ingredientesRemovidos)}
             style={styles.removeButton}
           >
             <Ionicons name="trash-outline" size={18} color={colors.error} />
@@ -63,11 +63,13 @@ export function CartItemRow({ item }: CartItemRowProps) {
           </Text>
         )}
 
+        {!!item.ingredientesRemovidos.length && <Text style={styles.extras}>Sin: {item.ingredientesRemovidos.join(', ')}</Text>}
+
         <View style={styles.footer}>
           <View style={styles.quantityControls}>
             <TouchableOpacity
               onPress={() =>
-                updateQuantity(item.producto.id, item.extras, item.cantidad - 1)
+                updateQuantity(item.producto.id, item.extras, item.cantidad - 1, item.ingredientesRemovidos)
               }
               style={styles.qtyButton}
             >
@@ -76,7 +78,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
             <Text style={styles.quantity}>{item.cantidad}</Text>
             <TouchableOpacity
               onPress={() =>
-                updateQuantity(item.producto.id, item.extras, item.cantidad + 1)
+                updateQuantity(item.producto.id, item.extras, item.cantidad + 1, item.ingredientesRemovidos)
               }
               style={styles.qtyButton}
             >
