@@ -7,25 +7,30 @@ import type { RolDto, UsuarioAdminResponse } from '../types'
 export default function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminResponse | null; roles: RolDto[]; onClose: () => void }) {
   const { data: taxonomia } = useTaxonomiaRoles()
 
-  /* El panel solo asigna los roles marcados como asignables (lo decide la
+  /* El panel solo ofrece los roles marcados como asignables (lo decide la
    * base de datos: ADMIN es una cuenta única y CLIENTE/DELIVERY nacen por
-   * auto-registro). Al editar, el rol actual del usuario siempre está
-   * disponible aunque no sea asignable: es su rol y no se le puede quitar. */
-  const rolesSeleccionables = roles.filter(r => r.asignablePorAdmin || r.codigo === editing?.rol)
-  const codigosSeleccionables = new Set(rolesSeleccionables.map(r => r.codigo))
+   * auto-registro). Los asignables son los subroles de la categoría
+   * EMPLEADO: el admin elige entre ellos al crear el usuario. */
+  const rolesAsignables = roles.filter(r => r.asignablePorAdmin)
 
-  /* Los roles se muestran agrupados por categoría (administración, personal
-   * interno, clientes, repartidores). */
-  const categoriasConRoles = (taxonomia?.categorias ?? [])
-    .map(c => ({ ...c, roles: c.roles.filter(r => codigosSeleccionables.has(r.codigo)) }))
-    .filter(c => c.roles.length > 0)
+  /* Al editar, el rol actual del usuario se muestra aunque no sea asignable:
+   * es su rol y no se le puede quitar (queda bloqueado y visible). */
+  const rolEnEdicion = editing ? roles.find(r => r.codigo === editing.rol) : undefined
+  const rolBloqueado = rolEnEdicion && !rolEnEdicion.asignablePorAdmin ? rolEnEdicion : undefined
+
+  /* Categoría de los roles asignables: la que decide la base de datos
+   * (EMPLEADO, con los subroles mesero y cajero). */
+  const categoriaAsignables = taxonomia?.categorias.find(c =>
+    c.roles.some(r => rolesAsignables.some(a => a.codigo === r.codigo)))
 
   const [username, setUsername] = useState(editing?.username ?? '')
   const [nombre,   setNombre]   = useState(editing?.nombre ?? '')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [activo,   setActivo]   = useState(editing?.activo ?? true)
-  const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? rolesSeleccionables[0]?.codigo ?? '')
+  /* Al crear, el rol arranca sin elegir: el admin escoge explícitamente
+   * entre los asignables (mesero o cajero). Al editar, el rol actual. */
+  const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? '')
 
   const { data: permisosCatalogo = [] } = usePermisos()
 
@@ -136,16 +141,36 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
             </div>
           ))}
           <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>ROL</label>
-            <select value={rolCodigo} onChange={e => cambiarRol(e.target.value)} className="input">
-              {categoriasConRoles.length > 0
-                ? categoriasConRoles.map(categoria => (
-                    <optgroup key={categoria.codigo} label={categoria.descripcion}>
-                      {categoria.roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
-                    </optgroup>
-                  ))
-                : rolesSeleccionables.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
-            </select>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>
+              ROL DEL USUARIO
+            </label>
+            <div role="radiogroup" aria-label="Rol del usuario" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {categoriaAsignables && (
+                <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--yellow)' }}>
+                  {categoriaAsignables.descripcion}
+                </p>
+              )}
+              {rolBloqueado && (
+                <TarjetaRol
+                  rol={rolBloqueado}
+                  seleccionado={rolCodigo === rolBloqueado.codigo}
+                  bloqueado
+                  nota="Rol actual: no se asigna desde el panel"
+                  onSelect={() => cambiarRol(rolBloqueado.codigo)}
+                />
+              )}
+              {rolesAsignables.map(r => (
+                <TarjetaRol
+                  key={r.id}
+                  rol={r}
+                  seleccionado={rolCodigo === r.codigo}
+                  onSelect={() => cambiarRol(r.codigo)}
+                />
+              ))}
+            </div>
+            {!rolCodigo && (
+              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>Elige el rol del usuario para poder guardarlo.</p>
+            )}
           </div>
           {editing && (
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--muted)', cursor: 'pointer' }}>
@@ -183,7 +208,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={guardar} disabled={isPending || !nombre || (!editing && !username) || (muestraChecklist && permisos.length === 0)}>
+          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={guardar} disabled={isPending || !nombre || !rolCodigo || (!editing && !username) || (muestraChecklist && permisos.length === 0)}>
             <Check size={14} /> {isPending ? 'Guardando…' : 'Guardar'}
           </button>
           <button className="btn-ghost" onClick={onClose}>Cancelar</button>
@@ -191,4 +216,48 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
       </div>
     </div>
   )
+}
+
+/** Tarjeta de un rol: la opción que el admin puede escoger (mesero o cajero).
+ *  Muestra el nombre del rol, su descripción y cuántas functionalities trae. */
+function TarjetaRol({ rol, seleccionado, bloqueado = false, nota, onSelect }: {
+  rol: RolDto
+  seleccionado: boolean
+  bloqueado?: boolean
+  nota?: string
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={seleccionado}
+      disabled={bloqueado}
+      onClick={onSelect}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+        padding: '10px 12px', borderRadius: 12, cursor: bloqueado ? 'default' : 'pointer',
+        border: `1px solid ${seleccionado ? 'var(--yellow)' : 'var(--border)'}`,
+        background: seleccionado ? 'rgba(245,166,35,.10)' : 'var(--surface-2)',
+        color: 'var(--text)', opacity: bloqueado ? .75 : 1,
+      }}
+    >
+      <span style={{
+        width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+        border: `2px solid ${seleccionado ? 'var(--yellow)' : 'var(--border)'}`,
+        background: seleccionado ? 'var(--yellow)' : 'transparent',
+      }} />
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontWeight: 700, fontSize: 13 }}>{etiquetaRol(rol.codigo)}</span>
+        <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>{rol.descripcion}</span>
+        {nota && <span style={{ display: 'block', fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{nota}</span>}
+      </span>
+      <span style={{ fontSize: 10, color: 'var(--muted)', flexShrink: 0 }}>{rol.permisos.length} func.</span>
+    </button>
+  )
+}
+
+/** "MESERO" -> "Mesero" */
+function etiquetaRol(codigo: string) {
+  return codigo.charAt(0) + codigo.slice(1).toLowerCase()
 }
