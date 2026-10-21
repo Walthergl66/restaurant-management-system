@@ -2,13 +2,17 @@
  * Estación Burger — Input con estilo neón
  */
 
-import React, { useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   TextInput,
   Text,
   StyleSheet,
   TextInputProps,
+  StyleProp,
+  TextStyle,
+  FocusEvent,
+  BlurEvent,
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +26,91 @@ interface InputProps extends TextInputProps {
   compact?: boolean;
 }
 
+/**
+ * Campo de texto memoizado.
+ *
+ * Se separa del contenedor para que el re-render del BORDE (al ganar/perder
+ * foco) NO alcance al <TextInput>. En Android, tocar el <TextInput> obliga a
+ * React Native a reconciliar el EditText nativo (ATTACH_NEW_INPUT) y eso
+ * hace perder pulsaciones y cerrar el teclado. Con el memo, el <TextInput>
+ * solo se re-renderiza cuando cambian sus props reales (value, placeholder,
+ * etc.), nunca por el estado de foco del contenedor.
+ *
+ * `onFocus`/`onBlur` NO forman parte de `inputProps`: se inyectan aparte y son
+ * estables (useCallback), de modo que un handler inline del padre no rompe el
+ * memo.
+ */
+interface InputFieldProps {
+  compact: boolean;
+  inputStyle?: StyleProp<TextStyle>;
+  isPassword: boolean;
+  showPassword: boolean;
+  onTogglePassword: () => void;
+  onFocus: (e: FocusEvent) => void;
+  onBlur: (e: BlurEvent) => void;
+  inputProps: TextInputProps;
+}
+
+/** Comparación superficial de las props sueltas del <TextInput>. */
+function shallowEqualInputProps(a: TextInputProps, b: TextInputProps): boolean {
+  const aKeys = Object.keys(a) as (keyof TextInputProps)[];
+  const bKeys = Object.keys(b) as (keyof TextInputProps)[];
+  if (aKeys.length !== bKeys.length) return false;
+  for (const key of aKeys) {
+    if (!Object.is(a[key], b[key])) return false;
+  }
+  return true;
+}
+
+function areInputFieldPropsEqual(
+  prev: InputFieldProps,
+  next: InputFieldProps
+): boolean {
+  return (
+    prev.compact === next.compact &&
+    prev.inputStyle === next.inputStyle &&
+    prev.isPassword === next.isPassword &&
+    prev.showPassword === next.showPassword &&
+    prev.onTogglePassword === next.onTogglePassword &&
+    prev.onFocus === next.onFocus &&
+    prev.onBlur === next.onBlur &&
+    shallowEqualInputProps(prev.inputProps, next.inputProps)
+  );
+}
+
+const InputField = memo(function InputField({
+  compact,
+  inputStyle,
+  isPassword,
+  showPassword,
+  onTogglePassword,
+  onFocus,
+  onBlur,
+  inputProps,
+}: InputFieldProps) {
+  return (
+    <>
+      <TextInput
+        style={[styles.input, compact && styles.inputCompact, inputStyle]}
+        placeholderTextColor={colors.textMuted}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        secureTextEntry={isPassword && !showPassword}
+        {...inputProps}
+      />
+      {isPassword && (
+        <TouchableOpacity onPress={onTogglePassword} style={styles.eyeButton}>
+          <Ionicons
+            name={showPassword ? 'eye-off' : 'eye'}
+            size={20}
+            color={colors.textMuted}
+          />
+        </TouchableOpacity>
+      )}
+    </>
+  );
+}, areInputFieldPropsEqual);
+
 export function Input({
   label,
   error,
@@ -29,31 +118,43 @@ export function Input({
   isPassword,
   compact = false,
   style,
+  onFocus,
+  onBlur,
   ...props
 }: InputProps) {
+  const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // El resaltado de foco se aplica de forma IMPERATIVA sobre el contenedor,
-  // SIN setState. En Android, un setState en onFocus/onBlur re-renderizaba el
-  // Input en cada foco y reestablecía el EditText nativo (ATTACH_NEW_INPUT),
-  // lo que hacía perder pulsaciones y cerrar el teclado. Sin re-render, el
-  // foco nativo se mantiene estable y se puede escribir con normalidad.
-  const containerRef = useRef<View>(null);
+  // Handlers del padre guardados en un ref: llegan por props (y su identidad
+  // puede cambiar en cada render del padre) pero NO forman parte de las props
+  // del <TextInput> memoizado, así que no lo invalidan.
+  const externalHandlers = useRef({ onFocus, onBlur });
+  useEffect(() => {
+    externalHandlers.current = { onFocus, onBlur };
+  }, [onFocus, onBlur]);
 
-  const aplicarFoco = (activo: boolean) => {
-    containerRef.current?.setNativeProps({
-      style: activo ? styles.inputContainerFocused : styles.inputContainerBlurred,
-    });
-  };
+  const handleFocus = useCallback((e: FocusEvent) => {
+    setFocused(true);
+    externalHandlers.current.onFocus?.(e);
+  }, []);
+
+  const handleBlur = useCallback((e: BlurEvent) => {
+    setFocused(false);
+    externalHandlers.current.onBlur?.(e);
+  }, []);
+
+  const togglePassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
 
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
       {label && <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>}
       <View
-        ref={containerRef}
         style={[
           styles.inputContainer,
           compact && styles.inputContainerCompact,
+          focused && styles.inputContainerFocused,
           error && styles.inputContainerError,
         ]}
       >
@@ -61,30 +162,20 @@ export function Input({
           <Ionicons
             name={icon}
             size={20}
-            color={colors.textMuted}
+            color={focused ? colors.neonOrange : colors.textMuted}
             style={styles.icon}
           />
         )}
-        <TextInput
-          style={[styles.input, compact && styles.inputCompact, style]}
-          placeholderTextColor={colors.textMuted}
-          onFocus={(e) => { aplicarFoco(true); props.onFocus?.(e); }}
-          onBlur={(e) => { aplicarFoco(false); props.onBlur?.(e); }}
-          secureTextEntry={isPassword && !showPassword}
-          {...props}
+        <InputField
+          compact={compact}
+          inputStyle={style}
+          isPassword={isPassword ?? false}
+          showPassword={showPassword}
+          onTogglePassword={togglePassword}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          inputProps={props}
         />
-        {isPassword && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.eyeButton}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={20}
-              color={colors.textMuted}
-            />
-          </TouchableOpacity>
-        )}
       </View>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -136,13 +227,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
-  },
-  // Estado base del borde (sin foco): permite revertir el resaltado aplicado
-  // imperativamente en onBlur sin recurrir a setState.
-  inputContainerBlurred: {
-    borderColor: colors.surfaceBorder,
-    shadowOpacity: 0,
-    elevation: 0,
   },
   inputContainerError: {
     borderColor: colors.error,
