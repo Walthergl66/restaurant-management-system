@@ -40,7 +40,10 @@ export default function RegistroScreen() {
   // la ventana se encoge al abrir el teclado y, con useWindowDimensions, el
   // re-render hacía rebotar el foco entre campos. La pantalla es estable.
   const [{ width, height, fontScale }] = useState(() => Dimensions.get('screen'));
-  const shortScreen = height - insets.top - insets.bottom < 680;
+  // El inset inferior puede cambiar al abrir el teclado en Android. No debe
+  // alterar la estructura del formulario: eso desmontaría los TextInput con
+  // foco y provocaría que el teclado se cerrara/rebotara entre campos.
+  const shortScreen = height - insets.top < 680;
   const pairedFields = width >= 360 && fontScale <= 1.2;
   const { registro } = useAuth();
 
@@ -121,7 +124,7 @@ export default function RegistroScreen() {
           { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8 },
         ]}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
+        keyboardDismissMode="none"
       >
         <View style={styles.content}>
         <View style={styles.header}>
@@ -135,11 +138,11 @@ export default function RegistroScreen() {
           <Text style={styles.title}>CREAR CUENTA</Text>
         </View>
 
-        {!shortScreen && <View style={styles.intro}>
+        <View style={[styles.intro, shortScreen && styles.introHidden]}>
           <Text style={styles.subtitle}>
             Regístrate para pedir y seguir tus pedidos
           </Text>
-        </View>}
+        </View>
 
         <View style={styles.form}>
           <Input
@@ -280,6 +283,9 @@ const styles = StyleSheet.create({
   },
   intro: {
     marginBottom: 12,
+  },
+  introHidden: {
+    display: 'none',
   },
   title: {
     color: colors.neonOrange,
