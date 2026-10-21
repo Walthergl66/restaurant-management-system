@@ -121,7 +121,7 @@ class UsuarioGestionIntegrationTest extends AbstractIntegrationTest {
         String meseroUsername = "mesero_perm_" + uid;
         Long meseroId = crearUsuario(meseroUsername, "MESERO");
         String victimaUsername = "victima_" + uid;
-        Long victimaId = crearUsuario(victimaUsername, "DELIVERY");
+        Long victimaId = crearUsuario(victimaUsername, "CAJERO");
         String meseroToken = loginToken(meseroUsername, "clave123");
 
         mockMvc.perform(delete("/api/v1/usuarios/{id}", victimaId)
