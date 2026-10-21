@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -51,6 +52,8 @@ public class UsuarioService implements Usuarios {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.restaurante.auditoria.application.AuditoriaService auditoriaService;
+    private final tools.jackson.databind.ObjectMapper objectMapper;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           RolRepository rolRepository,
@@ -58,7 +61,9 @@ public class UsuarioService implements Usuarios {
                           PermisoRepository permisoRepository,
                           RefreshTokenRepository refreshTokenRepository,
                           PasswordEncoder passwordEncoder,
-                          ApplicationEventPublisher eventPublisher) {
+                          ApplicationEventPublisher eventPublisher,
+                          com.restaurante.auditoria.application.AuditoriaService auditoriaService,
+                          tools.jackson.databind.ObjectMapper objectMapper) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.categoriaRolRepository = categoriaRolRepository;
@@ -66,6 +71,8 @@ public class UsuarioService implements Usuarios {
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.auditoriaService = auditoriaService;
+        this.objectMapper = objectMapper;
     }
 
     public UsuarioAdminResponse crear(CrearUsuarioRequest request) {
@@ -91,7 +98,13 @@ public class UsuarioService implements Usuarios {
             }
             usuario.asignarPermisosExplicitos(resolverPermisos(request.permisos()));
         }
-        return UsuarioAdminResponse.from(usuarioRepository.save(usuario));
+        Usuario guardado = usuarioRepository.save(usuario);
+        try {
+            auditoriaService.registrar(usuarioActual(), "USUARIO_CREADO", "USUARIO",
+                    guardado.getUsername(), json(Map.of("rol", rol.getCodigo(), "nombre", guardado.getNombre())), "USUARIOS");
+        } catch (Exception ignored) {
+        }
+        return UsuarioAdminResponse.from(guardado);
     }
 
     /**
@@ -258,9 +271,15 @@ public class UsuarioService implements Usuarios {
     public void eliminar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        String username = usuario.getUsername();
         try {
             usuarioRepository.delete(usuario);
             usuarioRepository.flush();
+            try {
+                auditoriaService.registrar(usuarioActual(), "USUARIO_ELIMINADO", "USUARIO",
+                        username, "{\"accion\":\"ELIMINADO_DEFINITIVO\"}", "USUARIOS");
+            } catch (Exception ignored) {
+            }
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("No se puede eliminar al usuario: tiene un perfil de cliente asociado");
         }
@@ -379,6 +398,28 @@ public class UsuarioService implements Usuarios {
                 u.getNombre(),
                 u.getRol() != null ? u.getRol().getCodigo() : null,
                 u.isActivo());
+    }
+
+    private String usuarioActual() {
+        try {
+            org.springframework.security.core.Authentication auth =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getPrincipal() == null
+                    || "anonymousUser".equals(auth.getPrincipal()) || "sistema".equals(auth.getPrincipal())) {
+                return "sistema";
+            }
+            return auth.getName();
+        } catch (Exception e) {
+            return "sistema";
+        }
+    }
+
+    private String json(Map<String, String> datos) {
+        try {
+            return objectMapper.writeValueAsString(datos);
+        } catch (Exception e) {
+            return "{\"detalle\":\"no serializable\"}";
+        }
     }
 
     private String normalizarUsername(String username) {
