@@ -29,6 +29,9 @@ build/
 # --- Test results ---
 *.trx
 
+# Archivos locales generados por Playwright MCP (capturas y snapshots)
+/.playwright-mcp/
+
 # Backups locales (no se versionan)
 database/backups/
 
