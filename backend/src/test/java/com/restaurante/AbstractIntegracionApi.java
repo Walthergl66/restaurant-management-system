@@ -1,8 +1,14 @@
 package com.restaurante;
 
+import com.restaurante.usuarios.domain.Rol;
+import com.restaurante.usuarios.domain.RolCodigo;
+import com.restaurante.usuarios.domain.Usuario;
+import com.restaurante.usuarios.infrastructure.RolRepository;
+import com.restaurante.usuarios.infrastructure.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
@@ -25,6 +31,32 @@ public abstract class AbstractIntegracionApi extends AbstractIntegrationTest {
 
     @Autowired
     protected ObjectMapper objectMapper;
+
+    @Autowired
+    protected UsuarioRepository usuarioRepository;
+
+    @Autowired
+    protected RolRepository rolRepository;
+
+    @Autowired
+    protected PasswordEncoder passwordEncoder;
+
+    /**
+     * Crea un cliente como fixture de la prueba y devuelve su token.
+     *
+     * <p>El panel no puede crear usuarios CLIENTE: nacen por auto-registro en
+     * la app móvil. El test los crea directo contra el repositorio porque lo
+     * que se prueba aquí es el flujo del cliente, no el alta desde el panel.
+     */
+    protected String tokenCliente(String username, String password) {
+        if (!usuarioRepository.existsByUsername(username)) {
+            Rol rol = rolRepository.findByCodigo(RolCodigo.CLIENTE)
+                    .orElseThrow(() -> new IllegalStateException("No existe el rol CLIENTE"));
+            usuarioRepository.save(new Usuario(
+                    username, passwordEncoder.encode(password), username, rol));
+        }
+        return loginToken(username, password);
+    }
 
     protected String tokenAdmin() {
         return loginToken("admin", "admin123");
