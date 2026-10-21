@@ -6,7 +6,6 @@
 .classpath
 .project
 .DS_Store
-.playwright-mcp 
 
 # --- Entorno / secretos ---
 .env
@@ -30,6 +29,9 @@ build/
 # --- Test results ---
 *.trx
 
+# Archivos locales generados por Playwright MCP (capturas y snapshots)
+/.playwright-mcp/
+
 # Backups locales (no se versionan)
 database/backups/
 
@@ -39,4 +41,4 @@ PLAN_BACKEND_RESTAURANT.md
 *plan-backend-restaurante*.md
 plan-produccion.md
 
-.kiro
+.kiro/
