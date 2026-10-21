@@ -7,6 +7,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.util.LinkedHashSet;
@@ -14,6 +15,18 @@ import java.util.Set;
 
 /**
  * Rol de acceso. Agrupa permisos que se conceden a los usuarios.
+ *
+ * <p>Cada rol pertenece a una {@link CategoriaRol} (ADMIN, EMPLEADO,
+ * CLIENTE o DELIVERY) y lleva dos banderas que gobiernan qué puede hacer el
+ * administrador con él:
+ * <ul>
+ *   <li>{@code asignablePorAdmin}: si es {@code false}, el panel no puede
+ *       crear ni asignar ese rol (ADMIN: hay una sola cuenta; CLIENTE y
+ *       DELIVERY: nacen por auto-registro).</li>
+ *   <li>{@code configurable}: si es {@code true}, el administrador puede
+ *       agregar o quitar funcionalidades (permisos explícitos) a los
+ *       usuarios con ese rol.</li>
+ * </ul>
  */
 @Entity
 @Table(name = "roles", schema = "seguridad")
@@ -27,6 +40,19 @@ public class Rol extends BaseEntity {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private CategoriaRol categoria;
+
+    @Column(name = "asignable_por_admin", nullable = false)
+    private boolean asignablePorAdmin = true;
+
+    @Column(nullable = false)
+    private boolean configurable = false;
+
+    @Column(nullable = false, length = 20)
+    private String origen = "ADMIN";
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "roles_permisos", schema = "seguridad",
@@ -52,6 +78,25 @@ public class Rol extends BaseEntity {
 
     public boolean isActivo() {
         return activo;
+    }
+
+    public CategoriaRol getCategoria() {
+        return categoria;
+    }
+
+    /** Si el administrador puede crear usuarios con este rol desde el panel. */
+    public boolean isAsignablePorAdmin() {
+        return asignablePorAdmin;
+    }
+
+    /** Si el administrador puede ajustar las funcionalidades de este rol. */
+    public boolean isConfigurable() {
+        return configurable;
+    }
+
+    /** De dónde nace la cuenta con este rol: {@code ADMIN} o {@code AUTO_REGISTRO}. */
+    public String getOrigen() {
+        return origen;
     }
 
     public Set<Permiso> getPermisos() {
