@@ -1,17 +1,25 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { X, Check, Eye, EyeOff } from 'lucide-react'
-import { useCrearUsuario, useActualizarUsuario, usePermisos } from '../hooks'
+import { useCrearUsuario, useActualizarUsuario, usePermisos, useTaxonomiaRoles } from '../hooks'
 import type { RolDto, UsuarioAdminResponse } from '../types'
 
-/* Roles cuyas funcionalidades puede ajustar el administrador por usuario.
- * ADMIN y CLIENTE quedan fijos (ADMIN con todo, CLIENTE con lo suyo). */
-const ROLES_CONFIGURABLES = ['MESERO', 'COCINA', 'DELIVERY']
-
 export default function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminResponse | null; roles: RolDto[]; onClose: () => void }) {
-  // CLIENTE no se asigna desde el panel: es el rol de auto-registro de la app.
-  // Al editar un usuario que ya es CLIENTE se conserva su rol como opción.
-  const rolesSeleccionables = roles.filter(r => r.codigo !== 'CLIENTE' || r.codigo === editing?.rol)
+  const { data: taxonomia } = useTaxonomiaRoles()
+
+  /* El panel solo asigna los roles marcados como asignables (lo decide la
+   * base de datos: ADMIN es una cuenta única y CLIENTE/DELIVERY nacen por
+   * auto-registro). Al editar, el rol actual del usuario siempre está
+   * disponible aunque no sea asignable: es su rol y no se le puede quitar. */
+  const rolesSeleccionables = roles.filter(r => r.asignablePorAdmin || r.codigo === editing?.rol)
+  const codigosSeleccionables = new Set(rolesSeleccionables.map(r => r.codigo))
+
+  /* Los roles se muestran agrupados por categoría (administración, personal
+   * interno, clientes, repartidores). */
+  const categoriasConRoles = (taxonomia?.categorias ?? [])
+    .map(c => ({ ...c, roles: c.roles.filter(r => codigosSeleccionables.has(r.codigo)) }))
+    .filter(c => c.roles.length > 0)
+
   const [username, setUsername] = useState(editing?.username ?? '')
   const [nombre,   setNombre]   = useState(editing?.nombre ?? '')
   const [password, setPassword] = useState('')
@@ -20,6 +28,11 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
   const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? rolesSeleccionables[0]?.codigo ?? '')
 
   const { data: permisosCatalogo = [] } = usePermisos()
+
+  /* Solo los roles configurables admiten funcionalidades propias; el resto
+   * (ADMIN, CLIENTE, DELIVERY) nacen con las suyas por defecto. */
+  const rolActual = roles.find(r => r.codigo === rolCodigo)
+  const esConfigurable = rolActual?.configurable ?? false
 
   /* Set editable de funcionalidades. Al cambiar de rol se re-marcan los
    * defaults del nuevo rol; al editar, si el usuario ya tiene permisos
@@ -66,14 +79,14 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
     if (editing) {
       actualizar.mutate({
         id: editing.id,
-        payload: ROLES_CONFIGURABLES.includes(rolCodigo)
+        payload: esConfigurable
           ? { nombre, rolCodigo, activo, permisos }
           : { nombre, rolCodigo, activo },
       })
     } else {
       crear.mutate({
         username, nombre, password, rolCodigo,
-        ...(ROLES_CONFIGURABLES.includes(rolCodigo) ? { permisos } : {}),
+        ...(esConfigurable ? { permisos } : {}),
       })
     }
   }
@@ -82,7 +95,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
     ? [{ label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }]
     : [{ label: 'USUARIO', value: username, set: setUsername, type: 'text' }, { label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }, { label: 'CONTRASEÑA', value: password, set: setPassword, type: 'password' }]
 
-  const muestraChecklist = ROLES_CONFIGURABLES.includes(rolCodigo) && permisosCatalogo.length > 0
+  const muestraChecklist = esConfigurable && permisosCatalogo.length > 0
 
   return (
     <div className="overlay">
@@ -125,7 +138,13 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
           <div>
             <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>ROL</label>
             <select value={rolCodigo} onChange={e => cambiarRol(e.target.value)} className="input">
-              {rolesSeleccionables.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
+              {categoriasConRoles.length > 0
+                ? categoriasConRoles.map(categoria => (
+                    <optgroup key={categoria.codigo} label={categoria.descripcion}>
+                      {categoria.roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
+                    </optgroup>
+                  ))
+                : rolesSeleccionables.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
             </select>
           </div>
           {editing && (
