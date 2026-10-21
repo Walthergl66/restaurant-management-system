@@ -78,6 +78,7 @@ public class UsuarioService implements Usuarios {
         if (!rol.isActivo()) {
             throw new BusinessRuleException("El rol está desactivado");
         }
+        exigirRolAsignable(rol);
         Usuario usuario = new Usuario(
                 username,
                 passwordEncoder.encode(request.password()),
@@ -140,6 +141,10 @@ public class UsuarioService implements Usuarios {
         if (request.rolCodigo() != null && !usuario.getRol().getCodigo().equals(request.rolCodigo())) {
             Rol rol = rolRepository.findByCodigo(request.rolCodigo())
                     .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + request.rolCodigo()));
+            if (!rol.isActivo()) {
+                throw new BusinessRuleException("El rol está desactivado");
+            }
+            exigirRolAsignable(rol);
             usuario.asignarRol(rol);
             // El set explícito quedó armado sobre el rol anterior: al cambiar de
             // rol se limpia para que rijan los defaults del nuevo rol.
@@ -169,6 +174,22 @@ public class UsuarioService implements Usuarios {
             invalidarSesiones(usuario);
         }
         return UsuarioAdminResponse.from(usuario);
+    }
+
+    /**
+     * El administrador solo puede crear y asignar los roles marcados como
+     * asignables en la base de datos: ADMIN tiene una sola cuenta y las
+     * cuentas de CLIENTE y DELIVERY nacen por auto-registro.
+     */
+    private void exigirRolAsignable(Rol rol) {
+        if (rol.isAsignablePorAdmin()) {
+            return;
+        }
+        String motivo = "AUTO_REGISTRO".equals(rol.getOrigen())
+                ? "las cuentas con ese rol nacen por auto-registro"
+                : "hay una sola cuenta con ese rol";
+        throw new BusinessRuleException(
+                "El rol " + rol.getCodigo() + " no se asigna desde el panel: " + motivo);
     }
 
     /**
