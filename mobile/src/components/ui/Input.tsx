@@ -2,7 +2,7 @@
  * Estación Burger — Input con estilo neón
  */
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   TextInput,
@@ -31,17 +31,29 @@ export function Input({
   style,
   ...props
 }: InputProps) {
-  const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // El resaltado de foco se aplica de forma IMPERATIVA sobre el contenedor,
+  // SIN setState. En Android, un setState en onFocus/onBlur re-renderizaba el
+  // Input en cada foco y reestablecía el EditText nativo (ATTACH_NEW_INPUT),
+  // lo que hacía perder pulsaciones y cerrar el teclado. Sin re-render, el
+  // foco nativo se mantiene estable y se puede escribir con normalidad.
+  const containerRef = useRef<View>(null);
+
+  const aplicarFoco = (activo: boolean) => {
+    containerRef.current?.setNativeProps({
+      style: activo ? styles.inputContainerFocused : styles.inputContainerBlurred,
+    });
+  };
 
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
       {label && <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>}
       <View
+        ref={containerRef}
         style={[
           styles.inputContainer,
           compact && styles.inputContainerCompact,
-          focused && styles.inputContainerFocused,
           error && styles.inputContainerError,
         ]}
       >
@@ -49,15 +61,15 @@ export function Input({
           <Ionicons
             name={icon}
             size={20}
-            color={focused ? colors.neonOrange : colors.textMuted}
+            color={colors.textMuted}
             style={styles.icon}
           />
         )}
         <TextInput
           style={[styles.input, compact && styles.inputCompact, style]}
           placeholderTextColor={colors.textMuted}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onFocus={(e) => { aplicarFoco(true); props.onFocus?.(e); }}
+          onBlur={(e) => { aplicarFoco(false); props.onBlur?.(e); }}
           secureTextEntry={isPassword && !showPassword}
           {...props}
         />
@@ -124,6 +136,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+  },
+  // Estado base del borde (sin foco): permite revertir el resaltado aplicado
+  // imperativamente en onBlur sin recurrir a setState.
+  inputContainerBlurred: {
+    borderColor: colors.surfaceBorder,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   inputContainerError: {
     borderColor: colors.error,
