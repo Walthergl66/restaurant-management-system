@@ -6,6 +6,7 @@ import com.restaurante.usuarios.web.dto.LoginRequest;
 import com.restaurante.usuarios.web.dto.ReenviarVerificacionRequest;
 import com.restaurante.usuarios.web.dto.RefreshTokenRequest;
 import com.restaurante.usuarios.web.dto.RegistroPendienteResponse;
+import com.restaurante.usuarios.web.dto.RegistroRepartidorRequest;
 import com.restaurante.usuarios.web.dto.RegistroRequest;
 import com.restaurante.usuarios.web.dto.RestablecerPasswordRequest;
 import com.restaurante.usuarios.web.dto.SolicitarRecuperacionRequest;
@@ -51,6 +52,18 @@ public class AuthController {
     public ResponseEntity<RegistroPendienteResponse> registro(@Valid @RequestBody RegistroRequest request) {
         authService.registro(request.username(), request.nombre(), request.password(),
                 request.cedula(), request.celular());
+        RegistroPendienteResponse respuesta = new RegistroPendienteResponse(
+                request.username(), false,
+                "Te enviamos un código de verificación a tu correo");
+        return ResponseEntity.created(URI.create("/api/v1/auth/verificar-email")).body(respuesta);
+    }
+
+    @PostMapping("/registro-repartidor")
+    @Operation(summary = "Auto-registro público de un repartidor (rol DELIVERY); queda pendiente de verificar el correo")
+    public ResponseEntity<RegistroPendienteResponse> registroRepartidor(
+            @Valid @RequestBody RegistroRepartidorRequest request) {
+        authService.registroRepartidor(request.username(), request.nombre(),
+                request.password(), request.celular());
         RegistroPendienteResponse respuesta = new RegistroPendienteResponse(
                 request.username(), false,
                 "Te enviamos un código de verificación a tu correo");
