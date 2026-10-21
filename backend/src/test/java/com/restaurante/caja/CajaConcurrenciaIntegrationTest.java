@@ -31,7 +31,8 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
     @BeforeEach
     void preparar() {
         adminToken = tokenAdmin();
-        gestorToken = asegurarUsuario("gestor_conc", "ADMIN", "claveConc1");
+        // La cuenta ADMIN es unica y no se replica desde el panel: se usa la sembrada.
+        gestorToken = tokenAdmin();
     }
 
     @Test
@@ -133,23 +134,4 @@ class CajaConcurrenciaIntegrationTest extends AbstractIntegracionApi {
         return objectMapper.readTree(res.getResponse().getContentAsString()).path("id").asLong();
     }
 
-    private String asegurarUsuario(String username, String rol, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + adminToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"%s"}
-                                    """.formatted(username, username, password, rol)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar el usuario " + username, e);
-        }
-        return loginToken(username, password);
-    }
 }
