@@ -20,6 +20,10 @@ services:
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}   # 1 hora (plan mejoras 3); antes 24h
       ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:?ADMIN_INITIAL_PASSWORD obligatorio en prod}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS obligatorio en prod (dominios reales, sin *)}
+      BREVO_API_KEY: ${BREVO_API_KEY:?BREVO_API_KEY obligatorio en prod}
+      BREVO_REMITENTE_EMAIL: ${BREVO_REMITENTE_EMAIL:?BREVO_REMITENTE_EMAIL obligatorio en prod}
+      BREVO_REMITENTE_NOMBRE: ${BREVO_REMITENTE_NOMBRE:-Estación Burger}
+      BREVO_TIMEOUT: ${BREVO_TIMEOUT:-5s}
       SERVER_PORT: 8080
     ports:
       - "${APP_PORT:-8080}:8080"
