@@ -107,7 +107,28 @@ base de datos.
 | `JWT_REFRESH_EXPIRATION_MS` | `604800000` | Expiración del refresh token |
 | `IVA_RATE` | `0.15` | Tasa de IVA (15 %, incluido en precios) |
 | `ADMIN_INITIAL_PASSWORD` | `admin123` *(solo dev/test)* | Password inicial del usuario `admin`; obligatoria en prod |
+| `BREVO_HABILITADO` | `false` | Enciende el envío real por Brevo. Con `false` el correo se escribe en el log (dev/test). |
+| `BREVO_API_KEY` | *(obligatoria con Brevo activo)* | Clave de la API transaccional de Brevo |
+| `BREVO_REMITENTE_EMAIL` | *(obligatoria con Brevo activo)* | Remitente verificado en la cuenta de Brevo |
+| `BREVO_REMITENTE_NOMBRE` | `Estación Burger` | Nombre visible del remitente |
+| `BREVO_TIMEOUT` | `5s` | Timeout de conexión y de la petición |
 | `SPRING_PROFILES_ACTIVE` | *(sin default)* | Perfil activo (`dev` o `prod`). La app no fija perfil por defecto: sin esta variable arranca con la configuración base. |
+
+### Correo transaccional (Brevo)
+
+La verificación de correo y la recuperación de contraseña envían el código por
+la API de Brevo (`POST /v3/smtp/email`). El contenido sale de las plantillas
+versionadas en `src/main/resources/correo/` (`verificacion|recuperacion`
+`.html` y `.txt`), no de plantillas del panel de Brevo.
+
+- En desarrollo y pruebas `BREVO_HABILITADO=false`: el código se registra en el
+  log del backend para entrega manual (`EmisorCorreoLog`).
+- En `prod` el perfil fuerza `habilitado=true` y la app **no arranca** si falta
+  `BREVO_API_KEY` o `BREVO_REMITENTE_EMAIL`.
+- El envío ocurre **después** de confirmar la transacción: si el registro se
+  revierte no sale correo, y si Brevo falla la cuenta ya está creada (se
+  registra el fallo sin código ni token) y el usuario puede pedir el reenvío.
+- Brevo responde `400` si el remitente no está verificado en la cuenta.
 
 ### Usuario inicial
 
