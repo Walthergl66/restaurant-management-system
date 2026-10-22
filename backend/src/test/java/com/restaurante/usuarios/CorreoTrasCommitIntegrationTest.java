@@ -90,7 +90,7 @@ class CorreoTrasCommitIntegrationTest extends AbstractIntegrationTest {
                         .content("""
                                 {"username":"%s"}
                                 """.formatted(correo)))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         verify(emisorCorreo, times(2)).enviarCodigoVerificacion(eq(correo), anyString());
     }
