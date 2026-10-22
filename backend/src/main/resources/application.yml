@@ -91,3 +91,15 @@ app:
     # Opción 1 del plan: backend en la nube + agente local
     reintentos-max: 3
     intervalo-reintentos-ms: 5000
+  correo:
+    brevo:
+      # Con false el módulo escribe el correo en el log (desarrollo y pruebas,
+      # sin credenciales). application-prod.yml lo enciende y lo exige.
+      habilitado: ${BREVO_HABILITADO:false}
+      api-key: ${BREVO_API_KEY:}
+      url: ${BREVO_URL:https://api.brevo.com/v3/smtp/email}
+      # Remitente verificado en la cuenta de Brevo; si no lo está, la API
+      # responde 400 y el registro queda igualmente creado (se puede reenviar).
+      remitente-email: ${BREVO_REMITENTE_EMAIL:}
+      remitente-nombre: ${BREVO_REMITENTE_NOMBRE:Estación Burger}
+      timeout: ${BREVO_TIMEOUT:5s}
