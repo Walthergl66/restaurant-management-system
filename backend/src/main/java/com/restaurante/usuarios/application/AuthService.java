@@ -4,7 +4,8 @@ import com.restaurante.shared.domain.exception.BusinessRuleException;
 import com.restaurante.shared.domain.exception.EmailNoVerificadoException;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.shared.domain.exception.UnauthorizedException;
-import com.restaurante.usuarios.EmisorCorreo;
+import com.restaurante.usuarios.CodigoVerificacionGenerado;
+import com.restaurante.usuarios.RecuperacionPasswordGenerada;
 import com.restaurante.usuarios.domain.RecuperacionPassword;
 import com.restaurante.usuarios.domain.RefreshToken;
 import com.restaurante.usuarios.domain.Usuario;
@@ -18,8 +19,7 @@ import com.restaurante.usuarios.infrastructure.security.JwtService;
 import com.restaurante.usuarios.web.dto.AuthResponse;
 import com.restaurante.usuarios.web.dto.LoginRequest;
 import com.restaurante.usuarios.web.dto.UsuarioInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +38,6 @@ import java.util.UUID;
 @Transactional
 public class AuthService {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-
     /** Vigencia del token de recuperación de contraseña. */
     private static final Duration VIGENCIA_RECUPERACION = Duration.ofMinutes(30);
 
@@ -52,7 +50,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RecuperacionPasswordRepository recuperacionRepository;
     private final VerificacionEmailRepository verificacionRepository;
-    private final EmisorCorreo emisorCorreo;
+    private final ApplicationEventPublisher eventPublisher;
     private final RefreshTokenFamiliaRevoker familiaRevoker;
     private final UsuarioService usuarioService;
     private final PasswordEncoder passwordEncoder;
@@ -63,7 +61,7 @@ public class AuthService {
                        RefreshTokenRepository refreshTokenRepository,
                        RecuperacionPasswordRepository recuperacionRepository,
                        VerificacionEmailRepository verificacionRepository,
-                       EmisorCorreo emisorCorreo,
+                       ApplicationEventPublisher eventPublisher,
                        RefreshTokenFamiliaRevoker familiaRevoker,
                        UsuarioService usuarioService,
                        PasswordEncoder passwordEncoder,
@@ -73,7 +71,7 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
         this.recuperacionRepository = recuperacionRepository;
         this.verificacionRepository = verificacionRepository;
-        this.emisorCorreo = emisorCorreo;
+        this.eventPublisher = eventPublisher;
         this.familiaRevoker = familiaRevoker;
         this.usuarioService = usuarioService;
         this.passwordEncoder = passwordEncoder;
@@ -154,14 +152,15 @@ public class AuthService {
         String codigo = String.format("%06d", CODIGO_RANDOM.nextInt(1_000_000));
         verificacionRepository.save(new VerificacionEmail(
                 usuario.getId(), VerificacionEmail.hash(codigo), Instant.now().plus(VIGENCIA_VERIFICACION)));
-        emisorCorreo.enviarCodigoVerificacion(usuario.getUsername(), codigo);
+        // El envío ocurre tras el commit (EnvioCorreos): si algo revierte, no
+        // sale un código para una verificación que no existe.
+        eventPublisher.publishEvent(new CodigoVerificacionGenerado(usuario.getUsername(), codigo));
     }
 
     /**
      * RF-45: solicita un token de recuperación. No revela si el usuario existe
-     * (respuesta uniforme). No hay servicio de correo en este alcance, así que
-     * el token se registra en el log del servidor para entrega manual; en
-     * producción se reemplaza por el envío por email.
+     * (respuesta uniforme). El correo con el token sale tras confirmar la
+     * transacción; si el envío falla, el token queda guardado y puede pedirse otro.
      */
     public void solicitarRecuperacion(String username) {
         Optional<Usuario> posible = usuarioRepository.findByUsernameAndActivoTrue(username);
@@ -173,8 +172,8 @@ public class AuthService {
         RecuperacionPassword recuperacion = new RecuperacionPassword(
                 usuario.getId(), RecuperacionPassword.hash(token), Instant.now().plus(VIGENCIA_RECUPERACION));
         recuperacionRepository.save(recuperacion);
-        log.warn("Recuperación de contraseña solicitada para '{}'. Token válido {} min (entrega manual): {}",
-                username, VIGENCIA_RECUPERACION.toMinutes(), token);
+        eventPublisher.publishEvent(
+                new RecuperacionPasswordGenerada(usuario.getUsername(), token, VIGENCIA_RECUPERACION));
     }
 
     /**
