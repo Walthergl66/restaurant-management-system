@@ -52,7 +52,7 @@ public class UsuarioService implements Usuarios {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
-    private final com.restaurante.auditoria.application.AuditoriaService auditoriaService;
+    private final com.restaurante.auditoria.Auditoria auditoriaService;
     private final tools.jackson.databind.ObjectMapper objectMapper;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
@@ -62,7 +62,7 @@ public class UsuarioService implements Usuarios {
                           RefreshTokenRepository refreshTokenRepository,
                           PasswordEncoder passwordEncoder,
                           ApplicationEventPublisher eventPublisher,
-                          com.restaurante.auditoria.application.AuditoriaService auditoriaService,
+                          com.restaurante.auditoria.Auditoria auditoriaService,
                           tools.jackson.databind.ObjectMapper objectMapper) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
