@@ -14,6 +14,8 @@ se niega a arrancar si faltan las obligatorias (placeholders sin default en
 | `DB_USER` | Usuario de PostgreSQL. |
 | `DB_PASSWORD` | Contraseña de PostgreSQL. |
 | `CORS_ALLOWED_ORIGINS` | Lista separada por comas de orígenes permitidos para navegador, p.ej. `https://app.midominio.com,https://admin.midominio.com`. No usar `*` ni localhost en producción. |
+| `BREVO_API_KEY` | Clave de la API transaccional de Brevo (envío de códigos de verificación y recuperación de contraseña). |
+| `BREVO_REMITENTE_EMAIL` | Remitente verificado en la cuenta de Brevo; si no está verificado la API responde 400 y el correo no sale. |
 
 ## Opcionales (tienen default razonable)
 
@@ -24,6 +26,8 @@ se niega a arrancar si faltan las obligatorias (placeholders sin default en
 | `DB_NAME` | — | Sin default: defínala igual que el POSTGRES_DB creado. |
 | `JWT_EXPIRATION_MS` | `3600000` | Access token: 1 hora. |
 | `JWT_REFRESH_EXPIRATION_MS` | `604800000` | Refresh token: 7 días. |
+| `BREVO_REMITENTE_NOMBRE` | `Estación Burger` | Nombre visible del remitente y de la marca en el correo. |
+| `BREVO_TIMEOUT` | `5s` | Timeout de conexión y de la petición a Brevo. |
 
 ## Cómo suministrar los secretos
 
@@ -38,6 +42,8 @@ Nunca se commitean valores de `JWT_SECRET`, `ADMIN_INITIAL_PASSWORD` ni
    DB_USER=...
    DB_PASSWORD=...
    CORS_ALLOWED_ORIGINS=https://app.midominio.com
+   BREVO_API_KEY=...
+   BREVO_REMITENTE_EMAIL=no-reply@midominio.com
    ```
 2. **Secretos de orquestación**: Docker Secrets o el secret manager del
    proveedor (AWS Secrets Manager, Vault, etc.); la app lee variables de entorno,
@@ -47,6 +53,21 @@ Nunca se commitean valores de `JWT_SECRET`, `ADMIN_INITIAL_PASSWORD` ni
    sesiones activas (consulte el flujo de `sesion_version`): al cambiar la clave
    los tokens firmados con la anterior quedan inválidos, así que la rotación debe
    programarse en una ventana en la que se pueda forzar re-login.
+
+## Correo transaccional (Brevo)
+
+El envío de códigos de verificación y de recuperación de contraseña usa la API
+transaccional de Brevo. En el perfil `prod` el correo está **siempre encendido**:
+sin `BREVO_API_KEY` o `BREVO_REMITENTE_EMAIL` la aplicación no arranca.
+
+- El remitente debe estar **verificado** en la cuenta de Brevo; si no, la API
+  responde `400`, el fallo se registra sin el código y la cuenta se crea igual
+  (el usuario puede pedir el reenvío).
+- Las plantillas viven en el repositorio (`backend/src/main/resources/correo/`),
+  así que un cambio de texto se revisa en git y no depende del panel de Brevo.
+- El correo se envía **después de confirmar la transacción**: una operación
+  revertida no genera correo, y un proveedor caído no revierte una operación ya
+  confirmada.
 
 ## TLS, proxy y WebSocket
 
