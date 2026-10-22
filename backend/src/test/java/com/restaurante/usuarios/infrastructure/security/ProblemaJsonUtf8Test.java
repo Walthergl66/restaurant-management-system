@@ -1,6 +1,7 @@
 package com.restaurante.usuarios.infrastructure.security;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -54,7 +55,17 @@ class ProblemaJsonUtf8Test {
         for (int i = 0; i < LoginRateLimiter.MAX_ATTEMPTS; i++) {
             limiter.isAllowed("127.0.0.1");
         }
-        LoginRateLimitFilter filter = new LoginRateLimitFilter(limiter, objectMapper, new MockEnvironment());
+        org.springframework.beans.factory.ObjectProvider<com.restaurante.auditoria.Auditoria> provider =
+                new org.springframework.beans.factory.ObjectProvider<com.restaurante.auditoria.Auditoria>() {
+                    public com.restaurante.auditoria.Auditoria getObject() { return null; }
+                    public com.restaurante.auditoria.Auditoria getIfAvailable() { return null; }
+                    public com.restaurante.auditoria.Auditoria getIfUnique() { return null; }
+                    public com.restaurante.auditoria.Auditoria getObject(Object... args) { return null; }
+                    public java.util.stream.Stream<com.restaurante.auditoria.Auditoria> stream() { return java.util.stream.Stream.empty(); }
+                    public java.util.stream.Stream<com.restaurante.auditoria.Auditoria> orderedStream() { return java.util.stream.Stream.empty(); }
+                    public java.util.Iterator<com.restaurante.auditoria.Auditoria> iterator() { return java.util.Collections.emptyIterator(); }
+                };
+        LoginRateLimitFilter filter = new LoginRateLimitFilter(limiter, objectMapper, new MockEnvironment(), provider);
 
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/auth/login");
         MockHttpServletResponse response = new MockHttpServletResponse();

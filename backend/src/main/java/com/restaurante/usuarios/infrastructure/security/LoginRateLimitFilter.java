@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,14 +28,14 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     private final LoginRateLimiter rateLimiter;
     private final ObjectMapper objectMapper;
     private final Environment environment;
-    private final com.restaurante.auditoria.application.AuditoriaService auditoriaService;
+    private final com.restaurante.auditoria.Auditoria auditoriaService;
 
     public LoginRateLimitFilter(LoginRateLimiter rateLimiter, ObjectMapper objectMapper, Environment environment,
-                                com.restaurante.auditoria.application.AuditoriaService auditoriaService) {
+                                ObjectProvider<com.restaurante.auditoria.Auditoria> auditoriaProvider) {
         this.rateLimiter = rateLimiter;
         this.objectMapper = objectMapper;
         this.environment = environment;
-        this.auditoriaService = auditoriaService;
+        this.auditoriaService = auditoriaProvider.getIfAvailable();
     }
 
     @Override
@@ -53,8 +54,10 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             // X-Forwarded-For solo se confía tras ForwardedHeaderFilter con proxy confiable; por defecto se ignora para evitar spoof
             if (!rateLimiter.isAllowed(key)) {
                 try {
-                    auditoriaService.registrar(key, "RATE_LIMIT_EXCEDIDO", "SEGURIDAD",
-                            request.getRequestURI(), "{\"ruta\":\"" + request.getRequestURI() + "\"}", "SEGURIDAD");
+                    if (auditoriaService != null) {
+                        auditoriaService.registrar(key, "RATE_LIMIT_EXCEDIDO", "SEGURIDAD",
+                                request.getRequestURI(), "{\"ruta\":\"" + request.getRequestURI() + "\"}", "SEGURIDAD");
+                    }
                 } catch (Exception ignored) {
                 }
                 ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,

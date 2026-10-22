@@ -2,7 +2,8 @@ package com.restaurante.auditoria.application;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.UUID;
 
@@ -11,21 +12,44 @@ import java.util.UUID;
  * User-Agent y un requestId correlacionable con logs.
  */
 @Component
-@RequestScope
 public class AuditoriaHttpContext {
 
-    private String ip;
-    private String userAgent;
-    private String requestId;
-    private String uri;
-    private String metodo;
+    private final ThreadLocal<Datos> cache = ThreadLocal.withInitial(Datos::new);
 
-    public AuditoriaHttpContext(HttpServletRequest request) {
-        this.uri = request.getRequestURI();
-        this.metodo = request.getMethod();
-        this.userAgent = recortar(request.getHeader("User-Agent"), 255);
-        this.ip = extraerIp(request);
-        this.requestId = UUID.randomUUID().toString();
+    private static class Datos {
+        String ip;
+        String userAgent;
+        String requestId = UUID.randomUUID().toString();
+        String uri;
+        String metodo;
+    }
+
+    private Datos datos() {
+        Datos d = cache.get();
+        try {
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest request = attrs.getRequest();
+                if (d.uri == null) {
+                    d.uri = request.getRequestURI();
+                }
+                if (d.metodo == null) {
+                    d.metodo = request.getMethod();
+                }
+                if (d.userAgent == null) {
+                    d.userAgent = recortar(request.getHeader("User-Agent"), 255);
+                }
+                if (d.ip == null) {
+                    d.ip = extraerIp(request);
+                }
+                if (d.requestId == null) {
+                    d.requestId = UUID.randomUUID().toString();
+                }
+            }
+        } catch (Exception ignored) {
+            // Sin contexto HTTP (tests, listeners fuera de request)
+        }
+        return d;
     }
 
     private String extraerIp(HttpServletRequest request) {
@@ -51,22 +75,26 @@ public class AuditoriaHttpContext {
     }
 
     public String getIp() {
-        return ip;
+        return datos().ip;
     }
 
     public String getUserAgent() {
-        return userAgent;
+        return datos().userAgent;
     }
 
     public String getRequestId() {
-        return requestId;
+        Datos d = datos();
+        if (d.requestId == null) {
+            d.requestId = UUID.randomUUID().toString();
+        }
+        return d.requestId;
     }
 
     public String getUri() {
-        return uri;
+        return datos().uri;
     }
 
     public String getMetodo() {
-        return metodo;
+        return datos().metodo;
     }
 }

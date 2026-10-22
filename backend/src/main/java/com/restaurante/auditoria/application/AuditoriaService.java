@@ -20,14 +20,31 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class AuditoriaService {
+public class AuditoriaService implements com.restaurante.auditoria.Auditoria {
 
     private final AuditoriaRepository repository;
-    private final AuditoriaHttpContext auditoriaHttpContext;
+    private final org.springframework.beans.factory.ObjectProvider<AuditoriaHttpContext> auditoriaHttpContextProvider;
+    private AuditoriaHttpContext cached;
 
-    public AuditoriaService(AuditoriaRepository repository, AuditoriaHttpContext auditoriaHttpContext) {
+    public AuditoriaService(AuditoriaRepository repository,
+                            org.springframework.beans.factory.ObjectProvider<AuditoriaHttpContext> auditoriaHttpContextProvider) {
         this.repository = repository;
-        this.auditoriaHttpContext = auditoriaHttpContext;
+        this.auditoriaHttpContextProvider = auditoriaHttpContextProvider;
+    }
+
+    private AuditoriaHttpContext contexto() {
+        if (cached != null) {
+            return cached;
+        }
+        try {
+            cached = auditoriaHttpContextProvider.getIfAvailable();
+        } catch (Exception ignored) {
+            cached = null;
+        }
+        if (cached == null) {
+            cached = new AuditoriaHttpContext();
+        }
+        return cached;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -37,6 +54,7 @@ public class AuditoriaService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrar(String tipo, String entidad, String entidadId, String detalle, String categoria) {
+        AuditoriaHttpContext ctx = contexto();
         repository.save(new EventoAuditoria(
                 usuarioActual(),
                 tipo,
@@ -44,13 +62,14 @@ public class AuditoriaService {
                 entidadId,
                 detalle,
                 categoria,
-                auditoriaHttpContext.getIp(),
-                auditoriaHttpContext.getUserAgent(),
-                auditoriaHttpContext.getRequestId()));
+                ctx.getIp(),
+                ctx.getUserAgent(),
+                ctx.getRequestId()));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrar(String usuario, String tipo, String entidad, String entidadId, String detalle, String categoria) {
+        AuditoriaHttpContext ctx = contexto();
         repository.save(new EventoAuditoria(
                 usuario,
                 tipo,
@@ -58,9 +77,9 @@ public class AuditoriaService {
                 entidadId,
                 detalle,
                 categoria,
-                auditoriaHttpContext.getIp(),
-                auditoriaHttpContext.getUserAgent(),
-                auditoriaHttpContext.getRequestId()));
+                ctx.getIp(),
+                ctx.getUserAgent(),
+                ctx.getRequestId()));
     }
 
     @Transactional(readOnly = true)
