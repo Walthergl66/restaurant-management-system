@@ -50,7 +50,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        cocineroToken = asegurarUsuario("cocina_test", "COCINA", "clave456");
+        cocineroToken = tokenEmpleadoCocina("cocina_test");
     }
 
     @Test
@@ -379,7 +379,8 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     }
 
     private void aprobarAnulacionDesdeMesa(String codigo, long lineaId) throws Exception {
-        String aprobadorToken = asegurarUsuario("cajero_comandas_test", "ADMIN", "clave789");
+        // Aprueba el ADMIN sembrado: la cuenta ADMIN no se replica desde el panel.
+        String aprobadorToken = administradorToken;
         String lista = mockMvc.perform(get("/api/v1/anulaciones?pedidoCodigo=" + codigo)
                         .header("Authorization", "Bearer " + aprobadorToken))
                 .andExpect(status().isOk())
@@ -471,26 +472,6 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
     // ---------------------------------------------------------------
     // Utilidades de contexto de datos
     // ---------------------------------------------------------------
-
-    private String asegurarUsuario(String username, String rol, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + administradorToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"%s"}
-                                    """.formatted(username, username, password, rol)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar el usuario " + username, e);
-        }
-        return loginToken(username, password);
-    }
 
     private JsonNode buscar(String codigo, String estado) throws Exception {
         JsonNode todas = listar(null, estado);

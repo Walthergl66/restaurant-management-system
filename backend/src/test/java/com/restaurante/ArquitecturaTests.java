@@ -82,11 +82,13 @@ class ArquitecturaTests {
      * luego al agregar ActualizarEstadoRequest en UsuarioService (contrato del
      * PATCH /usuarios/{id}/estado). Se volvio a subir a 53 al agregar
      * PermisoDto en UsuarioService (catalogo de funcionalidades para el panel
-     * de usuarios); sigue siendo el mismo numero de clases (17). Si se migra un
-     * servicio a Command/Result, hay que bajar aqui los dos numeros en el mismo
-     * commit.
+     * de usuarios); sigue siendo el mismo numero de clases (17). Subio a 55
+     * al sumar CategoriaRolDto y TaxonomiaRolesDto en UsuarioService (la
+     * taxonomia de roles que consume el panel); siguen siendo las mismas 17
+     * clases. Si se migra un servicio a Command/Result, hay que bajar aqui los
+     * dos numeros en el mismo commit.
      */
-    private static final int MAX_IMPORTS_DE_APPLICATION_A_WEB = 53;
+    private static final int MAX_IMPORTS_DE_APPLICATION_A_WEB = 55;
     private static final int MAX_CLASES_DE_APPLICATION_CON_DTO_WEB = 17;
 
     // ---------------------------------------------------------------------

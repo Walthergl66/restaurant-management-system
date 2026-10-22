@@ -12,4 +12,10 @@ public interface AuditoriaRepository extends JpaRepository<EventoAuditoria, Long
 
     List<EventoAuditoria> findByFechaBetweenAndEntidadOrderByFechaDesc(
             Instant desde, Instant hasta, String entidad);
+
+    List<EventoAuditoria> findByFechaBetweenAndCategoriaOrderByFechaDesc(
+            Instant desde, Instant hasta, String categoria);
+
+    List<EventoAuditoria> findByFechaBetweenAndEntidadAndCategoriaOrderByFechaDesc(
+            Instant desde, Instant hasta, String entidad, String categoria);
 }

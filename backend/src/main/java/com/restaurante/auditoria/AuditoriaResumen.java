@@ -13,5 +13,9 @@ public record AuditoriaResumen(
         String entidad,
         String entidadId,
         String detalle,
-        Instant fecha) {
+        Instant fecha,
+        String categoria,
+        String ip,
+        String userAgent,
+        String requestId) {
 }

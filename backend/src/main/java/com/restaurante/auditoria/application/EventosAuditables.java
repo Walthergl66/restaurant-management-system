@@ -40,19 +40,19 @@ public class EventosAuditables {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPedidoCreado(PedidoCreado evento) {
         auditoria.registrar("PEDIDO_CREADO", "PEDIDO", evento.pedidoCodigo(),
-                json(Map.of("mesaId", String.valueOf(evento.mesaId()))));
+                json(Map.of("mesaId", String.valueOf(evento.mesaId()))), "PEDIDOS");
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPedidoConfirmado(PedidoConfirmado evento) {
         auditoria.registrar("PEDIDO_CONFIRMADO", "PEDIDO", evento.pedidoCodigo(),
-                json(Map.of("lineas", String.valueOf(evento.lineas().size()))));
+                json(Map.of("lineas", String.valueOf(evento.lineas().size()))), "PEDIDOS");
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPedidoCancelado(PedidoCancelado evento) {
         auditoria.registrar("PEDIDO_CANCELADO", "PEDIDO", evento.pedidoCodigo(),
-                json(Map.of("mesaId", String.valueOf(evento.mesaId()))));
+                json(Map.of("mesaId", String.valueOf(evento.mesaId()))), "PEDIDOS");
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -64,7 +64,7 @@ public class EventosAuditables {
         detalle.put("monto", monto.toPlainString());
         detalle.put("motivo", evento.motivo());
         auditoria.registrar("ANULACION_APROBADA", "ANULACION", String.valueOf(evento.anulacionId()),
-                json(detalle));
+                json(detalle), "ANULACIONES");
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -81,7 +81,7 @@ public class EventosAuditables {
         detalle.put("comprobante", evento.comprobanteCorrelativo());
         detalle.put("pagos", pagos.toString());
         auditoria.registrar("CUENTA_COBRADA", "CUENTA", String.valueOf(evento.cuentaId()),
-                json(detalle));
+                json(detalle), "CAJA");
     }
 
     private String json(Map<String, String> detalle) {

@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Historial de operaciones (RF-52). El registro se hace en una transacción
- * propia ({@code REQUIRES_NEW}) porque el listener que lo dispara yaruns tras
+ * propia ({@code REQUIRES_NEW}) porque el listener que lo dispara tras
  * el commit del negocio ({@code AFTER_COMMIT}): así la escritura no depende de
  * la transacción original y un fallo al auditar no invalida el commit (RNF-10/RNF-11).
  */
@@ -23,26 +23,64 @@ import java.util.List;
 public class AuditoriaService {
 
     private final AuditoriaRepository repository;
+    private final AuditoriaHttpContext auditoriaHttpContext;
 
-    public AuditoriaService(AuditoriaRepository repository) {
+    public AuditoriaService(AuditoriaRepository repository, AuditoriaHttpContext auditoriaHttpContext) {
         this.repository = repository;
+        this.auditoriaHttpContext = auditoriaHttpContext;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrar(String tipo, String entidad, String entidadId, String detalle) {
-        repository.save(new EventoAuditoria(usuarioActual(), tipo, entidad, entidadId, detalle));
+        registrar(tipo, entidad, entidadId, detalle, "NEGOCIO");
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void registrar(String tipo, String entidad, String entidadId, String detalle, String categoria) {
+        repository.save(new EventoAuditoria(
+                usuarioActual(),
+                tipo,
+                entidad,
+                entidadId,
+                detalle,
+                categoria,
+                auditoriaHttpContext.getIp(),
+                auditoriaHttpContext.getUserAgent(),
+                auditoriaHttpContext.getRequestId()));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void registrar(String usuario, String tipo, String entidad, String entidadId, String detalle, String categoria) {
+        repository.save(new EventoAuditoria(
+                usuario,
+                tipo,
+                entidad,
+                entidadId,
+                detalle,
+                categoria,
+                auditoriaHttpContext.getIp(),
+                auditoriaHttpContext.getUserAgent(),
+                auditoriaHttpContext.getRequestId()));
     }
 
     @Transactional(readOnly = true)
-    public List<AuditoriaResumen> listar(Instant desde, Instant hasta, String entidad) {
+    public List<AuditoriaResumen> listar(Instant desde, Instant hasta, String entidad, String categoria) {
         Instant fin = hasta == null ? Instant.now() : hasta;
-        List<EventoAuditoria> eventos = entidad == null
-                ? repository.findByFechaBetweenOrderByFechaDesc(desde, fin)
-                : repository.findByFechaBetweenAndEntidadOrderByFechaDesc(desde, fin, entidad);
+        List<EventoAuditoria> eventos;
+        if (entidad != null && categoria != null) {
+            eventos = repository.findByFechaBetweenAndEntidadAndCategoriaOrderByFechaDesc(desde, fin, entidad, categoria);
+        } else if (entidad != null) {
+            eventos = repository.findByFechaBetweenAndEntidadOrderByFechaDesc(desde, fin, entidad);
+        } else if (categoria != null) {
+            eventos = repository.findByFechaBetweenAndCategoriaOrderByFechaDesc(desde, fin, categoria);
+        } else {
+            eventos = repository.findByFechaBetweenOrderByFechaDesc(desde, fin);
+        }
         return eventos.stream()
                 .map(e -> new AuditoriaResumen(
                         e.getId(), e.getUsuario(), e.getTipo(), e.getEntidad(),
-                        e.getEntidadId(), e.getDetalle(), e.getFecha()))
+                        e.getEntidadId(), e.getDetalle(), e.getFecha(),
+                        e.getCategoria(), e.getIp(), e.getUserAgent(), e.getRequestId()))
                 .toList();
     }
 
