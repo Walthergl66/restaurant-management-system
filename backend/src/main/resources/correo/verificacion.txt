@@ -1,0 +1,11 @@
+Hola:
+
+Tu código de verificación de {{restaurante}} es:
+
+    {{codigo}}
+
+Ingrésalo en la app para activar tu cuenta. El código es válido por {{vigenciaMinutos}} minutos.
+
+Si no creaste una cuenta, ignora este mensaje.
+
+{{restaurante}}
