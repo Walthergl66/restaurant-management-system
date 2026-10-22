@@ -28,6 +28,7 @@ public class EmisorCorreoLog implements EmisorCorreo {
                 correo, codigo);
     }
 
+    @Override
     public void enviarRecuperacionPassword(String correo, String token, Duration vigencia) {
         log.warn("Correo de recuperación para '{}'. Token válido {} min (entrega manual en dev): {}",
                 correo, vigencia.toMinutes(), token);
