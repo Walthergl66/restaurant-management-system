@@ -1,0 +1,13 @@
+Hola:
+
+Recibimos una solicitud para restablecer tu contraseña en {{restaurante}}.
+
+Tu código de recuperación es:
+
+    {{token}}
+
+Pégalo en la pantalla de recuperación junto con tu nueva contraseña. Es válido por {{vigenciaMinutos}} minutos y solo se puede usar una vez.
+
+Si no solicitaste el cambio, ignora este mensaje: tu contraseña actual sigue vigente.
+
+{{restaurante}}
