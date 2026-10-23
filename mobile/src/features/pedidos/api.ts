@@ -5,6 +5,7 @@
 
 import { apiClient } from '@/shared/api/apiClient';
 import type {
+  CandidatoDireccion,
   CarritoCliente,
   ConfirmarPedidoRequest,
   CrearPedidoRequest,
@@ -28,6 +29,7 @@ const ENDPOINTS = {
     `/clientes/pedidos/${codigo}/confirmar-recepcion`,
   historial: '/clientes/historial',
   direcciones: '/clientes/direcciones',
+  geocodificar: '/clientes/geocodificar',
   metodosPago: '/clientes/metodos-pago',
   metodoPago: (id: number) => `/clientes/metodos-pago/${id}`,
 } as const;
@@ -113,6 +115,19 @@ export const pedidosService = {
   /** Direcciones activas del cliente (RF-42). */
   async getDirecciones(): Promise<DireccionCliente[]> {
     return apiClient.get<DireccionCliente[]>(ENDPOINTS.direcciones);
+  },
+
+  /**
+   * Busca candidatos de dirección por texto (geocoding) para el mapa del
+   * checkout. El backend reutiliza ORS; la api-key nunca viaja al cliente.
+   * Devuelve lista vacía si no hay resultados (se ajusta el marcador a mano).
+   */
+  async geocodificar(texto: string): Promise<CandidatoDireccion[]> {
+    const t = texto.trim();
+    if (!t) return [];
+    return apiClient.get<CandidatoDireccion[]>(
+      `${ENDPOINTS.geocodificar}?texto=${encodeURIComponent(t)}`
+    );
   },
 
   /** Métodos de pago guardados del cliente (RF-45). */

@@ -5,6 +5,7 @@ export { useAlertaLlegada } from './useAlertaLlegada'
 export type { AlertaLlegada } from './useAlertaLlegada'
 export { generarCodigoPedido, generarIdempotencyKey } from './idempotencia'
 export type {
+  CandidatoDireccion,
   CarritoCliente,
   ConfirmarPedidoRequest,
   CrearPedidoRequest,

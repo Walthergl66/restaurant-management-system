@@ -35,6 +35,10 @@ export interface PedidoCliente {
   estado: string;
   metodoPago: string;
   metodoEntrega: string;
+  /** Suma de líneas (sin recargo de entrega). */
+  subtotal: number;
+  /** Recargo de entrega: $1.50 en DOMICILIO, 0 en RETIRAR. Congelado al confirmar. */
+  costoEntrega: number;
   total: number;
   lineas: LineaPedido[];
   creadoAt: string;
@@ -108,6 +112,9 @@ export interface NuevaDireccionRequest {
   direccion: string;
   telefono?: string;
   observaciones?: string;
+  /** Coordenadas confirmadas del marcador (opcionales, A1). */
+  lat?: number;
+  lng?: number;
 }
 
 /** DireccionClienteSPI — dirección del cliente. */
@@ -118,8 +125,22 @@ export interface DireccionCliente {
   direccion: string;
   telefono: string | null;
   observaciones: string | null;
+  /** Coordenadas confirmadas del marcador (null en direcciones antiguas). */
+  lat: number | null;
+  lng: number | null;
   activa: boolean;
   creadoAt: string;
+}
+
+/**
+ * Candidato de geocoding para el mapa del checkout (descripción + coords).
+ * Contrato: GET /api/v1/clientes/geocodificar?texto=... del backend, que
+ * reutiliza ORS sin exponer la api-key al cliente.
+ */
+export interface CandidatoDireccion {
+  descripcion: string;
+  lat: number;
+  lng: number;
 }
 
 /** MetodoPagoClienteSPI — método de pago guardado (solo metadata). */
