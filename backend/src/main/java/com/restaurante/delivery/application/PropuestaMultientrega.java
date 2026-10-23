@@ -1,5 +1,6 @@
 package com.restaurante.delivery.application;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -18,15 +19,26 @@ public record PropuestaMultientrega(
         String criterio,
         String geometria,
         int distanciaTotalM,
-        int duracionTotalS) {
+        int duracionTotalS,
+        BigDecimal origenLat,
+        BigDecimal origenLng) {
 
-    /** Una parada de la propuesta en su orden de visita (0-based). */
+    /**
+     * Una parada de la propuesta en su orden de visita (0-based).
+     *
+     * <p>{@code lat}/{@code lng} son las coordenadas geocodificadas del destino
+     * (desde la caché de geocoding), para que el móvil posicione el marcador
+     * numerado con precisión. Pueden ser {@code null} si la dirección no
+     * geocodificó.
+     */
     public record ParadaPropuesta(
             int orden,
             Long asignacionId,
             Long pedidoClienteId,
             String codigo,
-            String direccion) {
+            String direccion,
+            BigDecimal lat,
+            BigDecimal lng) {
     }
 
     /** Lista de asignaciones en el orden propuesto, lista para crearRecorrido. */

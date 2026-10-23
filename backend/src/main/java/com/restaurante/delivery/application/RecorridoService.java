@@ -173,14 +173,18 @@ public class RecorridoService {
             int idx = orden.get(i);
             Asignacion a = lista.get(idx);
             PedidoDomicilioSPI d = datos.get(idx);
-            enOrden.add(destinos.get(idx));
+            Coordenada destino = destinos.get(idx);
+            enOrden.add(destino);
             propuesta.add(new PropuestaMultientrega.ParadaPropuesta(
-                    i, a.getId(), a.getPedidoClienteId(), d.codigo(), d.direccion()));
+                    i, a.getId(), a.getPedidoClienteId(), d.codigo(), d.direccion(),
+                    destino != null ? destino.lat() : null,
+                    destino != null ? destino.lng() : null));
         }
 
         ResultadoRuta ruta = rutas.rutaPara(enOrden, criterioEfectivo);
         return new PropuestaMultientrega(propuesta, criterioEfectivo.name(),
-                ruta.geometria(), ruta.distanciaM(), ruta.duracionS());
+                ruta.geometria(), ruta.distanciaM(), ruta.duracionS(),
+                origenCoord.lat(), origenCoord.lng());
     }
 
     /**
@@ -451,13 +455,43 @@ public class RecorridoService {
         List<ParadaResumen> lista = paradas.findByRecorridoIdOrderByOrdenAsc(recorrido.getId()).stream()
                 .map(this::paradaResumen)
                 .toList();
-        return RecorridoResumen.de(recorrido, lista);
+        return RecorridoResumen.de(recorrido, origenOpcional(), lista);
     }
 
     private ParadaResumen paradaResumen(Parada parada) {
         Asignacion a = asignaciones.findById(parada.getAsignacionId()).orElse(null);
         EntregaResumen entrega = a != null ? entregaResumen(a) : null;
-        return ParadaResumen.de(parada, entrega);
+        return ParadaResumen.de(parada, entrega, coordDeParada(a));
+    }
+
+    /**
+     * Coordenada geocodificada del destino de la parada, reutilizando la caché
+     * de geocoding. Devuelve {@code null} (sin romper) si no hay asignación, el
+     * pedido no tiene dirección o el geocoding no la resuelve: la parada se
+     * muestra sin posición en el mapa.
+     */
+    private Coordenada coordDeParada(Asignacion a) {
+        if (a == null) {
+            return null;
+        }
+        try {
+            PedidoDomicilioSPI pedido = clientes.datosEntrega(a.getPedidoClienteId()).orElse(null);
+            if (pedido == null || pedido.direccionId() == null
+                    || pedido.direccion() == null || pedido.direccion().isBlank()) {
+                return null;
+            }
+            return rutas.geocodificar(pedido.direccionId(), pedido.direccion()).orElse(null);
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Origen de reparto (restaurante) si está configurado; {@code null} si no,
+     * para no romper las respuestas del recorrido cuando falta configuración.
+     */
+    private Coordenada origenOpcional() {
+        return origen.estaConfigurado() ? origen.comoCoordenada() : null;
     }
 
     private List<Long> sinDuplicados(List<Long> ids) {

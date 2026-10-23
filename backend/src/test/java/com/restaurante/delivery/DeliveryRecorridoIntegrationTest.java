@@ -230,6 +230,101 @@ class DeliveryRecorridoIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(jsonPath("$.estado").value("FINALIZADO"));
     }
 
+    @Test
+    void optimizarIncluyeCoordenadasDeParadaYOrigen() throws Exception {
+        String admin = tokenAdmin();
+        Repartidor r = repartidorConToken();
+        long a1 = asignar(admin, pedidoDomicilioListo(), r.id);
+        long a2 = asignar(admin, pedidoDomicilioListo(), r.id);
+
+        mockMvc.perform(post("/api/v1/delivery/rutas/optimizar")
+                        .header("Authorization", "Bearer " + r.token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"asignacionIds":[%d,%d],"criterio":"DURACION"}
+                                """.formatted(a1, a2)))
+                .andExpect(status().isOk())
+                // El geocoding simulado devuelve (-0.19, -78.48) para cada destino.
+                .andExpect(jsonPath("$.paradas[0].lat").value(-0.19))
+                .andExpect(jsonPath("$.paradas[0].lng").value(-78.48))
+                .andExpect(jsonPath("$.paradas[1].lat").value(-0.19))
+                .andExpect(jsonPath("$.paradas[1].lng").value(-78.48))
+                // Origen = el configurado en application-test.yml.
+                .andExpect(jsonPath("$.origenLat").value(-0.180653))
+                .andExpect(jsonPath("$.origenLng").value(-78.467834));
+    }
+
+    @Test
+    void misEntregasIncluyeCoordenadasDeParadaYOrigen() throws Exception {
+        String admin = tokenAdmin();
+        Repartidor r = repartidorConToken();
+        long asignacionId = asignar(admin, pedidoDomicilioListo(), r.id);
+        long recorridoId = crearRecorrido(r.token, "INDIVIDUAL", List.of(asignacionId));
+
+        MvcResult res = mockMvc.perform(get("/api/v1/delivery/mis-entregas")
+                        .header("Authorization", "Bearer " + r.token))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode root = objectMapper.readTree(res.getResponse().getContentAsString());
+        JsonNode recorrido = null;
+        for (JsonNode rec : root.path("recorridos")) {
+            if (rec.path("recorridoId").asLong() == recorridoId) {
+                recorrido = rec;
+            }
+        }
+        org.junit.jupiter.api.Assertions.assertNotNull(recorrido, "recorrido no visible en mis-entregas");
+        // Origen del restaurante (configurado) presente en el recorrido.
+        org.junit.jupiter.api.Assertions.assertEquals(0,
+                new java.math.BigDecimal("-0.180653").compareTo(recorrido.path("origenLat").decimalValue()));
+        org.junit.jupiter.api.Assertions.assertEquals(0,
+                new java.math.BigDecimal("-78.467834").compareTo(recorrido.path("origenLng").decimalValue()));
+        // Coordenadas de la parada tomadas del geocoding simulado.
+        JsonNode parada = recorrido.path("paradas").get(0);
+        org.junit.jupiter.api.Assertions.assertEquals(0,
+                new java.math.BigDecimal("-0.19").compareTo(parada.path("lat").decimalValue()));
+        org.junit.jupiter.api.Assertions.assertEquals(0,
+                new java.math.BigDecimal("-78.48").compareTo(parada.path("lng").decimalValue()));
+    }
+
+    @Test
+    void recalcularExcluyeResueltasYReusaCacheSiClaveCoincide() throws Exception {
+        String admin = tokenAdmin();
+        Repartidor r = repartidorConToken();
+        long a1 = asignar(admin, pedidoDomicilioListo(), r.id);
+        long a2 = asignar(admin, pedidoDomicilioListo(), r.id);
+        long recorridoId = crearRecorrido(r.token, "MULTIPLE", List.of(a1, a2));
+        iniciar(r.token, recorridoId);
+
+        // Resuelve la primera parada: debe quedar excluida de los recálculos.
+        List<Long> todas = paradas(r.token, recorridoId);
+        entregar(r.token, todas.get(0), "k-resuelta").andExpect(status().isOk());
+
+        // Llamadas a Directions realizadas hasta ahora (crear/iniciar no las usan,
+        // pero el flujo previo pudo cachear). Contamos desde aquí.
+        Mockito.clearInvocations(orsClient);
+
+        String cuerpo = """
+                {"lat":-0.1850,"lng":-78.4700}
+                """;
+        // Primer recalculo: calcula y cachea la ruta de las paradas PENDIENTES.
+        mockMvc.perform(post("/api/v1/delivery/recorridos/{id}/recalcular", recorridoId)
+                        .header("Authorization", "Bearer " + r.token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.geometria").value("geometria-fake"));
+        // Segundo recalculo con la MISMA ubicación/paradas: clave de caché idéntica
+        // -> NO vuelve a llamar a ORS Directions.
+        mockMvc.perform(post("/api/v1/delivery/recorridos/{id}/recalcular", recorridoId)
+                        .header("Authorization", "Bearer " + r.token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo))
+                .andExpect(status().isOk());
+
+        // Exactamente una llamada real a Directions en los dos recálculos.
+        Mockito.verify(orsClient, Mockito.times(1)).calcularRuta(any(), any());
+    }
+
     // ---------- PROPIEDAD / GUARD / 503 ----------
 
     @Test

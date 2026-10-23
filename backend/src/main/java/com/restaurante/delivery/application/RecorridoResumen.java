@@ -1,7 +1,9 @@
 package com.restaurante.delivery.application;
 
+import com.restaurante.delivery.domain.Coordenada;
 import com.restaurante.delivery.domain.Recorrido;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -19,9 +21,11 @@ public record RecorridoResumen(
         Integer duracionTotalS,
         Instant iniciadoAt,
         Instant finalizadoAt,
+        BigDecimal origenLat,
+        BigDecimal origenLng,
         List<ParadaResumen> paradas) {
 
-    static RecorridoResumen de(Recorrido r, List<ParadaResumen> paradas) {
+    static RecorridoResumen de(Recorrido r, Coordenada origen, List<ParadaResumen> paradas) {
         return new RecorridoResumen(
                 r.getId(),
                 r.getRepartidorId(),
@@ -32,6 +36,8 @@ public record RecorridoResumen(
                 r.getDuracionTotalS(),
                 r.getIniciadoAt(),
                 r.getFinalizadoAt(),
+                origen != null ? origen.lat() : null,
+                origen != null ? origen.lng() : null,
                 paradas);
     }
 }
