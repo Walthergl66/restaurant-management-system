@@ -75,9 +75,18 @@ export function ProductCard({ producto, onPress }: ProductCardProps) {
           <View style={styles.footer}>
             <Text style={styles.price}>${producto.precio}</Text>
             <TouchableOpacity
-              onPress={() => addItem(producto)}
+              onPress={(e) => {
+                // Evita que el toque del botón (+) burbujee al TouchableOpacity
+                // de la tarjeta (en Android los touchables anidados podían hacer
+                // que el tap de la tarjeta no abriera el detalle). El (+) agrega
+                // al carrito; el resto de la tarjeta navega al detalle.
+                e.stopPropagation();
+                addItem(producto);
+              }}
               style={styles.addButton}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Agregar ${producto.nombre} al carrito`}
             >
               <Ionicons name="add" size={18} color={colors.background} />
             </TouchableOpacity>
