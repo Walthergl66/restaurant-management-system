@@ -13,4 +13,6 @@ import java.util.Optional;
 public interface RutaCacheRepository extends JpaRepository<RutaCache, Long> {
 
     Optional<RutaCache> findByClaveHash(String claveHash);
+
+    void deleteByClaveHash(String claveHash);
 }

@@ -6,7 +6,7 @@
  * habilitado para repartir) para mostrar un mensaje claro sin romper la UI.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError } from '@/shared/api/apiError';
 import { deliveryService } from './api';
 import type { MisEntregas } from './types';
@@ -27,22 +27,31 @@ export function useMisEntregas(): EstadoMisEntregas {
   const [error, setError] = useState<string | null>(null);
   const [noHabilitado, setNoHabilitado] = useState(false);
 
+  const mountedRef = useRef(true);
+  useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
+
   const cargar = useCallback(async (esRefresh: boolean) => {
     if (esRefresh) setRefreshing(true);
     setError(null);
     setNoHabilitado(false);
     try {
       const respuesta = await deliveryService.misEntregas();
+      if (!mountedRef.current) return;
       setDatos(respuesta);
     } catch (e) {
+      if (!mountedRef.current) return;
       if (e instanceof ApiError && e.status === 403) {
         setNoHabilitado(true);
       } else {
         setError(e instanceof Error ? e.message : 'No se pudieron cargar tus entregas');
       }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (mountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 

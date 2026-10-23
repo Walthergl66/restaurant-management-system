@@ -92,6 +92,7 @@ public class RutasService {
         }
 
         cacheado.ifPresent(geocodingCache::delete);
+        geocodingCache.flush();
         geocodingCache.saveAndFlush(
                 new GeocodingCache(direccionId, coord.lat(), coord.lng(), textoDireccion));
         return resuelto;
@@ -128,7 +129,8 @@ public class RutasService {
         }
 
         ResultadoRuta resultado = orsClient.calcularRuta(coordenadasEnOrden, criterio);
-        cacheado.ifPresent(rutaCache::delete);
+        rutaCache.deleteByClaveHash(claveHash);
+        rutaCache.flush();
         rutaCache.saveAndFlush(new RutaCache(null, claveHash, resultado.geometria(),
                 resultado.distanciaM(), resultado.duracionS(),
                 ahora.plus(Duration.ofMinutes(TTL_RUTA_MINUTOS))));

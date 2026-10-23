@@ -65,6 +65,7 @@ export function useUbicacion(): EstadoUbicacion {
             distanceInterval: 25,
           },
           (posicion) => {
+            if (!activo) return;
             setUbicacion({
               latitude: posicion.coords.latitude,
               longitude: posicion.coords.longitude,
