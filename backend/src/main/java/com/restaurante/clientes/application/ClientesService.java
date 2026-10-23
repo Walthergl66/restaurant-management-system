@@ -20,6 +20,7 @@ import com.restaurante.clientes.domain.PedidoClienteLinea;
 import com.restaurante.clientes.domain.PedidoClienteLineaExtra;
 import com.restaurante.clientes.domain.PedidoClienteTablet;
 import com.restaurante.clientes.infrastructure.ClienteRepository;
+import com.restaurante.clientes.infrastructure.ClientesDeliveryProperties;
 import com.restaurante.clientes.infrastructure.DireccionClienteRepository;
 import com.restaurante.clientes.infrastructure.MetodoPagoClienteRepository;
 import com.restaurante.clientes.infrastructure.PedidoClienteRepository;
@@ -55,6 +56,7 @@ public class ClientesService implements Clientes {
     private final Catalogo catalogo;
     private final ApplicationEventPublisher eventPublisher;
     private final OutboxRepository outboxRepository;
+    private final ClientesDeliveryProperties deliveryProperties;
 
     public ClientesService(PedidoClienteRepository pedidoRepository,
                            ClienteRepository clienteRepository,
@@ -63,7 +65,8 @@ public class ClientesService implements Clientes {
                            Usuarios usuarios,
                            Catalogo catalogo,
                            ApplicationEventPublisher eventPublisher,
-                           OutboxRepository outboxRepository) {
+                           OutboxRepository outboxRepository,
+                           ClientesDeliveryProperties deliveryProperties) {
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.direccionRepository = direccionRepository;
@@ -72,6 +75,12 @@ public class ClientesService implements Clientes {
         this.catalogo = catalogo;
         this.eventPublisher = eventPublisher;
         this.outboxRepository = outboxRepository;
+        this.deliveryProperties = deliveryProperties;
+    }
+
+    /** Recargo de domicilio configurado (app.delivery.recargo-domicilio). */
+    private Money recargoDomicilio() {
+        return Money.of(deliveryProperties.getRecargoDomicilio());
     }
 
     @Override
@@ -199,7 +208,7 @@ public class ClientesService implements Clientes {
             throw new ConflictException("La clave de confirmación no coincide con la del pedido (RF-41)");
         }
 
-        pedido.confirmar(clave);
+        pedido.confirmar(clave, recargoDomicilio());
         pedidoRepository.save(pedido);
         publicarConfirmado(pedido);
         return toSPI(pedido);
@@ -246,7 +255,7 @@ public class ClientesService implements Clientes {
         if (!pedido.getIdempotencyKey().equals(clave)) {
             throw new ConflictException("Clave distinta (RF-41)");
         }
-        pedido.confirmar(clave);
+        pedido.confirmar(clave, recargoDomicilio());
         pedidoRepository.save(pedido);
         publicarConfirmado(pedido);
         return pedidoPorCodigo(codigo);
@@ -394,7 +403,10 @@ public class ClientesService implements Clientes {
         if (clienteRepository.findByCedula(evento.cedula()).isPresent()) {
             throw new ConflictException("La cédula ya está registrada");
         }
-        if (clienteRepository.findByTelefono(evento.celular()).isPresent()) {
+        // Teléfono OPCIONAL: el UNIQUE solo aplica a los clientes que registran
+        // uno. Con telefono nulo no se comprueba duplicidad (PostgreSQL admite
+        // múltiples NULL) ni se guarda un placeholder.
+        if (evento.celular() != null && clienteRepository.findByTelefono(evento.celular()).isPresent()) {
             throw new ConflictException("El celular ya está registrado");
         }
         clienteRepository.save(new Cliente(
@@ -587,17 +599,30 @@ public class ClientesService implements Clientes {
                     extrasSPI);
         }).toList();
 
-        java.math.BigDecimal total = lineas.stream()
+        Money subtotal = lineas.stream()
                 .map(PedidoClienteLinea::subtotal)
-                .reduce(Money.ZERO, Money::add)
-                .getAmount();
+                .reduce(Money.ZERO, Money::add);
+
+        // El costo de entrega definitivo se CONGELA al confirmar. Mientras el
+        // pedido está en BORRADOR aún no hay valor congelado: se proyecta el
+        // recargo configurado para DOMICILIO para que el checkout muestre el
+        // desglose correcto antes de confirmar.
+        Money costoEntrega;
+        if (p.getEstado() == EstadoPedidoCliente.BORRADOR) {
+            costoEntrega = "DOMICILIO".equals(p.getMetodoEntrega()) ? recargoDomicilio() : Money.ZERO;
+        } else {
+            costoEntrega = p.getCostoEntrega();
+        }
+        Money total = subtotal.add(costoEntrega);
 
         return new PedidoClienteSPI(
                 p.getCodigo(),
                 p.getEstado().name(),
                 p.getMetodoPago(),
                 p.getMetodoEntrega(),
-                total,
+                subtotal.getAmount(),
+                costoEntrega.getAmount(),
+                total.getAmount(),
                 lineasSPI,
                 p.getCreadoAt(),
                 p.getActualizadoAt(),

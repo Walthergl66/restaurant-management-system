@@ -82,6 +82,10 @@ app:
     secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:3600000}       # 1 hora (A-04: ventana corta)
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 días
+  delivery:
+    # Recargo fijo que el backend suma al total de un pedido DOMICILIO y
+    # congela al confirmarlo. Ajustable sin tocar código.
+    recargo-domicilio: ${DELIVERY_RECARGO_DOMICILIO:1.50}
   iva:
     rate: ${IVA_RATE:0.15}   # 15% incluido en los precios de catálogo
   dinero:
