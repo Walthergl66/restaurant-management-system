@@ -2,6 +2,8 @@
 import api from '@/shared/api/client'
 import type {
   AsignacionResponse,
+  ConfigRestauranteResumen,
+  ConfirmacionPendienteResponse,
   EstadoAsignacion,
   PedidoListoResponse,
   RepartidorResponse,
@@ -69,5 +71,42 @@ export async function reasignar(
   const { data } = await api.post(`/delivery/asignaciones/${pedidoClienteId}/reasignar`, {
     repartidorId,
   })
+  return data
+}
+
+// ---- Ubicación del restaurante (delivery:config-gestionar) ----
+
+export async function getConfigRestaurante(): Promise<ConfigRestauranteResumen> {
+  const { data } = await api.get('/delivery/config-restaurante')
+  return data
+}
+
+export async function actualizarDireccionRestaurante(
+  direccion: string,
+): Promise<ConfigRestauranteResumen> {
+  const { data } = await api.put('/delivery/config-restaurante/direccion', { direccion })
+  return data
+}
+
+export async function fijarCoordenadasRestaurante(
+  lat: number,
+  lng: number,
+): Promise<ConfigRestauranteResumen> {
+  const { data } = await api.put('/delivery/config-restaurante/coordenadas', { lat, lng })
+  return data
+}
+
+// ---- Confirmaciones pendientes (delivery:confirmacion-resolver) ----
+
+export async function listarConfirmacionesPendientes(): Promise<ConfirmacionPendienteResponse[]> {
+  const { data } = await api.get('/delivery/confirmaciones/pendientes')
+  return data
+}
+
+export async function resolverConfirmacion(
+  paradaId: number,
+  motivo: string,
+): Promise<ConfirmacionPendienteResponse> {
+  const { data } = await api.post(`/delivery/confirmaciones/${paradaId}/resolver`, { motivo })
   return data
 }

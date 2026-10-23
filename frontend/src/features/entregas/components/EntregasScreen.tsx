@@ -3,6 +3,8 @@ import { useAuthStore, hasPermiso } from '@/features/auth'
 import RepartidoresPanel from './RepartidoresPanel'
 import PendientesPanel from './PendientesPanel'
 import EstadosRepartoPanel from './EstadosRepartoPanel'
+import UbicacionRestaurantePanel from './UbicacionRestaurantePanel'
+import ConfirmacionesPendientesPanel from './ConfirmacionesPendientesPanel'
 
 export default function EntregasScreen() {
   const user = useAuthStore(s => s.user)
@@ -22,9 +24,11 @@ export default function EntregasScreen() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <h1 style={{ fontSize: 20, fontWeight: 800 }}>Gestión de entregas</h1>
+      <UbicacionRestaurantePanel />
       <RepartidoresPanel />
       <PendientesPanel />
       <EstadosRepartoPanel />
+      <ConfirmacionesPendientesPanel />
     </div>
   )
 }

@@ -25,6 +25,30 @@ export interface PedidoListoResponse {
   telefono?: string | null
 }
 
+/** Espejo de ConfigRestauranteResumen (config-restaurante). lat/lng llegan como número (BigDecimal). */
+export interface ConfigRestauranteResumen {
+  direccion: string | null
+  lat: number | null
+  lng: number | null
+  origenCoords: 'GEOCODING' | 'MANUAL' | null
+  tieneCoordenadas: boolean
+  requiereSeleccionManual: boolean
+}
+
+/** Espejo de DeliveryConfirmacionesController.ConfirmacionPendienteResponse */
+export interface ConfirmacionPendienteResponse {
+  paradaId: number
+  asignacionId: number
+  pedidoClienteId: number
+  codigo?: string | null
+  direccion?: string | null
+  estado?: string | null
+  faseConfirmacion?: string | null
+  repartidorConfirmoAt?: string | null
+  clienteConfirmoAt?: string | null
+  entregaVerificada: boolean
+}
+
 /** Espejo de DeliveryAsignacionesController.AsignacionResponse */
 export interface AsignacionResponse {
   asignacionId: number

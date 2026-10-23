@@ -9,6 +9,11 @@ export {
   useAsignar,
   useAsignarLote,
   useReasignar,
+  useConfigRestaurante,
+  useActualizarDireccion,
+  useFijarCoordenadas,
+  useConfirmacionesPendientes,
+  useResolverConfirmacion,
 } from './hooks'
 export {
   listarRepartidores,
@@ -20,6 +25,11 @@ export {
   asignar,
   asignarLote,
   reasignar,
+  getConfigRestaurante,
+  actualizarDireccionRestaurante,
+  fijarCoordenadasRestaurante,
+  listarConfirmacionesPendientes,
+  resolverConfirmacion,
 } from './api'
 export type {
   EstadoRepartidor,
@@ -27,4 +37,6 @@ export type {
   RepartidorResponse,
   PedidoListoResponse,
   AsignacionResponse,
+  ConfigRestauranteResumen,
+  ConfirmacionPendienteResponse,
 } from './types'

@@ -4,18 +4,25 @@ import toast from 'react-hot-toast'
 import { queryClient } from '@/shared/api/queryClient'
 import { errMsg } from '@/shared/lib/utils'
 import {
+  actualizarDireccionRestaurante,
   asignar,
   asignarLote,
+  fijarCoordenadasRestaurante,
+  getConfigRestaurante,
   habilitarRepartidor,
   listarAsignaciones,
+  listarConfirmacionesPendientes,
   listarPendientesDeAsignar,
   listarRepartidores,
   listarRepartidoresHabilitados,
   reasignar,
+  resolverConfirmacion,
   suspenderRepartidor,
 } from './api'
 import type {
   AsignacionResponse,
+  ConfigRestauranteResumen,
+  ConfirmacionPendienteResponse,
   EstadoAsignacion,
   PedidoListoResponse,
   RepartidorResponse,
@@ -118,5 +125,62 @@ export function useReasignar() {
       invalidarTodo()
     },
     onError: (e: unknown) => toast.error(errMsg(e, 'No se pudo reasignar')),
+  })
+}
+
+// ---- Ubicación del restaurante ----
+
+export function useConfigRestaurante() {
+  return useQuery<ConfigRestauranteResumen>({
+    queryKey: ['delivery', 'config-restaurante'],
+    queryFn: getConfigRestaurante,
+  })
+}
+
+export function useActualizarDireccion() {
+  return useMutation({
+    mutationFn: (direccion: string) => actualizarDireccionRestaurante(direccion),
+    onSuccess: (data) => {
+      if (data.requiereSeleccionManual) {
+        toast('No se pudo ubicar automáticamente, selecciona el punto en el mapa', { icon: '📍' })
+      } else {
+        toast.success('Dirección actualizada')
+      }
+      queryClient.setQueryData(['delivery', 'config-restaurante'], data)
+    },
+    onError: (e: unknown) => toast.error(errMsg(e, 'No se pudo actualizar la dirección')),
+  })
+}
+
+export function useFijarCoordenadas() {
+  return useMutation({
+    mutationFn: (v: { lat: number; lng: number }) => fijarCoordenadasRestaurante(v.lat, v.lng),
+    onSuccess: (data) => {
+      toast.success('Ubicación guardada')
+      queryClient.setQueryData(['delivery', 'config-restaurante'], data)
+    },
+    onError: (e: unknown) => toast.error(errMsg(e, 'No se pudo guardar la ubicación')),
+  })
+}
+
+// ---- Confirmaciones pendientes ----
+
+export function useConfirmacionesPendientes() {
+  return useQuery<ConfirmacionPendienteResponse[]>({
+    queryKey: ['delivery', 'confirmaciones-pendientes'],
+    queryFn: listarConfirmacionesPendientes,
+    refetchInterval: REFRESH,
+  })
+}
+
+export function useResolverConfirmacion() {
+  return useMutation({
+    mutationFn: (v: { paradaId: number; motivo: string }) =>
+      resolverConfirmacion(v.paradaId, v.motivo),
+    onSuccess: () => {
+      toast.success('Entrega resuelta')
+      queryClient.invalidateQueries({ queryKey: ['delivery', 'confirmaciones-pendientes'] })
+    },
+    onError: (e: unknown) => toast.error(errMsg(e, 'No se pudo resolver la entrega')),
   })
 }
