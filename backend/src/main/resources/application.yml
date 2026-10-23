@@ -103,3 +103,12 @@ app:
       remitente-email: ${BREVO_REMITENTE_EMAIL:}
       remitente-nombre: ${BREVO_REMITENTE_NOMBRE:Estación Burger}
       timeout: ${BREVO_TIMEOUT:5s}
+  ors:
+    # OpenRouteService: proveedor de rutas (Directions), optimización de orden
+    # de paradas (Optimization/VROOM) y geocoding. La clave vive SOLO en el
+    # backend; el móvil pide rutas a nuestra API, nunca a ORS directamente.
+    # Sin api-key el módulo delivery no llama a ORS y responde 503 en los
+    # endpoints que la necesitan (fail-closed, no inventa rutas).
+    api-key: ${ORS_API_KEY:}
+    base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}
+    timeout-ms: ${ORS_TIMEOUT_MS:8000}
