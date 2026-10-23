@@ -22,6 +22,7 @@ import { nuevoUuid } from './uuid';
 export type AccionCargando = null | 'iniciar' | 'entregar' | 'finalizar';
 
 export interface EstadoEntregaIndividual {
+  etapa: 'recogida' | 'entrega';
   ruta: RutaCalculada | null;
   rutaCargando: boolean;
   rutaNoDisponible: boolean;
@@ -72,6 +73,7 @@ export function useEntregaIndividual(
   datos: MisEntregas | null,
   ubicacionRepartidor: LatLng | null = null
 ): EstadoEntregaIndividual {
+  const [etapa, setEtapa] = useState<'recogida' | 'entrega'>('recogida');
   const [ruta, setRuta] = useState<RutaCalculada | null>(null);
   const [rutaCargando, setRutaCargando] = useState(true);
   const [rutaNoDisponible, setRutaNoDisponible] = useState(false);
@@ -103,6 +105,7 @@ export function useEntregaIndividual(
     setRecorridoFinalizado(
       existente.estado === 'FINALIZADO' || existente.estado === 'CANCELADO'
     );
+    setEtapa('entrega');
   }, [datos, asignacionId]);
 
   // Carga de la ruta individual al montar / cambiar asignación.
@@ -133,18 +136,25 @@ export function useEntregaIndividual(
   }, [asignacionId, entrega]);
 
   const recalcularRutaDinamica = useCallback(async () => {
-    if (!recorridoId || !recorridoEnCurso || !ubicacionRepartidor) return;
+    if (!ubicacionRepartidor) return;
+    if (etapa === 'entrega' && (!recorridoId || !recorridoEnCurso)) return;
     const ultima = ultimaUbicacionRef.current;
     if (ultima && distanciaMetros(ultima, ubicacionRepartidor) < 30) return;
     if (recalculandoRef.current) return;
     recalculandoRef.current = true;
     const requestId = ++requestIdRef.current;
     try {
-      const nueva = await deliveryService.recalcular(
-        recorridoId,
-        ubicacionRepartidor.latitude,
-        ubicacionRepartidor.longitude
-      );
+      const nueva =
+        etapa === 'recogida'
+          ? await deliveryService.rutaRecogida(
+              ubicacionRepartidor.latitude,
+              ubicacionRepartidor.longitude
+            )
+          : await deliveryService.recalcular(
+              recorridoId as number,
+              ubicacionRepartidor.latitude,
+              ubicacionRepartidor.longitude
+            );
       if (requestId !== requestIdRef.current) return;
       setRuta(nueva);
       setRutaError(null);
@@ -170,6 +180,7 @@ export function useEntregaIndividual(
     const finalizado = existente.estado === 'FINALIZADO' || existente.estado === 'CANCELADO';
     setRecorridoFinalizado(finalizado);
     setAccionError(finalizado ? 'El recorrido ya fue finalizado.' : null);
+    setEtapa('entrega');
   }, [asignacionId]);
 
   const buscarRecorridoExistente = useCallback(async (): Promise<RecorridoResumen | undefined> => {
@@ -215,6 +226,7 @@ export function useEntregaIndividual(
           setRecorridoId(idRecorrido);
           setParadaId(idParada);
           setRecorridoFinalizado(false);
+          setEtapa('entrega');
         } catch (e) {
           if (e instanceof ApiError && e.status === 409) {
             const existente = await buscarRecorridoExistente();
@@ -233,6 +245,7 @@ export function useEntregaIndividual(
       const parada = iniciado.paradas.find((p) => p.asignacionId === asignacionId);
       if (parada) setParadaId(parada.paradaId);
       setRecorridoFinalizado(false);
+      setEtapa('entrega');
     } catch (e) {
       setAccionError(mensajeError(e, 'No se pudo iniciar el reparto'));
     } finally {
@@ -272,6 +285,7 @@ export function useEntregaIndividual(
   }, [accion, recorridoId, paradaEntregada]);
 
   return {
+    etapa,
     ruta,
     rutaCargando,
     rutaNoDisponible,

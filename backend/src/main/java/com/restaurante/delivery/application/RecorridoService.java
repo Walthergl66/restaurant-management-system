@@ -133,6 +133,17 @@ public class RecorridoService {
     }
 
     /**
+     * Ruta de recogida: GPS real del repartidor -> ubicación configurada del restaurante.
+     */
+    public RutaCalculada calcularRutaRecogida(java.math.BigDecimal lat, java.math.BigDecimal lng) {
+        repartidorService.repartidorHabilitadoDelUsuarioActual();
+        Coordenada origen = new Coordenada(lat, lng);
+        Coordenada destino = configRestaurante.origenParaRutas();
+        ResultadoRuta ruta = rutas.rutaPara(List.of(origen, destino), CRITERIO_POR_DEFECTO);
+        return RutaCalculada.de(ruta);
+    }
+
+    /**
      * Propuesta de multientrega optimizada: valida que TODAS las asignaciones
      * son del repartidor actual, activas y DOMICILIO; geocodifica cada destino;
      * pide a ORS Optimization (VROOM) el ORDEN eficiente y luego a ORS Directions

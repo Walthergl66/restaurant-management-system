@@ -150,6 +150,7 @@ export default function DetalleEntregaScreen() {
                   : []
               }
               origen={origenCoord}
+              colorRuta={flujo.etapa === 'recogida' ? colors.success : colors.neonOrange}
             />
             {flujo.rutaError ? (
               <View style={styles.mapInfo}>
@@ -217,7 +218,7 @@ export default function DetalleEntregaScreen() {
         <View style={styles.actions}>
           <AccionBtn
             icono="play"
-            texto="Iniciar reparto"
+            texto={flujo.etapa === 'recogida' ? 'Pedido recogido' : 'Iniciar reparto'}
             onPress={() => void flujo.iniciarReparto()}
             cargando={flujo.accion === 'iniciar'}
             habilitado={puedeIniciar && flujo.accion == null}

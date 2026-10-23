@@ -18,6 +18,7 @@ interface MapaRutaProps {
   ubicacionRepartidor: LatLng | null;
   paradas?: ParadaMapa[];
   origen?: LatLng | null;
+  colorRuta?: string;
 }
 
 export default function MapaRuta({
@@ -25,6 +26,7 @@ export default function MapaRuta({
   ubicacionRepartidor,
   paradas,
   origen,
+  colorRuta = '#F5A623',
 }: MapaRutaProps) {
   const webViewRef = useRef<WebView>(null);
   const [loaded, setLoaded] = useState(false);
@@ -105,7 +107,7 @@ export default function MapaRuta({
         if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
         const latLngs = coords.map(function (coord) { return L.latLng(coord[0], coord[1]); });
         if (latLngs.length > 1) {
-          routeLayer = L.polyline(latLngs, { color: '#F5A623', weight: 5, opacity: 0.95 }).addTo(map);
+          routeLayer = L.polyline(latLngs, { color: ${JSON.stringify(colorRuta)}, weight: 5, opacity: 0.95 }).addTo(map);
         }
         return latLngs;
       }

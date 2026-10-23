@@ -28,6 +28,11 @@ export const deliveryService = {
     return apiClient.post<RutaCalculada>('/delivery/rutas/individual', { asignacionId });
   },
 
+  /** Ruta de recogida (GPS del repartidor -> restaurante). */
+  rutaRecogida(lat: number, lng: number): Promise<RutaCalculada> {
+    return apiClient.post<RutaCalculada>('/delivery/rutas/recogida', { lat, lng });
+  },
+
   /** Propuesta de multientrega con el orden de paradas optimizado por ORS. */
   optimizar(
     asignacionIds: number[],

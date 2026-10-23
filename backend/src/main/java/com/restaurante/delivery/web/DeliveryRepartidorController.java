@@ -66,6 +66,13 @@ public class DeliveryRepartidorController {
         return recorridos.calcularRutaIndividual(request.asignacionId());
     }
 
+    @PostMapping("/rutas/recogida")
+    @PreAuthorize("hasAuthority('delivery:mis-entregas')")
+    @Operation(summary = "Ruta de recogida (GPS del repartidor -> restaurante)")
+    public RutaCalculada rutaRecogida(@Valid @RequestBody RecogidaRequest request) {
+        return recorridos.calcularRutaRecogida(request.lat(), request.lng());
+    }
+
     @PostMapping("/rutas/optimizar")
     @PreAuthorize("hasAuthority('delivery:mis-entregas')")
     @Operation(summary = "Propuesta de multientrega con el orden de paradas optimizado por ORS")
@@ -136,6 +143,10 @@ public class DeliveryRepartidorController {
 
     /** Ruta individual para una asignación propia. */
     public record RutaIndividualRequest(@NotNull Long asignacionId) {
+    }
+
+    /** Ruta de recogida desde la ubicación actual del repartidor. */
+    public record RecogidaRequest(@NotNull BigDecimal lat, @NotNull BigDecimal lng) {
     }
 
     /** Propuesta de multientrega: asignaciones a optimizar y criterio opcional
