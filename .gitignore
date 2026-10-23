@@ -42,3 +42,6 @@ CLAUDE.md
 PLAN_BACKEND_RESTAURANT.md
 *plan-backend-restaurante*.md
 plan-produccion.md
+
+#Ingnorar carpeta demo que es solo para presentacion. 
+/demo/
