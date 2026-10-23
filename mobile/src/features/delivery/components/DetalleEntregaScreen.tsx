@@ -110,6 +110,11 @@ export default function DetalleEntregaScreen() {
     }
   };
 
+  const iniciarReparto = async () => {
+    await flujo.iniciarReparto();
+    await refrescar();
+  };
+
   const puedeIniciar =
     !flujo.recorridoEnCurso && !flujo.paradaEntregada && !flujo.recorridoFinalizado;
   const puedeEntregar = flujo.recorridoEnCurso && flujo.paradaId != null && !flujo.paradaEntregada;
@@ -164,7 +169,9 @@ export default function DetalleEntregaScreen() {
             <Ionicons name="location-outline" size={30} color={colors.warning} />
             <Text style={styles.mapInfoText}>
               {flujo.rutaError ??
-                'No se pudo ubicar la dirección del pedido. Corrígela desde el checkout o contacta al cliente.'}
+                (ubicacion.permiso === 'denegado'
+                  ? 'Activa la ubicación para calcular la ruta.'
+                  : 'Calculando la ruta con tu ubicación actual...')}
             </Text>
           </View>
         )}
@@ -219,7 +226,7 @@ export default function DetalleEntregaScreen() {
           <AccionBtn
             icono="play"
             texto={flujo.etapa === 'recogida' ? 'Pedido recogido' : 'Iniciar reparto'}
-            onPress={() => void flujo.iniciarReparto()}
+            onPress={() => void iniciarReparto()}
             cargando={flujo.accion === 'iniciar'}
             habilitado={puedeIniciar && flujo.accion == null}
             variante="primaria"
