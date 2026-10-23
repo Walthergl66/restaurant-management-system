@@ -8,3 +8,13 @@ import type { UsuarioInfo } from './types';
 export function puedeAtenderMesas(usuario: UsuarioInfo | null): boolean {
   return !!usuario && !!usuario.permisos?.includes('pedidos:crear');
 }
+
+/**
+ * Política de acceso a la sección de reparto (app del repartidor). Se resuelve
+ * por PERMISO: solo el repartidor HABILITADO tiene `delivery:mis-entregas`
+ * operativo (el backend separa el rol del estado operativo y valida todo). Un
+ * DELIVERY no habilitado no llega aquí.
+ */
+export function puedeRepartir(usuario: UsuarioInfo | null): boolean {
+  return !!usuario && !!usuario.permisos?.includes('delivery:mis-entregas');
+}

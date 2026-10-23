@@ -11,7 +11,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/features/auth';
-import { puedeAtenderMesas } from '@/features/auth';
+import { puedeAtenderMesas, puedeRepartir } from '@/features/auth';
 import { CartProvider } from '@/features/carrito';
 import { colors } from '@/theme/colors';
 
@@ -29,14 +29,27 @@ function RootNavigator() {
     const enAuth = RUTAS_AUTH.includes(segments[0] as string);
     const enCliente = segments[0] === '(tabs)';
     const enMesero = segments[0] === '(waiter)';
-    const esMesero = puedeAtenderMesas(usuario);
+    const enDelivery = segments[0] === '(delivery)';
+
+    // Prioridad de roles clara: un repartidor NO es mesero ni cliente. El gate
+    // se decide por permiso; el backend valida todo igualmente.
+    const esRepartidor = puedeRepartir(usuario);
+    const esMesero = !esRepartidor && puedeAtenderMesas(usuario);
+
+    // Grupo de inicio que corresponde al usuario autenticado.
+    const grupoInicio = esRepartidor ? '/(delivery)' : esMesero ? '/(waiter)' : '/(tabs)';
+
     if (!isAuthenticated && !enAuth) {
       router.replace('/login');
     } else if (isAuthenticated && enAuth) {
-      router.replace(esMesero ? '/(waiter)' : '/(tabs)');
-    } else if (isAuthenticated && esMesero && enCliente) {
+      router.replace(grupoInicio);
+    } else if (isAuthenticated && esRepartidor && (enCliente || enMesero)) {
+      // Un repartidor nunca permanece en los grupos de cliente/mesero.
+      router.replace('/(delivery)');
+    } else if (isAuthenticated && esMesero && (enCliente || enDelivery)) {
       router.replace('/(waiter)');
-    } else if (isAuthenticated && !esMesero && enMesero) {
+    } else if (isAuthenticated && !esRepartidor && !esMesero && (enMesero || enDelivery)) {
+      // Cliente (sin permisos de mesero ni reparto) fuera de (waiter)/(delivery).
       router.replace('/(tabs)');
     }
   }, [loading, isAuthenticated, usuario, segments, router]);
@@ -59,6 +72,7 @@ function RootNavigator() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(waiter)" options={{ headerShown: false }} />
+      <Stack.Screen name="(delivery)" options={{ headerShown: false }} />
       {/* Las pantallas de auth NO van como presentation:'modal': en Android el
           contenedor modal nativo se reanima al abrir/cambiar el teclado y eso
           le roba el foco al TextInput, haciendo rebotar el foco entre campos.

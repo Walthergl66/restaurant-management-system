@@ -1,6 +1,6 @@
 export { AuthProvider, useAuth } from './AuthContext'
 export { authService } from './api'
-export { puedeAtenderMesas } from './permisos'
+export { puedeAtenderMesas, puedeRepartir } from './permisos'
 export { PasswordStrength } from './PasswordStrength'
 export {
   esCedulaValida,
