@@ -430,6 +430,48 @@ public class ClientesService implements Clientes {
         return id;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.restaurante.clientes.PedidoDomicilioSPI> pedidosDomicilioListos() {
+        return pedidoRepository
+                .findByMetodoEntregaAndEstadoOrderByIdAsc("DOMICILIO", EstadoPedidoCliente.LISTO)
+                .stream()
+                .map(this::toDomicilioSPI)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<com.restaurante.clientes.PedidoDomicilioSPI> datosEntrega(Long pedidoClienteId) {
+        if (pedidoClienteId == null) {
+            return Optional.empty();
+        }
+        return pedidoRepository.findById(pedidoClienteId).map(this::toDomicilioSPI);
+    }
+
+    private com.restaurante.clientes.PedidoDomicilioSPI toDomicilioSPI(PedidoCliente p) {
+        String clienteNombre = clienteRepository.findById(p.getClienteId())
+                .map(Cliente::getNombre)
+                .orElse(null);
+        String direccionTexto = null;
+        String telefono = null;
+        if (p.getDireccionId() != null) {
+            DireccionCliente dir = direccionRepository.findById(p.getDireccionId()).orElse(null);
+            if (dir != null) {
+                direccionTexto = dir.getDireccion();
+                telefono = dir.getTelefono();
+            }
+        }
+        return new com.restaurante.clientes.PedidoDomicilioSPI(
+                p.getId(),
+                p.getCodigo(),
+                p.getEstado().name(),
+                p.getMetodoEntrega(),
+                clienteNombre,
+                direccionTexto,
+                telefono);
+    }
+
     /** Cédula única con el usuario como prefijo. Si se agota el espacio de
      *  sufijos se falla en voz alta en vez de insertar una cédula repetida. */
     private String cedulaLibre(Long usuarioId) {

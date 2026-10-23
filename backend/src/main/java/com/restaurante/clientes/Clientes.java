@@ -81,4 +81,15 @@ public interface Clientes {
 
     /** Resuelve el clienteId real (BD) a partir del username del JWT. */
     Long resolverClienteId(String username);
+
+    /** Delivery (Fase 3): pedidos a DOMICILIO en estado LISTO, candidatos a
+     *  reparto, con sus datos de entrega. El módulo delivery filtra los que ya
+     *  tienen una asignación activa; aquí solo se aporta el criterio de
+     *  preparación ('listo para reparto' = DOMICILIO + LISTO) sin tocarlo. */
+    List<PedidoDomicilioSPI> pedidosDomicilioListos();
+
+    /** Delivery (Fase 3): datos de entrega de un pedido por su id interno
+     *  (el de {@code comercial.pedidos_clientes}, al que apunta
+     *  {@code delivery.asignaciones.pedido_cliente_id}). Vacío si no existe. */
+    java.util.Optional<PedidoDomicilioSPI> datosEntrega(Long pedidoClienteId);
 }
