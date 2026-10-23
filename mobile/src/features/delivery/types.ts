@@ -18,6 +18,13 @@ export interface EntregaResumen {
   telefono: string | null;
 }
 
+/** Fase de la doble confirmación de una parada (espejo de FaseConfirmacion). */
+export type FaseConfirmacion =
+  | 'SIN_CONFIRMAR'
+  | 'PENDIENTE_CONFIRMACION_CLIENTE'
+  | 'VERIFICADA'
+  | 'FALLIDA';
+
 /** ParadaResumen — una parada dentro de un recorrido (orden 0-based). */
 export interface ParadaResumen {
   paradaId: number;
@@ -30,6 +37,11 @@ export interface ParadaResumen {
   /** Coordenadas geocodificadas del destino (null si no geocodificó). */
   lat: number | null;
   lng: number | null;
+  /** Doble confirmación: fase y marcas de tiempo (separadas del estado logístico). */
+  faseConfirmacion: FaseConfirmacion;
+  repartidorConfirmoAt: string | null;
+  clienteConfirmoAt: string | null;
+  entregaVerificada: boolean;
 }
 
 /** RecorridoResumen — un recorrido con su estado logístico y paradas en orden. */
@@ -98,6 +110,10 @@ export interface ParadaResponse {
   direccion: string | null;
   lat: number | null;
   lng: number | null;
+  faseConfirmacion: FaseConfirmacion;
+  repartidorConfirmoAt: string | null;
+  clienteConfirmoAt: string | null;
+  entregaVerificada: boolean;
 }
 
 /** Criterio de optimización del orden de paradas. */

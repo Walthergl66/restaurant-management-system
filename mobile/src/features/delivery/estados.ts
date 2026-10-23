@@ -34,6 +34,19 @@ const ESTADOS_RECORRIDO: Record<string, EstiloEstado> = {
   CANCELADO: { etiqueta: 'Cancelado', color: colors.textMuted },
 };
 
+// Fase de la doble confirmación (separada del estado logístico). Tras marcar la
+// entrega, el repartidor ve que queda pendiente la confirmación del cliente,
+// pero NO se bloquea: puede seguir con otras paradas y finalizar el recorrido.
+const FASES_CONFIRMACION: Record<string, EstiloEstado> = {
+  SIN_CONFIRMAR: { etiqueta: 'Sin confirmar', color: colors.neonOrange },
+  PENDIENTE_CONFIRMACION_CLIENTE: {
+    etiqueta: 'Pendiente de confirmación del cliente',
+    color: colors.neonPink,
+  },
+  VERIFICADA: { etiqueta: 'Entrega verificada', color: colors.success },
+  FALLIDA: { etiqueta: 'Fallida', color: colors.error },
+};
+
 function resolver(mapa: Record<string, EstiloEstado>, estado: string): EstiloEstado {
   return mapa[estado] ?? { etiqueta: estado, color: colors.textSecondary };
 }
@@ -41,3 +54,4 @@ function resolver(mapa: Record<string, EstiloEstado>, estado: string): EstiloEst
 export const estiloEstadoAsignacion = (estado: string) => resolver(ESTADOS_ASIGNACION, estado);
 export const estiloEstadoParada = (estado: string) => resolver(ESTADOS_PARADA, estado);
 export const estiloEstadoRecorrido = (estado: string) => resolver(ESTADOS_RECORRIDO, estado);
+export const estiloFaseConfirmacion = (fase: string) => resolver(FASES_CONFIRMACION, fase);

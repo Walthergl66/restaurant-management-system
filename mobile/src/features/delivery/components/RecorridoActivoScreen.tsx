@@ -13,7 +13,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/theme/colors';
-import { estiloEstadoParada, estiloEstadoRecorrido } from '../estados';
+import { estiloEstadoParada, estiloEstadoRecorrido, estiloFaseConfirmacion } from '../estados';
 import { useRecorridoActivo, type EstadoParadaUi } from '../useRecorridoActivo';
 import { useUbicacion } from '../useUbicacion';
 import type { ParadaResumen } from '../types';
@@ -364,6 +364,17 @@ function ParadaItem({ parada, esSiguiente, estadoUi, onEntregar, onIncidencia }:
         <Text style={styles.proximaNota}>Siguiente parada</Text>
       )}
 
+      {/* Doble confirmación: tras entregar, la parada queda a la espera de que
+          el cliente confirme. No bloquea al repartidor (puede seguir/finalizar). */}
+      {parada.estado === 'ENTREGADA' && (
+        <View style={styles.faseConfirmacion}>
+          <EstadoBadge
+            etiqueta={estiloFaseConfirmacion(parada.faseConfirmacion).etiqueta}
+            color={estiloFaseConfirmacion(parada.faseConfirmacion).color}
+          />
+        </View>
+      )}
+
       {pendienteSync && (
         <Text style={styles.syncNota}>Pendiente de sincronizar (sin conexión)</Text>
       )}
@@ -380,7 +391,7 @@ function ParadaItem({ parada, esSiguiente, estadoUi, onEntregar, onIncidencia }:
             {enviando ? (
               <ActivityIndicator color="#000" />
             ) : (
-              <Text style={styles.botonText}>Marcar entregado</Text>
+              <Text style={styles.botonText}>He llegado / Entregar</Text>
             )}
           </TouchableOpacity>
           <TouchableOpacity
@@ -461,6 +472,7 @@ const styles = StyleSheet.create({
   paradaNumText: { color: '#000', fontWeight: '800' },
   proximaNota: { color: colors.neonOrange, fontSize: 12, fontWeight: '700' },
   syncNota: { color: colors.warning, fontSize: 12, fontWeight: '700' },
+  faseConfirmacion: { marginTop: 6, alignSelf: 'flex-start' },
   paradaBotones: { flexDirection: 'row', gap: 10 },
   paradaBoton: { flex: 1 },
   boton: {
