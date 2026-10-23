@@ -110,7 +110,8 @@ export default function DetalleEntregaScreen() {
     }
   };
 
-  const puedeIniciar = !flujo.recorridoEnCurso && !flujo.paradaEntregada;
+  const puedeIniciar =
+    !flujo.recorridoEnCurso && !flujo.paradaEntregada && !flujo.recorridoFinalizado;
   const puedeEntregar = flujo.recorridoEnCurso && flujo.paradaId != null && !flujo.paradaEntregada;
   const puedeFinalizar = flujo.recorridoId != null && flujo.paradaEntregada;
 

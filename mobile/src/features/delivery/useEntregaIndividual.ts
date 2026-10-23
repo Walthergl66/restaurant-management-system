@@ -29,6 +29,7 @@ export interface EstadoEntregaIndividual {
   paradaId: number | null;
   paradaEntregada: boolean;
   recorridoEnCurso: boolean;
+  recorridoFinalizado: boolean;
   accion: AccionCargando;
   accionError: string | null;
   iniciarReparto: () => Promise<void>;
@@ -65,6 +66,7 @@ export function useEntregaIndividual(
   const [paradaId, setParadaId] = useState<number | null>(null);
   const [paradaEntregada, setParadaEntregada] = useState(false);
   const [recorridoEnCurso, setRecorridoEnCurso] = useState(false);
+  const [recorridoFinalizado, setRecorridoFinalizado] = useState(false);
 
   const [accion, setAccion] = useState<AccionCargando>(null);
   const [accionError, setAccionError] = useState<string | null>(null);
@@ -110,6 +112,35 @@ export function useEntregaIndividual(
     };
   }, [asignacionId, entrega]);
 
+  const aplicarRecorridoExistente = useCallback((existente: RecorridoResumen) => {
+    const parada = existente.paradas.find((p) => p.asignacionId === asignacionId);
+    setRecorridoId(existente.recorridoId);
+    setParadaId(parada?.paradaId ?? null);
+    setRecorridoEnCurso(existente.estado === 'EN_CURSO' || existente.estado === 'PLANIFICADO');
+    setParadaEntregada(parada?.estado === 'ENTREGADA');
+    const finalizado = existente.estado === 'FINALIZADO' || existente.estado === 'CANCELADO';
+    setRecorridoFinalizado(finalizado);
+    setAccionError(finalizado ? 'El recorrido ya fue finalizado.' : null);
+  }, [asignacionId]);
+
+  const buscarRecorridoExistente = useCallback(async (): Promise<RecorridoResumen | undefined> => {
+    try {
+      const actualizados = await deliveryService.misEntregas();
+      const existente = actualizados.recorridos.find((r) =>
+        r.paradas.some((p) => p.asignacionId === asignacionId)
+      );
+      if (existente) return existente;
+    } catch {
+      // Si falla, se intenta con el historial finalizado.
+    }
+    try {
+      const historial = await deliveryService.historial();
+      return historial.find((r) => r.paradas.some((p) => p.asignacionId === asignacionId));
+    } catch {
+      return undefined;
+    }
+  }, [asignacionId]);
+
   const iniciarReparto = useCallback(async () => {
     if (accion) return;
     setAccion('iniciar');
@@ -119,27 +150,46 @@ export function useEntregaIndividual(
       let idParada = paradaId;
 
       if (idRecorrido == null) {
-        const creado = await deliveryService.crearRecorrido(
-          'INDIVIDUAL',
-          [asignacionId],
-          'DURACION'
-        );
-        idRecorrido = creado.recorridoId;
-        idParada = creado.paradas.find((p) => p.asignacionId === asignacionId)?.paradaId ?? null;
-        setRecorridoId(idRecorrido);
-        setParadaId(idParada);
+        const existente = await buscarRecorridoExistente();
+        if (existente) {
+          aplicarRecorridoExistente(existente);
+          return;
+        }
+        try {
+          const creado = await deliveryService.crearRecorrido(
+            'INDIVIDUAL',
+            [asignacionId],
+            'DURACION'
+          );
+          idRecorrido = creado.recorridoId;
+          idParada = creado.paradas.find((p) => p.asignacionId === asignacionId)?.paradaId ?? null;
+          setRecorridoId(idRecorrido);
+          setParadaId(idParada);
+          setRecorridoFinalizado(false);
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 409) {
+            const existente = await buscarRecorridoExistente();
+            if (existente) {
+              aplicarRecorridoExistente(existente);
+              setAccionError('La asignación ya pertenece a un recorrido.');
+              return;
+            }
+          }
+          throw e;
+        }
       }
 
       const iniciado = await deliveryService.iniciarRecorrido(idRecorrido);
       setRecorridoEnCurso(iniciado.estado === 'EN_CURSO');
       const parada = iniciado.paradas.find((p) => p.asignacionId === asignacionId);
       if (parada) setParadaId(parada.paradaId);
+      setRecorridoFinalizado(false);
     } catch (e) {
       setAccionError(mensajeError(e, 'No se pudo iniciar el reparto'));
     } finally {
       setAccion(null);
     }
-  }, [accion, recorridoId, paradaId, asignacionId]);
+  }, [accion, recorridoId, paradaId, asignacionId, buscarRecorridoExistente, aplicarRecorridoExistente]);
 
   const marcarEntregado = useCallback(async () => {
     if (accion || paradaId == null || paradaEntregada) return;
@@ -181,6 +231,7 @@ export function useEntregaIndividual(
     paradaId,
     paradaEntregada,
     recorridoEnCurso,
+    recorridoFinalizado,
     accion,
     accionError,
     iniciarReparto,

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+import Constants from 'expo-constants';
 import { colors } from '@/theme/colors';
 import { decodePolyline, type LatLng } from '../polyline';
 
@@ -95,7 +96,11 @@ export default function MapaRuta({
     <script>
       const routeCoords = ${JSON.stringify(routeCoords)};
       const markers = ${JSON.stringify(markers)};
-      const mapboxToken = ${JSON.stringify(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? '')};
+      const mapboxToken = ${JSON.stringify(
+        Constants.expoConfig?.extra?.mapboxToken ??
+          process.env.EXPO_PUBLIC_MAPBOX_TOKEN ??
+          ''
+      )};
       const map = L.map('map', { zoomControl: true, attributionControl: true });
       if (!mapboxToken) {
         const note = document.createElement('div');
