@@ -73,6 +73,35 @@ export interface ConfirmarPedidoRequest {
   idempotencyKey: string;
 }
 
+/** Fase logística de la entrega (recorrido del repartidor). */
+export type FaseLogistica =
+  | 'SIN_ASIGNAR'
+  | 'ASIGNADO'
+  | 'EN_CAMINO'
+  | 'ENTREGADO_POR_REPARTIDOR'
+  | 'FALLIDA';
+
+/** Fase de la doble confirmación de entrega. */
+export type FaseConfirmacion =
+  | 'SIN_CONFIRMAR'
+  | 'PENDIENTE_CONFIRMACION_CLIENTE'
+  | 'VERIFICADA'
+  | 'FALLIDA';
+
+/**
+ * SeguimientoEntregaSPI — estado logístico y de doble confirmación de la
+ * entrega de un pedido (espejo exacto del SPI del backend).
+ * GET /api/v1/clientes/pedidos/{codigo}/seguimiento
+ */
+export interface SeguimientoEntrega {
+  tieneEntrega: boolean;
+  faseLogistica: FaseLogistica;
+  faseConfirmacion: FaseConfirmacion;
+  repartidorConfirmoAt: string | null;
+  clienteConfirmoAt: string | null;
+  entregaVerificada: boolean;
+}
+
 /** NuevaDireccionClienteRequest — alta de dirección para domicilio. */
 export interface NuevaDireccionRequest {
   etiqueta: string;

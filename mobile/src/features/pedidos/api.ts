@@ -14,6 +14,7 @@ import type {
   NuevoMetodoPagoRequest,
   Page,
   PedidoCliente,
+  SeguimientoEntrega,
 } from './types';
 
 const ENDPOINTS = {
@@ -21,6 +22,10 @@ const ENDPOINTS = {
   pedidos: '/clientes/pedidos',
   pedido: (codigo: string) => `/clientes/pedidos/${codigo}`,
   confirmar: (codigo: string) => `/clientes/pedidos/${codigo}/confirmar`,
+  seguimiento: (codigo: string) =>
+    `/clientes/pedidos/${codigo}/seguimiento`,
+  confirmarRecepcion: (codigo: string) =>
+    `/clientes/pedidos/${codigo}/confirmar-recepcion`,
   historial: '/clientes/historial',
   direcciones: '/clientes/direcciones',
   metodosPago: '/clientes/metodos-pago',
@@ -56,6 +61,33 @@ export const pedidosService = {
   /** Snapshot del estado de un pedido propio (el push en vivo es vía WebSocket). */
   async getPedido(codigo: string): Promise<PedidoCliente> {
     return apiClient.get<PedidoCliente>(ENDPOINTS.pedido(codigo));
+  },
+
+  /**
+   * Seguimiento logístico y de doble confirmación de un pedido propio.
+   * Consulta ligera de respaldo del estado en vivo del socket.
+   */
+  async getSeguimiento(codigo: string): Promise<SeguimientoEntrega> {
+    return apiClient.get<SeguimientoEntrega>(ENDPOINTS.seguimiento(codigo));
+  },
+
+  /**
+   * Confirma la recepción del pedido por parte del cliente (2.ª de las
+   * dos confirmaciones). Idempotente vía header Idempotency-Key: un
+   * reintento con la misma clave no duplica la confirmación.
+   * 403 si el pedido es ajeno, 422 si el repartidor aún no entregó.
+   */
+  async confirmarRecepcion(
+    codigo: string,
+    idempotencyKey: string
+  ): Promise<SeguimientoEntrega> {
+    return apiClient.request<SeguimientoEntrega>(
+      ENDPOINTS.confirmarRecepcion(codigo),
+      {
+        method: 'POST',
+        headers: { 'Idempotency-Key': idempotencyKey },
+      }
+    );
   },
 
   /**
