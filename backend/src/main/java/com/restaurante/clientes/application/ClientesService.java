@@ -306,7 +306,9 @@ public class ClientesService implements Clientes {
                 request.etiqueta(),
                 request.direccion(),
                 request.telefono(),
-                request.observaciones());
+                request.observaciones(),
+                request.lat(),
+                request.lng());
         direccionRepository.save(dir);
         return toSPI(dir);
     }
@@ -637,6 +639,8 @@ public class ClientesService implements Clientes {
                 d.getDireccion(),
                 d.getTelefono(),
                 d.getObservaciones(),
+                d.getLat(),
+                d.getLng(),
                 d.getActiva(),
                 d.getCreadoAt());
     }

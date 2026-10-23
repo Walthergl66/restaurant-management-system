@@ -136,6 +136,8 @@ public class ClientesController {
         return clientes.direcciones(clienteIdActual());
     }
 
+
+
     /** RF-45: métodos de pago guardados del cliente (metadata no sensible). */
     @GetMapping("/metodos-pago")
     @PreAuthorize("hasAuthority('clientes:carrito-gestionar')")

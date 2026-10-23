@@ -86,6 +86,53 @@ public class OrsClient {
     }
 
     /**
+     * Candidato de búsqueda de ORS Geocoding: etiqueta legible + coordenadas.
+     */
+    public record CandidatoGeocoding(String etiqueta, BigDecimal lat, BigDecimal lng) {
+    }
+
+    /**
+     * Busca varios candidatos de dirección con ORS Geocoding (Pelias):
+     * {@code GET /geocode/search?text=...&size=limite}. Devuelve de 0 a
+     * {@code limite} candidatos con su etiqueta legible ({@code label}) y
+     * coordenadas. Nunca lanza por "sin resultados": devuelve lista vacía.
+     */
+    public List<CandidatoGeocoding> buscarCandidatos(String textoDireccion, int limite) {
+        exigirApiKey();
+        if (textoDireccion == null || textoDireccion.isBlank()) {
+            return List.of();
+        }
+        int size = Math.max(1, Math.min(limite, 10));
+        JsonNode cuerpo = ejecutar("geocoding", () -> restClient.get()
+                .uri(uri -> uri.path("/geocode/search")
+                        .queryParam("text", textoDireccion)
+                        .queryParam("size", size)
+                        .build())
+                .header("Authorization", propiedades.getApiKey())
+                .header("Accept", "application/json")
+                .retrieve()
+                .body(JsonNode.class));
+
+        JsonNode features = cuerpo == null ? null : cuerpo.get("features");
+        if (features == null || !features.isArray() || features.isEmpty()) {
+            return List.of();
+        }
+        List<CandidatoGeocoding> candidatos = new ArrayList<>();
+        for (JsonNode feature : features) {
+            JsonNode coords = feature.path("geometry").path("coordinates");
+            if (!coords.isArray() || coords.size() < 2) {
+                continue;
+            }
+            // ORS entrega [lng, lat]; se expone como (lat, lng).
+            BigDecimal lng = coords.get(0).decimalValue();
+            BigDecimal lat = coords.get(1).decimalValue();
+            String etiqueta = feature.path("properties").path("label").asString(textoDireccion);
+            candidatos.add(new CandidatoGeocoding(etiqueta, lat, lng));
+        }
+        return candidatos;
+    }
+
+    /**
      * Calcula una ruta que pasa por las coordenadas en el orden dado con ORS
      * Directions: {@code POST /v2/directions/driving-car}. El cuerpo envía
      * {@code coordinates} como {@code [[lng,lat],...]} (orden de ORS).
