@@ -95,19 +95,28 @@ export default function MapaRuta({
     <script>
       const routeCoords = ${JSON.stringify(routeCoords)};
       const markers = ${JSON.stringify(markers)};
+      const mapboxToken = ${JSON.stringify(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? '')};
       const map = L.map('map', { zoomControl: true, attributionControl: true });
-      const tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-        subdomains: 'abcd',
-        maxZoom: 20
-      });
-      tiles.addTo(map);
-      tiles.on('tileerror', function () {
+      if (!mapboxToken) {
         const note = document.createElement('div');
-        note.textContent = 'No se pudieron cargar las teselas del mapa.';
+        note.textContent = 'Configura EXPO_PUBLIC_MAPBOX_TOKEN para cargar el mapa.';
         note.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:999;color:#ef4444;font-size:12px;background:rgba(0,0,0,.7);padding:4px 8px;border-radius:8px;';
         document.body.appendChild(note);
-      });
+      } else {
+        const tiles = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=' + encodeURIComponent(mapboxToken), {
+          attribution: '&copy; Mapbox &copy; OpenStreetMap contributors',
+          tileSize: 512,
+          zoomOffset: -1,
+          maxZoom: 20
+        });
+        tiles.addTo(map);
+        tiles.on('tileerror', function () {
+          const note = document.createElement('div');
+          note.textContent = 'No se pudieron cargar las teselas del mapa.';
+          note.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:999;color:#ef4444;font-size:12px;background:rgba(0,0,0,.7);padding:4px 8px;border-radius:8px;';
+          document.body.appendChild(note);
+        });
+      }
       const latLngs = routeCoords.map(function (coord) { return L.latLng(coord[0], coord[1]); });
       if (latLngs.length > 1) {
         L.polyline(latLngs, { color: '#F5A623', weight: 5, opacity: 0.95 }).addTo(map);
