@@ -108,7 +108,7 @@ export function useEntregaIndividual(
     setEtapa('entrega');
   }, [datos, asignacionId]);
 
-  // Carga de la ruta individual al montar / cambiar asignación.
+  // Carga inicial: la ruta activa depende del estado confirmado por backend.
   useEffect(() => {
     if (!entrega) return;
     let activo = true;
@@ -116,27 +116,51 @@ export function useEntregaIndividual(
       setRutaCargando(true);
       setRutaNoDisponible(false);
       setRutaError(null);
-      try {
-        const calculada = await deliveryService.rutaIndividual(asignacionId);
-        if (activo) setRuta(calculada);
-      } catch (e) {
-        if (!activo) return;
-        if (e instanceof ApiError && e.status === 503) {
-          setRutaNoDisponible(true);
-        } else {
-          setRutaError(mensajeError(e, 'No se pudo cargar la ruta'));
+      const existente = recorridoDeAsignacion(datos, asignacionId);
+      if (!existente) {
+        try {
+          const historial = await deliveryService.historial();
+          const finalizado = historial.find((r) =>
+            r.paradas.some((p) => p.asignacionId === asignacionId)
+          );
+          if (activo && finalizado) {
+            aplicarRecorridoExistente(finalizado);
+          }
+        } catch {
+          // Si falla el historial, se mantiene la etapa por defecto.
         }
-      } finally {
-        if (activo) setRutaCargando(false);
+      }
+      const estadoActual = existente ?? recorridoDeAsignacion(datos, asignacionId);
+      const esFinalizado =
+        estadoActual?.estado === 'FINALIZADO' || estadoActual?.estado === 'CANCELADO';
+      if (esFinalizado) {
+        try {
+          const calculada = await deliveryService.rutaIndividual(asignacionId);
+          if (activo) setRuta(calculada);
+        } catch (e) {
+          if (!activo) return;
+          if (e instanceof ApiError && e.status === 503) setRutaNoDisponible(true);
+          else setRutaError(mensajeError(e, 'No se pudo cargar la ruta'));
+        } finally {
+          if (activo) setRutaCargando(false);
+        }
+        return;
+      }
+      if (activo) {
+        setRuta(null);
+        setRutaCargando(false);
       }
     })();
     return () => {
       activo = false;
     };
-  }, [asignacionId, entrega]);
+  }, [asignacionId, entrega, datos]);
 
   const recalcularRutaDinamica = useCallback(async () => {
-    if (!ubicacionRepartidor) return;
+    if (!ubicacionRepartidor) {
+      setRutaError('Se necesita GPS para calcular la ruta.');
+      return;
+    }
     if (etapa === 'entrega' && (!recorridoId || !recorridoEnCurso)) return;
     const ultima = ultimaUbicacionRef.current;
     if (ultima && distanciaMetros(ultima, ubicacionRepartidor) < 30) return;
