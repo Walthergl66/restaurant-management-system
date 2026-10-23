@@ -73,7 +73,7 @@ class ProblemaJsonUtf8Test {
         filter.doFilter(request, response, new MockFilterChain());
 
         assertEquals(429, response.getStatus());
-        assertUtf8ConAcentos(response, "Demasiados intentos de login, intente más tarde");
+        assertUtf8ConAcentos(response, "Demasiados intentos, intente más tarde");
     }
 
     /**
