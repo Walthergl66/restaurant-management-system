@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError } from '@/shared/api/apiError';
 import { deliveryService } from './api';
 import type { EntregaResumen, MisEntregas, RecorridoResumen, RutaCalculada } from './types';
+import type { LatLng } from './polyline';
 import { nuevoUuid } from './uuid';
 
 export type AccionCargando = null | 'iniciar' | 'entregar' | 'finalizar';
@@ -52,10 +53,24 @@ function mensajeError(e: unknown, fallback: string): string {
   return e instanceof Error ? e.message : fallback;
 }
 
+function distanciaMetros(a: LatLng, b: LatLng): number {
+  const radio = 6371000;
+  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
+  const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((a.latitude * Math.PI) / 180) *
+      Math.cos((b.latitude * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  return 2 * radio * Math.asin(Math.sqrt(h));
+}
+
 export function useEntregaIndividual(
   asignacionId: number,
   entrega: EntregaResumen | undefined,
-  datos: MisEntregas | null
+  datos: MisEntregas | null,
+  ubicacionRepartidor: LatLng | null = null
 ): EstadoEntregaIndividual {
   const [ruta, setRuta] = useState<RutaCalculada | null>(null);
   const [rutaCargando, setRutaCargando] = useState(true);
@@ -73,7 +88,9 @@ export function useEntregaIndividual(
 
   // Idempotency-Key reutilizado entre reintentos del MISMO intento de entrega.
   const idempotencyKey = useRef<string | null>(null);
-
+  const recalculandoRef = useRef(false);
+  const ultimaUbicacionRef = useRef<LatLng | null>(null);
+  const requestIdRef = useRef(0);
   // Estado inicial a partir de un recorrido ya existente para esta asignación.
   useEffect(() => {
     const existente = recorridoDeAsignacion(datos, asignacionId);
@@ -114,6 +131,35 @@ export function useEntregaIndividual(
       activo = false;
     };
   }, [asignacionId, entrega]);
+
+  const recalcularRutaDinamica = useCallback(async () => {
+    if (!recorridoId || !recorridoEnCurso || !ubicacionRepartidor) return;
+    const ultima = ultimaUbicacionRef.current;
+    if (ultima && distanciaMetros(ultima, ubicacionRepartidor) < 30) return;
+    if (recalculandoRef.current) return;
+    recalculandoRef.current = true;
+    const requestId = ++requestIdRef.current;
+    try {
+      const nueva = await deliveryService.recalcular(
+        recorridoId,
+        ubicacionRepartidor.latitude,
+        ubicacionRepartidor.longitude
+      );
+      if (requestId !== requestIdRef.current) return;
+      setRuta(nueva);
+      setRutaError(null);
+      ultimaUbicacionRef.current = ubicacionRepartidor;
+    } catch {
+      if (requestId !== requestIdRef.current) return;
+      setRutaError('No se pudo actualizar la ruta; se mantiene la última válida.');
+    } finally {
+      recalculandoRef.current = false;
+    }
+  }, [recorridoId, recorridoEnCurso, ubicacionRepartidor]);
+
+  useEffect(() => {
+    void recalcularRutaDinamica();
+  }, [recalcularRutaDinamica]);
 
   const aplicarRecorridoExistente = useCallback((existente: RecorridoResumen) => {
     const parada = existente.paradas.find((p) => p.asignacionId === asignacionId);

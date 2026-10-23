@@ -36,7 +36,7 @@ export default function DetalleEntregaScreen() {
   const entrega = datos?.asignaciones.find((e) => e.asignacionId === asignacionId);
 
   const ubicacion = useUbicacion();
-  const flujo = useEntregaIndividual(asignacionId, entrega, datos);
+  const flujo = useEntregaIndividual(asignacionId, entrega, datos, ubicacion.ubicacion);
 
   const recorrido = datos?.recorridos.find((r) =>
     r.paradas.some((p) => p.asignacionId === asignacionId)
