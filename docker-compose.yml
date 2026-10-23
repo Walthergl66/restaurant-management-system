@@ -71,6 +71,29 @@ services:
       start_period: 40s
     restart: unless-stopped
 
+  # Frontend Next.js (App Router). Proxea /api/* al backend por la red interna
+  # de compose (BACKEND_URL=http://backend:8080), así el navegador solo habla
+  # con el frontend: no se expone el backend ni hay CORS entre ambos.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # next.config.ts resuelve el rewrite de /api/* en BUILD time (output
+      # standalone), así que BACKEND_URL se pasa como build arg, no solo como
+      # variable de runtime.
+      args:
+        BACKEND_URL: ${BACKEND_URL:-http://backend:8080}
+    container_name: restaurante-frontend
+    environment:
+      # También en runtime, por si alguna ruta la consultara en server.
+      BACKEND_URL: ${BACKEND_URL:-http://backend:8080}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    restart: unless-stopped
+
 # Los datos de la BD de dev sobreviven `docker compose down` (no `down -v`).
 volumes:
   pgdata:
