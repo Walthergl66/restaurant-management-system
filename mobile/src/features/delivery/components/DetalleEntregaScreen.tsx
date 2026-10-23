@@ -38,6 +38,20 @@ export default function DetalleEntregaScreen() {
   const ubicacion = useUbicacion();
   const flujo = useEntregaIndividual(asignacionId, entrega, datos);
 
+  const recorrido = datos?.recorridos.find((r) =>
+    r.paradas.some((p) => p.asignacionId === asignacionId)
+  );
+  const parada = recorrido?.paradas.find((p) => p.asignacionId === asignacionId);
+  const origenCoord =
+    recorrido?.origenLat != null && recorrido?.origenLng != null
+      ? { latitude: Number(recorrido.origenLat), longitude: Number(recorrido.origenLng) }
+      : null;
+  const destinoCoord =
+    parada?.lat != null && parada?.lng != null
+      ? { latitude: parada.lat, longitude: parada.lng }
+      : null;
+  const hayCoordenadas = Boolean(origenCoord || destinoCoord || ubicacion.ubicacion);
+
   const header = (
     <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
       <TouchableOpacity
@@ -111,7 +125,7 @@ export default function DetalleEntregaScreen() {
           <EstadoBadge etiqueta={estado.etiqueta} color={estado.color} />
         </View>
 
-        {/* Mapa de la ruta individual */}
+        {/* Mapa de la ruta individual. Se muestra aunque ORS falle, si hay coords. */}
         {flujo.rutaCargando ? (
           <View style={styles.mapLoading}>
             <ActivityIndicator color={colors.neonOrange} />
@@ -124,17 +138,34 @@ export default function DetalleEntregaScreen() {
               Rutas no disponibles ahora mismo, intenta más tarde.
             </Text>
           </View>
-        ) : flujo.rutaError ? (
+        ) : hayCoordenadas || flujo.ruta ? (
+          <>
+            <MapaRuta
+              geometria={flujo.ruta?.geometria ?? ''}
+              ubicacionRepartidor={ubicacion.ubicacion}
+              paradas={
+                destinoCoord
+                  ? [{ orden: 0, latitude: destinoCoord.latitude, longitude: destinoCoord.longitude }]
+                  : []
+              }
+              origen={origenCoord}
+            />
+            {flujo.rutaError ? (
+              <View style={styles.mapInfo}>
+                <Ionicons name="alert-circle-outline" size={30} color={colors.error} />
+                <Text style={styles.mapInfoText}>{flujo.rutaError}</Text>
+              </View>
+            ) : null}
+          </>
+        ) : (
           <View style={styles.mapInfo}>
-            <Ionicons name="alert-circle-outline" size={30} color={colors.error} />
-            <Text style={styles.mapInfoText}>{flujo.rutaError}</Text>
+            <Ionicons name="location-outline" size={30} color={colors.warning} />
+            <Text style={styles.mapInfoText}>
+              {flujo.rutaError ??
+                'No se pudo ubicar la dirección del pedido. Corrígela desde el checkout o contacta al cliente.'}
+            </Text>
           </View>
-        ) : flujo.ruta ? (
-          <MapaRuta
-            geometria={flujo.ruta.geometria}
-            ubicacionRepartidor={ubicacion.ubicacion}
-          />
-        ) : null}
+        )}
 
         {/* Banner de permiso de ubicación denegado (no bloquea la ruta). */}
         {ubicacion.permiso === 'denegado' && (

@@ -54,16 +54,31 @@ public class RutasService {
     }
 
     /**
-     * Geocodifica una dirección reutilizando la caché. Si existe una entrada
-     * para {@code direccionId} con el mismo texto, la devuelve sin llamar a ORS;
-     * si no, llama al proveedor, hace upsert y devuelve. Vacío si ORS no pudo
-     * geocodificar el texto.
+     * Geocodifica una dirección reutilizando la caché, sin referencia de origen.
      */
     public Optional<Coordenada> geocodificar(Long direccionId, String textoDireccion) {
+        return geocodificar(direccionId, textoDireccion, null);
+    }
+
+    /**
+     * Geocodifica una dirección reutilizando la caché. Si existe una entrada
+     * para {@code direccionId} con el mismo texto, la devuelve sin llamar a ORS,
+     * salvo que esté demasiado lejos de {@code origenReferencia}: en ese caso se
+     * descarta la caché y no se usa el resultado. Si no hay caché válida, llama
+     * al proveedor, hace upsert y devuelve. Vacío si ORS no pudo geocodificar el
+     * texto o el resultado no es plausible para el origen de reparto.
+     */
+    public Optional<Coordenada> geocodificar(Long direccionId, String textoDireccion,
+                                             Coordenada origenReferencia) {
         Optional<GeocodingCache> cacheado = geocodingCache.findByDireccionId(direccionId);
         if (cacheado.isPresent() && textoCoincide(cacheado.get().getDireccionTexto(), textoDireccion)) {
             GeocodingCache c = cacheado.get();
-            return Optional.of(new Coordenada(c.getLat(), c.getLng()));
+            Coordenada coord = new Coordenada(c.getLat(), c.getLng());
+            if (origenReferencia != null && distanciaKm(origenReferencia, coord) > DISTANCIA_MAXIMA_KM) {
+                geocodingCache.delete(c);
+                return Optional.empty();
+            }
+            return Optional.of(coord);
         }
 
         Optional<Coordenada> resuelto = orsClient.geocodeDireccion(textoDireccion);
@@ -72,10 +87,28 @@ public class RutasService {
         }
 
         Coordenada coord = resuelto.get();
+        if (origenReferencia != null && distanciaKm(origenReferencia, coord) > DISTANCIA_MAXIMA_KM) {
+            return Optional.empty();
+        }
+
         cacheado.ifPresent(geocodingCache::delete);
         geocodingCache.saveAndFlush(
                 new GeocodingCache(direccionId, coord.lat(), coord.lng(), textoDireccion));
         return resuelto;
+    }
+
+    /** Distancia máxima plausible entre el origen de reparto y un destino geocodificado. */
+    private static final double DISTANCIA_MAXIMA_KM = 150.0;
+
+    private static double distanciaKm(Coordenada a, Coordenada b) {
+        double r = 6371.0;
+        double dLat = Math.toRadians(b.lat().doubleValue() - a.lat().doubleValue());
+        double dLng = Math.toRadians(b.lng().doubleValue() - a.lng().doubleValue());
+        double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(a.lat().doubleValue()))
+                * Math.cos(Math.toRadians(b.lat().doubleValue()))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return 2 * r * Math.asin(Math.sqrt(h));
     }
 
     /**

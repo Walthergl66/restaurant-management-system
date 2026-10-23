@@ -506,7 +506,9 @@ public class RecorridoService {
             throw new BusinessRuleException(
                     "El pedido " + pedido.pedidoClienteId() + " no tiene una dirección para geocodificar");
         }
-        return rutas.geocodificar(pedido.direccionId(), pedido.direccion())
+        Coordenada origen = configRestaurante.origenConfigurado()
+                ? configRestaurante.origenParaRutas() : null;
+        return rutas.geocodificar(pedido.direccionId(), pedido.direccion(), origen)
                 .orElseThrow(() -> new BusinessRuleException(
                         "No se pudo geocodificar la dirección del pedido " + pedido.pedidoClienteId()));
     }
@@ -620,7 +622,9 @@ public class RecorridoService {
                     || pedido.direccion() == null || pedido.direccion().isBlank()) {
                 return null;
             }
-            return rutas.geocodificar(pedido.direccionId(), pedido.direccion()).orElse(null);
+            Coordenada origen = configRestaurante.origenConfigurado()
+                    ? configRestaurante.origenParaRutas() : null;
+            return rutas.geocodificar(pedido.direccionId(), pedido.direccion(), origen).orElse(null);
         } catch (RuntimeException e) {
             return null;
         }
