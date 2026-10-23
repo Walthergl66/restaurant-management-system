@@ -11,10 +11,13 @@ Base URL: `http://localhost:8080/api/v1` (prod) o `http://localhost:8080` (dev, 
 - `POST /api/v1/auth/registro` → alta de cliente (correo, nombre, cédula, celular, contraseña) → 201, pendiente de verificar el correo
 - `POST /api/v1/auth/registro-repartidor` → alta de repartidor (correo, nombre, celular, contraseña) → 201, pendiente de verificar el correo
 - `POST /api/v1/auth/verificar-email` → `{username, codigo}` → tokens si el código es válido
+- `POST /api/v1/auth/reenviar-verificacion` → `{username}` → 204 siempre (no revela si la cuenta existe)
 
 Header: `Authorization: Bearer <accessToken>`.
 
-Rate limit: `POST /login` → 5/min por IP (429 `urn:problem:restaurante:rate-limit`), deshabilitado en `test`.
+Rate limit: `POST /login`, `/refresh`, `/registro` y `/reenviar-verificacion`
+→ 5/min por IP (429 `urn:problem:restaurante:rate-limit`), deshabilitado en
+`test`. El de registro/reenvío protege la cuota del proveedor de correo.
 
 ## Módulos
 

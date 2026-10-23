@@ -80,6 +80,18 @@ Reglas:
   verificar un dominio basta con cambiar `MAIL_FROM`.
 - El código de 6 dígitos **nunca se registra** en logs ni en la auditoría
   (RNF-10); solo el evento de envío o de fallo.
+- **Envío tras el commit (RNF-11):** el código se persiste en la misma
+  transacción del registro, pero la llamada a Resend ocurre después del
+  commit. Un fallo del proveedor **no revierte el registro** ni tumbará la
+  respuesta HTTP: la cuenta queda creada y el usuario puede reintentar con
+  `POST /api/v1/auth/reenviar-verificacion`.
+- **Auditoría:** cada envío deja un evento `CORREO_VERIFICACION_ENVIADO` o
+  `CORREO_VERIFICACION_FALLIDO` (con el motivo del canal, sin el código) en
+  la categoría `SEGURIDAD`, consultable en `GET /api/v1/auditoria`.
+- **Rate limit (RNF-07):** `POST /registro` y `POST /reenviar-verificacion`
+  comparten el límite de 5 intentos/min por IP junto a login y refresh, para
+  que nadie agote la cuota diaria de Resend (100/día en plan free) ni
+  bombardee buzones.
 
 ## TLS, proxy y WebSocket
 
