@@ -1,5 +1,8 @@
 export { deliveryService } from './api';
 export { useMisEntregas } from './useMisEntregas';
+export { useEntregaIndividual } from './useEntregaIndividual';
+export { decodePolyline } from './polyline';
+export { nuevoUuid } from './uuid';
 export {
   estiloEstadoAsignacion,
   estiloEstadoParada,
@@ -9,6 +12,13 @@ export { default as MisEntregasScreen } from './components/MisEntregasScreen';
 export { default as DetalleEntregaScreen } from './components/DetalleEntregaScreen';
 export { default as EntregaCard } from './components/EntregaCard';
 export { default as EstadoBadge } from './components/EstadoBadge';
+
+// NOTA: MapaRuta (react-native-maps) y useUbicacion (expo-location) NO se
+// re-exportan desde el barrel a propósito: solo se importan por ruta relativa
+// desde DetalleEntregaScreen (pantalla del grupo (delivery)), para no arrastrar
+// módulos nativos a flujos de cliente/mesero en Expo Go.
+export type { LatLng } from './polyline';
+export type { EstadoEntregaIndividual, AccionCargando } from './useEntregaIndividual';
 export type {
   CriterioOptimizacion,
   EntregaResumen,
