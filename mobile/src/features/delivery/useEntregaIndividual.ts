@@ -192,6 +192,10 @@ export function useEntregaIndividual(
   }, [recorridoId, recorridoEnCurso, ubicacionRepartidor]);
 
   useEffect(() => {
+    ultimaUbicacionRef.current = null;
+  }, [etapa]);
+
+  useEffect(() => {
     void recalcularRutaDinamica();
   }, [recalcularRutaDinamica]);
 
