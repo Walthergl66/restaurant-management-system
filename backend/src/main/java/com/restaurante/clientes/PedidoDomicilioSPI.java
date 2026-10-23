@@ -9,6 +9,11 @@ package com.restaurante.clientes;
  * <p>Contiene PII (nombre, dirección, teléfono del cliente): el módulo
  * delivery solo debe exponerla a usuarios con permiso de administración de
  * asignaciones.
+ *
+ * <p>{@code direccionId} es el id de {@code comercial.clientes_direcciones}; el
+ * módulo delivery lo usa como clave estable para cachear el geocoding de la
+ * dirección (la dirección es TEXTO, sin coordenadas) y evitar regeocodificar.
+ * Puede ser {@code null} si el pedido no tiene dirección asociada.
  */
 public record PedidoDomicilioSPI(
         Long pedidoClienteId,
@@ -16,6 +21,7 @@ public record PedidoDomicilioSPI(
         String estado,
         String metodoEntrega,
         String clienteNombre,
+        Long direccionId,
         String direccion,
         String telefono) {
 }

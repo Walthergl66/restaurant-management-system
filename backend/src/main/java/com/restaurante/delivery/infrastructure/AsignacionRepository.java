@@ -29,6 +29,19 @@ public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
 
     List<Asignacion> findByRepartidorIdOrderByIdDesc(Long repartidorId);
 
+    List<Asignacion> findByRecorridoIdOrderByIdAsc(Long recorridoId);
+
+    /** Asignaciones activas (no terminales liberadoras) de un repartidor: lo
+     *  que puede operar hoy (ASIGNADA/EN_RUTA/ENTREGADA). */
+    @Query("""
+            SELECT a FROM Asignacion a
+            WHERE a.repartidorId = :repartidorId
+              AND a.estado NOT IN (com.restaurante.delivery.domain.EstadoAsignacion.REASIGNADA,
+                                   com.restaurante.delivery.domain.EstadoAsignacion.FALLIDA)
+            ORDER BY a.id DESC
+            """)
+    List<Asignacion> findActivasByRepartidorId(@Param("repartidorId") Long repartidorId);
+
     List<Asignacion> findByEstadoOrderByIdDesc(EstadoAsignacion estado);
 
     List<Asignacion> findByEstadoAndRepartidorIdOrderByIdDesc(EstadoAsignacion estado, Long repartidorId);

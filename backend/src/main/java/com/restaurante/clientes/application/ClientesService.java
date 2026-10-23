@@ -468,6 +468,7 @@ public class ClientesService implements Clientes {
                 p.getEstado().name(),
                 p.getMetodoEntrega(),
                 clienteNombre,
+                p.getDireccionId(),
                 direccionTexto,
                 telefono);
     }
