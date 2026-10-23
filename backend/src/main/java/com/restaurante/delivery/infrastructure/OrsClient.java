@@ -134,7 +134,7 @@ public class OrsClient {
 
     /**
      * Calcula una ruta que pasa por las coordenadas en el orden dado con ORS
-     * Directions: {@code POST /v2/directions/driving-car}. El cuerpo envía
+     * Directions: {@code POST /v2/directions/driving-car/json}. El cuerpo envía
      * {@code coordinates} como {@code [[lng,lat],...]} (orden de ORS).
      *
      * <p>El criterio {@code DISTANCIA} se traduce a {@code preference:shortest}
@@ -160,7 +160,7 @@ public class OrsClient {
         }
 
         JsonNode cuerpo = ejecutar("directions", () -> restClient.post()
-                .uri(uri -> uri.path("/v2/directions/" + PERFIL)
+                .uri(uri -> uri.path("/v2/directions/" + PERFIL + "/json")
                         .queryParam("api_key", propiedades.getApiKey())
                         .build())
                 .header("Content-Type", "application/json")

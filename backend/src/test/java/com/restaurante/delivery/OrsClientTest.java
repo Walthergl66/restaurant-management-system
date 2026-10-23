@@ -96,7 +96,7 @@ class OrsClientTest {
         String json = """
                 {"routes":[{"summary":{"distance":1234.5,"duration":600.2},"geometry":"abc_polyline"}]}
                 """;
-        m.server().expect(requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car")))
+        m.server().expect(requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car/json")))
                 .andExpect(method(HttpMethod.POST))
                 // ORS usa [lng,lat]: origen (lng=-89.2,lat=13.6) primero.
                 .andExpect(content().json("""
@@ -118,7 +118,7 @@ class OrsClientTest {
     @DisplayName("directions con criterio DISTANCIA pide preference shortest")
     void directionsCriterioDistancia() {
         Montaje m = montar(conApiKey());
-        m.server().expect(requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car")))
+        m.server().expect(requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car/json")))
                 .andExpect(content().json("{\"preference\":\"shortest\"}"))
                 .andRespond(withSuccess(
                         "{\"routes\":[{\"summary\":{\"distance\":1,\"duration\":1},\"geometry\":\"g\"}]}",
@@ -189,7 +189,7 @@ class OrsClientTest {
     @DisplayName("4xx se traduce a rutas-no-disponibles")
     void errorClienteSeTraduce() {
         Montaje m = montar(conApiKey());
-        m.server().expect(requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car")))
+        m.server().expect(requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car/json")))
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
 
         assertThrows(RutasNoDisponiblesException.class, () -> m.cliente().calcularRuta(

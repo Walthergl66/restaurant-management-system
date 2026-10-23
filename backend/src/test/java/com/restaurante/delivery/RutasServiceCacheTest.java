@@ -112,7 +112,7 @@ class RutasServiceCacheTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("rutaPara: la 2ª llamada con la misma clave usa caché y NO golpea ORS")
     void rutaSegundaLlamadaUsaCache() {
-        server.expect(once(), requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car")))
+        server.expect(once(), requestTo(org.hamcrest.Matchers.containsString("/v2/directions/driving-car/json")))
                 .andRespond(withSuccess(
                         "{\"routes\":[{\"summary\":{\"distance\":1500,\"duration\":720},\"geometry\":\"poly\"}]}",
                         MediaType.APPLICATION_JSON));

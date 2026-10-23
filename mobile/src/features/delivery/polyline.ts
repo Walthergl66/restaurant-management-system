@@ -2,7 +2,7 @@
  * Estación Burger — Decodificador de polyline (delivery)
  *
  * El backend obtiene las rutas de ORS Directions /v2/directions/driving-car
- * (sin sufijo /geojson), por lo que `RutaCalculada.geometria` es un POLYLINE
+ * (endpoint /json), por lo que `RutaCalculada.geometria` es un POLYLINE
  * CODIFICADO con el Encoded Polyline Algorithm de Google, precisión 5 (1e5).
  *
  * Esta función lo decodifica a un array de { latitude, longitude } para dibujar
