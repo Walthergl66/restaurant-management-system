@@ -91,3 +91,28 @@ app:
     # Opción 1 del plan: backend en la nube + agente local
     reintentos-max: 3
     intervalo-reintentos-ms: 5000
+
+  # Correo transaccional (RF-45): envío del código de verificación de correo.
+  # La aplicación NO habla con SMTP ni con el proveedor directamente en la capa
+  # de aplicación: lo hace el adaptador que resuelva este puerto (EmisorCorreo).
+  mail:
+    # Interruptor maestro. false (por defecto) = el código sale por el adaptador
+    #   de log (EmisorCorreoLog): modo desarrollo, sin salir de la aplicación.
+    #   "Sin configurar nada, nada cambia": este es el valor que arranca quien
+    #   no declare MAIL_ENABLED.
+    # true = el envío real, vía API del proveedor (Resend en desarrollo).
+    enabled: ${MAIL_ENABLED:false}
+    # Clave API del proveedor (Resend: re_...). OBLIGATORIA si enabled=true:
+    #   en el perfil prod, ProdSecretsValidator detiene el arranque si falta.
+    #   Se suministra SOLO por entorno, nunca en el repositorio.
+    api-key: ${RESEND_API_KEY:}
+    # Remitente (MAIL_FROM) y nombre visible (MAIL_FROM_NAME). Sin dominio
+    #   verificado en Resend el remitente es el de prueba onboarding@resend.dev,
+    #   que solo entrega al correo de la propia cuenta; al verificar un dominio
+    #   bastará cambiar MAIL_FROM, sin tocar código.
+    from: ${MAIL_FROM:}
+    from-name: ${MAIL_FROM_NAME:}
+    # Timeouts de la llamada HTTP al proveedor (ms). Cortos a propósito: un
+    #   correo no debe colgar la petición; el envío va además tras el commit.
+    connect-timeout-ms: ${MAIL_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${MAIL_READ_TIMEOUT_MS:10000}

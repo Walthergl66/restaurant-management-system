@@ -48,6 +48,38 @@ Nunca se commitean valores de `JWT_SECRET`, `ADMIN_INITIAL_PASSWORD` ni
    los tokens firmados con la anterior quedan inválidos, así que la rotación debe
    programarse en una ventana en la que se pueda forzar re-login.
 
+## Correo transaccional — RF-45 (API de Resend)
+
+El envío del código de verificación está apagado por defecto y se activa por
+variable de entorno. La capa de aplicación habla con el puerto `EmisorCorreo`;
+el adaptador de API solo se monta si `MAIL_ENABLED=true` (el otro adaptador,
+el de log, es el defecto). **Sin configurar nada, nada cambia.**
+
+| Variable | Default | Uso |
+|---|---|---|
+| `MAIL_ENABLED` | `false` | Interruptor maestro. `true` = envío real; `false` = el código sale por el log del servidor. |
+| `RESEND_API_KEY` | — | Clave API de Resend (`re_...`), generada en el panel (API Keys) y visible solo al crearla. Secreta. |
+| `MAIL_FROM` | — | Remitente. Sin dominio verificado en Resend: `onboarding@resend.dev` (solo entrega al correo de la propia cuenta). |
+| `MAIL_FROM_NAME` | — | Nombre visible del remitente. |
+| `MAIL_CONNECT_TIMEOUT_MS` | `5000` | Timeout de conexión a la API. |
+| `MAIL_READ_TIMEOUT_MS` | `10000` | Timeout de lectura de la API. |
+
+Reglas:
+
+- **Si `MAIL_ENABLED=true` en `prod`, `RESEND_API_KEY`, `MAIL_FROM` y
+  `MAIL_FROM_NAME` son obligatorias**: `ProdSecretsValidator` detiene el
+  arranque si falta alguna (no existe envío encendido a medias).
+- **Apagado de emergencia:** `MAIL_ENABLED=false` + reinicio ⇒ el sistema
+  vuelve al modo log sin tocar código.
+- **Rotación de la clave:** crear una clave nueva en el panel de Resend,
+  sustituir `RESEND_API_KEY` en el entorno del servidor y reiniciar. No toca
+  el código. Recomendado cada 90–180 días o ante cualquier baja/sospecha.
+- **Deliverability:** Resend exige dominio propio verificado (DKIM/SPF) para
+  enviar a terceros; mientras tanto solo se entrega al correo de la cuenta. Al
+  verificar un dominio basta con cambiar `MAIL_FROM`.
+- El código de 6 dígitos **nunca se registra** en logs ni en la auditoría
+  (RNF-10); solo el evento de envío o de fallo.
+
 ## TLS, proxy y WebSocket
 
 - La app se despliega **siempre detrás de un proxy TLS** (Caddy, nginx,

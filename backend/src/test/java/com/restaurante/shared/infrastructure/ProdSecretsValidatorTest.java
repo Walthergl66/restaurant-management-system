@@ -66,4 +66,51 @@ class ProdSecretsValidatorTest {
         IllegalStateException e = assertThrows(IllegalStateException.class, con(corto)::validar);
         assertTrue(e.getMessage().contains("JWT_SECRET"));
     }
+
+    // --- Correo transaccional (RF-45): validación condicional ---------------
+
+    @Test
+    void mailApagadoNoExigeCredenciales() {
+        String[] apagado = concat(COMPLETO, "MAIL_ENABLED", "false");
+        assertDoesNotThrow(con(apagado)::validar);
+    }
+
+    @Test
+    void mailEncendidoSinCredencialesLanza() {
+        String[] encendido = concat(COMPLETO, "MAIL_ENABLED", "true");
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                con(encendido)::validar);
+        assertTrue(e.getMessage().contains("MAIL_ENABLED"));
+        assertTrue(e.getMessage().contains("RESEND_API_KEY"));
+        assertTrue(e.getMessage().contains("MAIL_FROM"));
+    }
+
+    @Test
+    void mailEncendidoConCredencialesNoLanza() {
+        String[] completo = concat(COMPLETO,
+                "MAIL_ENABLED", "true",
+                "RESEND_API_KEY", "re_test",
+                "MAIL_FROM", "onboarding@resend.dev",
+                "MAIL_FROM_NAME", "Restaurante");
+        assertDoesNotThrow(con(completo)::validar);
+    }
+
+    @Test
+    void mailEncendidoConCredencialVaciaCuentaComoFaltante() {
+        String[] incompleto = concat(COMPLETO,
+                "MAIL_ENABLED", "true",
+                "RESEND_API_KEY", " ",
+                "MAIL_FROM", "onboarding@resend.dev",
+                "MAIL_FROM_NAME", "Restaurante");
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                con(incompleto)::validar);
+        assertTrue(e.getMessage().contains("RESEND_API_KEY"));
+    }
+
+    private static String[] concat(String[] base, String... extras) {
+        String[] resultado = new String[base.length + extras.length];
+        System.arraycopy(base, 0, resultado, 0, base.length);
+        System.arraycopy(extras, 0, resultado, base.length, extras.length);
+        return resultado;
+    }
 }

@@ -15,6 +15,14 @@
 # Opcionales con default razonable:
 #   DB_HOST (localhost) / DB_PORT (5432) / DB_NAME
 #   JWT_EXPIRATION_MS (3600000 = 1 hora) / JWT_REFRESH_EXPIRATION_MS (7 días)
+#   MAIL_ENABLED (false = sin envío de correos; ver nota más abajo)
+#
+# Correo transaccional (RF-45), SOLO si MAIL_ENABLED=true:
+#   RESEND_API_KEY / MAIL_FROM / MAIL_FROM_NAME
+#   En ese caso las tres son obligatorias y ProdSecretsValidator detiene el
+#   arranque si falta alguna (no puede haber envío encendido a medias).
+#   Con MAIL_ENABLED=false (o sin la variable) no se exige nada y el código de
+#   verificación sale por el log del servidor. Detalle en docs/produccion.md.
 # =============================================================================
 spring:
   # La URL JDBC (con sslmode=require y timeouts) y las credenciales se
