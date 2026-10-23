@@ -22,9 +22,3 @@ app:
     # El difusor casi nunca corre solo en tests: el E2E lo dispara a mano.
     difusor-delay-ms: 3600000
     difusor-initial-delay-ms: 3600000
-  delivery:
-    # Origen de reparto fijo para las pruebas (el OrsClient está mockeado, pero
-    # el servicio necesita un origen configurado para construir la ruta).
-    origen:
-      lat: -0.180653
-      lng: -78.467834

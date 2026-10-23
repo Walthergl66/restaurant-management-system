@@ -112,13 +112,8 @@ app:
     api-key: ${ORS_API_KEY:}
     base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}
     timeout-ms: ${ORS_TIMEOUT_MS:8000}
-  delivery:
-    origen:
-      # Ubicación operativa del restaurante: ORIGEN de todas las rutas de
-      # reparto. Configuración de despliegue por entorno (no se hardcodea en el
-      # código de negocio). Sin coordenadas, los endpoints que calculan ruta
-      # responden 503 (fail-closed, no se inventa un origen).
-      # Valor de ejemplo (Quito, Ecuador); descoméntalo o fíjalo por entorno:
-      #   DELIVERY_ORIGEN_LAT=-0.180653  DELIVERY_ORIGEN_LNG=-78.467834
-      lat: ${DELIVERY_ORIGEN_LAT:}
-      lng: ${DELIVERY_ORIGEN_LNG:}
+    # Origen de las rutas de reparto: la ubicación del restaurante ya NO se
+    # configura por entorno aquí. Se persiste en delivery.config_restaurante y
+    # la edita el administrador desde el panel (ConfigRestauranteService). Sin
+    # coordenadas configuradas, los endpoints que calculan ruta responden 503
+    # (fail-closed, no se inventa un origen).

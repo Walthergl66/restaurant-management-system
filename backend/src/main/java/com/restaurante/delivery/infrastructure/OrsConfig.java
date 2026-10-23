@@ -23,7 +23,7 @@ import java.time.Duration;
  * vacía ni se filtra la clave.
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties({OrsProperties.class, DeliveryOrigenProperties.class})
+@EnableConfigurationProperties(OrsProperties.class)
 public class OrsConfig {
 
     /** Nombre del bean para distinguirlo de cualquier otro RestClient.Builder. */

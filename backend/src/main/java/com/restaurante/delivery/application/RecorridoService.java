@@ -17,7 +17,6 @@ import com.restaurante.delivery.domain.ResultadoRuta;
 import com.restaurante.delivery.domain.RutasNoDisponiblesException;
 import com.restaurante.delivery.domain.TipoRecorrido;
 import com.restaurante.delivery.infrastructure.AsignacionRepository;
-import com.restaurante.delivery.infrastructure.DeliveryOrigenProperties;
 import com.restaurante.delivery.infrastructure.IncidenciaRepository;
 import com.restaurante.delivery.infrastructure.ParadaRepository;
 import com.restaurante.delivery.infrastructure.RecorridoRepository;
@@ -51,9 +50,10 @@ import java.util.Map;
  * NUNCA tocan el estado de preparación del pedido en comercial: iniciar un
  * recorrido o entregar una parada no modifica {@code comercial.pedidos_clientes}.
  *
- * <p>Origen de las rutas: la ubicación operativa del restaurante, parametrizada
- * en {@link DeliveryOrigenProperties} ({@code app.delivery.origen}); no se
- * hardcodea.
+ * <p>Origen de las rutas: la ubicación operativa del restaurante, PERSISTIDA y
+ * editable por el administrador ({@link ConfigRestauranteService#origenParaRutas()}).
+ * Ya no depende de env vars ({@code app.delivery.origen}) ni de coordenadas
+ * hardcodeadas; si no está configurada, el servicio falla fail-closed (503).
  *
  * <p>Criterio de optimización por defecto del sistema: {@link CriterioOptimizacion#DURACION}
  * (ruta más rápida), salvo que el request indique {@code DISTANCIA}.
@@ -73,7 +73,7 @@ public class RecorridoService {
     private final IncidenciaRepository incidencias;
     private final RepartidorService repartidorService;
     private final RutasService rutas;
-    private final DeliveryOrigenProperties origen;
+    private final ConfigRestauranteService configRestaurante;
     private final Clientes clientes;
     private final Auditoria auditoria;
     private final ObjectMapper objectMapper;
@@ -81,7 +81,7 @@ public class RecorridoService {
     public RecorridoService(RecorridoRepository recorridos, ParadaRepository paradas,
                             AsignacionRepository asignaciones, IncidenciaRepository incidencias,
                             RepartidorService repartidorService, RutasService rutas,
-                            DeliveryOrigenProperties origen, Clientes clientes,
+                            ConfigRestauranteService configRestaurante, Clientes clientes,
                             Auditoria auditoria, ObjectMapper objectMapper) {
         this.recorridos = recorridos;
         this.paradas = paradas;
@@ -89,7 +89,7 @@ public class RecorridoService {
         this.incidencias = incidencias;
         this.repartidorService = repartidorService;
         this.rutas = rutas;
-        this.origen = origen;
+        this.configRestaurante = configRestaurante;
         this.clientes = clientes;
         this.auditoria = auditoria;
         this.objectMapper = objectMapper;
@@ -127,7 +127,7 @@ public class RecorridoService {
         Repartidor repartidor = repartidorService.repartidorHabilitadoDelUsuarioActual();
         Asignacion asignacion = asignacionPropiaActiva(asignacionId, repartidor);
         Coordenada destino = geocodificarDestino(asignacion.getPedidoClienteId());
-        ResultadoRuta ruta = rutas.rutaPara(List.of(origen.comoCoordenada(), destino), CRITERIO_POR_DEFECTO);
+        ResultadoRuta ruta = rutas.rutaPara(List.of(configRestaurante.origenParaRutas(), destino), CRITERIO_POR_DEFECTO);
         return RutaCalculada.de(ruta);
     }
 
@@ -162,7 +162,7 @@ public class RecorridoService {
             destinos.add(geocodificar(pedido));
         }
 
-        Coordenada origenCoord = origen.comoCoordenada();
+        Coordenada origenCoord = configRestaurante.origenParaRutas();
         List<Integer> orden = rutas.optimizar(origenCoord, destinos, criterioEfectivo);
 
         // Reordena asignaciones/destinos/datos según el orden que devolvió VROOM.
@@ -491,7 +491,7 @@ public class RecorridoService {
      * para no romper las respuestas del recorrido cuando falta configuración.
      */
     private Coordenada origenOpcional() {
-        return origen.estaConfigurado() ? origen.comoCoordenada() : null;
+        return configRestaurante.origenConfigurado() ? configRestaurante.origenParaRutas() : null;
     }
 
     private List<Long> sinDuplicados(List<Long> ids) {

@@ -48,12 +48,20 @@ class DeliveryRecorridoIntegrationTest extends AbstractIntegracionApi {
     @Autowired
     private com.restaurante.clientes.infrastructure.PedidoClienteRepository pedidoClienteRepository;
 
+    @Autowired
+    private com.restaurante.delivery.application.ConfigRestauranteService configRestaurante;
+
     @BeforeEach
     void stubOrs() {
         Mockito.reset(orsClient);
         // Geocoding determinista: un punto por dirección.
         Mockito.when(orsClient.geocodeDireccion(anyString()))
                 .thenReturn(Optional.of(Coordenada.of(-0.19, -78.48)));
+        // El origen de las rutas ahora sale de la config persistida del
+        // restaurante (ya no de env vars). Se fija un punto para los tests.
+        configRestaurante.fijarCoordenadasManual(
+                java.math.BigDecimal.valueOf(-0.180653),
+                java.math.BigDecimal.valueOf(-78.467834), "test");
         // Directions: geometría y totales fijos.
         Mockito.when(orsClient.calcularRuta(any(), any()))
                 .thenReturn(new ResultadoRuta("geometria-fake", 1500, 600));
