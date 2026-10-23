@@ -63,6 +63,7 @@ el de log, es el defecto). **Sin configurar nada, nada cambia.**
 | `MAIL_FROM_NAME` | — | Nombre visible del remitente. |
 | `MAIL_CONNECT_TIMEOUT_MS` | `5000` | Timeout de conexión a la API. |
 | `MAIL_READ_TIMEOUT_MS` | `10000` | Timeout de lectura de la API. |
+| `MAIL_API_URL` | `https://api.resend.com` | Base URL de la API; solo se toca en pruebas o con proxy corporativo. |
 
 Reglas:
 

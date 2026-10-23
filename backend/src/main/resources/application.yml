@@ -112,6 +112,9 @@ app:
     #   bastará cambiar MAIL_FROM, sin tocar código.
     from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:}
+    # Base URL de la API. Solo se toca para pruebas (servidor stub) o si un
+    # proxy corporativo exige otro punto de acceso; producción = Resend.
+    api-url: ${MAIL_API_URL:https://api.resend.com}
     # Timeouts de la llamada HTTP al proveedor (ms). Cortos a propósito: un
     #   correo no debe colgar la petición; el envío va además tras el commit.
     connect-timeout-ms: ${MAIL_CONNECT_TIMEOUT_MS:5000}

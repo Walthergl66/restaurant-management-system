@@ -45,3 +45,6 @@ plan-produccion.md
 
 #Ingnorar carpeta demo que es solo para presentacion. 
 /demo/
+
+# IDE de agentes Kiro (lo traía origin/main; se recuperó tras el conflicto del merge)
+.kiro/
