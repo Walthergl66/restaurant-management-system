@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,11 +28,14 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     private final LoginRateLimiter rateLimiter;
     private final ObjectMapper objectMapper;
     private final Environment environment;
+    private final com.restaurante.auditoria.Auditoria auditoriaService;
 
-    public LoginRateLimitFilter(LoginRateLimiter rateLimiter, ObjectMapper objectMapper, Environment environment) {
+    public LoginRateLimitFilter(LoginRateLimiter rateLimiter, ObjectMapper objectMapper, Environment environment,
+                                ObjectProvider<com.restaurante.auditoria.Auditoria> auditoriaProvider) {
         this.rateLimiter = rateLimiter;
         this.objectMapper = objectMapper;
         this.environment = environment;
+        this.auditoriaService = auditoriaProvider.getIfAvailable();
     }
 
     @Override
@@ -49,14 +53,20 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             String key = ip != null ? ip : "unknown";
             // X-Forwarded-For solo se confía tras ForwardedHeaderFilter con proxy confiable; por defecto se ignora para evitar spoof
             if (!rateLimiter.isAllowed(key)) {
+                try {
+                    if (auditoriaService != null) {
+                        auditoriaService.registrar(key, "RATE_LIMIT_EXCEDIDO", "SEGURIDAD",
+                                request.getRequestURI(), "{\"ruta\":\"" + request.getRequestURI() + "\"}", "SEGURIDAD");
+                    }
+                } catch (Exception ignored) {
+                }
                 ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
                         "Demasiados intentos de login, intente más tarde");
                 problem.setType(URI.create("urn:problem:restaurante:rate-limit"));
                 problem.setTitle("Too Many Requests");
                 problem.setProperty("path", request.getRequestURI());
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.getWriter().write(objectMapper.writeValueAsString(problem));
+                ProblemaJson.escribir(response, MediaType.APPLICATION_JSON_VALUE, problem, objectMapper);
                 return;
             }
         }

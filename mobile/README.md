@@ -79,6 +79,28 @@ adb reverse tcp:8080 tcp:8080
 npx expo start --android
 ```
 
+### Cómo escanear el QR (y por qué a veces abre el navegador)
+
+El QR que imprime `npx expo start` **no** contiene la app: contiene la
+página intermedia `http://<IP-del-PC>:8081/_expo/loading`, que decide
+en qué runtime abrir el proyecto. Por eso la cámara del teléfono la
+abre en el **navegador** — es el comportamiento esperado.
+
+Dos formas de llegar a la app:
+
+1. Escanear con la cámara → se abre el navegador → pulsar
+   **"Open in Expo Go"** → la app arranca con `exp://<IP>:8081`.
+2. Escanear desde **dentro de la app Expo Go** (su lector de QR), que
+   salta el navegador y abre directo.
+
+> **No instales `expo-dev-client` en este proyecto.** En cuanto aparece
+> en `package.json`, el CLI de Expo entra en modo "development build",
+> la página intermedia deja de mostrarse y el QR pasa a contener una
+> URL `http://localhost:8081` (no `exp://`), que en el teléfono apunta
+> al propio teléfono: el navegador abre y no carga nada. Este proyecto
+> se depura con Expo Go; una development build requiere `eas build` o
+> `npx expo run:android` (Android SDK + JDK 17).
+
 Requisitos: backend arriba en `:8080` y PostgreSQL
 (`docker compose up -d postgres` desde la raíz del repo).
 

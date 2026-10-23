@@ -26,8 +26,8 @@ class ClientesAislamientoIntegrationTest extends AbstractIntegracionApi {
     @BeforeEach
     void preparar() {
         adminToken = tokenAdmin();
-        tokenA = asegurarCliente("cli_a_aislamiento", "claveA123");
-        tokenB = asegurarCliente("cli_b_aislamiento", "claveB123");
+        tokenA = tokenCliente("cli_a_aislamiento", "claveA123");
+        tokenB = tokenCliente("cli_b_aislamiento", "claveB123");
     }
 
     @Test
@@ -193,23 +193,4 @@ class ClientesAislamientoIntegrationTest extends AbstractIntegracionApi {
         return objectMapper.readTree(body).path("id").asLong();
     }
 
-    private String asegurarCliente(String username, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + adminToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"CLIENTE"}
-                                    """.formatted(username, username, password)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409 al crear cliente, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar cliente " + username, e);
-        }
-        return loginToken(username, password);
-    }
 }

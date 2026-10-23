@@ -35,7 +35,7 @@ class SesionRevocacionIntegrationTest extends AbstractIntegrationTest {
     void cambiarPasswordRevocaAccesoYRefresh() throws Exception {
         String uid = String.valueOf(System.nanoTime());
         String username = "revoca_pwd_" + uid;
-        Long id = crearUsuario(username, "EMPLEADO");
+        Long id = crearUsuario(username, "MESERO");
 
         String[] tokens = loginTokens(username, "clave123");
         mockMvc.perform(get("/api/v1/auth/me")
@@ -71,7 +71,7 @@ class SesionRevocacionIntegrationTest extends AbstractIntegrationTest {
     void cambiarRolRevocaAccesoYRefresh() throws Exception {
         String uid = String.valueOf(System.nanoTime());
         String username = "revoca_rol_" + uid;
-        Long id = crearUsuario(username, "EMPLEADO");
+        Long id = crearUsuario(username, "MESERO");
 
         String[] tokens = loginTokens(username, "clave123");
         mockMvc.perform(get("/api/v1/auth/me")
@@ -82,10 +82,10 @@ class SesionRevocacionIntegrationTest extends AbstractIntegrationTest {
                         .header("Authorization", "Bearer " + loginToken("admin", "admin123"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Usuario Prueba","rolCodigo":"DELIVERY"}
+                                {"nombre":"Usuario Prueba","rolCodigo":"CAJERO"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rol").value("DELIVERY"));
+                .andExpect(jsonPath("$.rol").value("CAJERO"));
 
         mockMvc.perform(get("/api/v1/auth/me")
                         .header("Authorization", "Bearer " + tokens[0]))
@@ -103,7 +103,7 @@ class SesionRevocacionIntegrationTest extends AbstractIntegrationTest {
     void desactivarReactivarInvalidaSesionesViejas() throws Exception {
         String uid = String.valueOf(System.nanoTime());
         String username = "revoca_estado_" + uid;
-        Long id = crearUsuario(username, "EMPLEADO");
+        Long id = crearUsuario(username, "MESERO");
 
         String[] tokens = loginTokens(username, "clave123");
         String adminToken = loginToken("admin", "admin123");

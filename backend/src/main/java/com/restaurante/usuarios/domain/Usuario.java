@@ -46,6 +46,14 @@ public class Usuario extends AuditableEntity {
     @Column(name = "sesion_version", nullable = false)
     private long sesionVersion = 0;
 
+    /**
+     * Celular de contacto. Lo captura el auto-registro de repartidor (rol
+     * DELIVERY) para que el restaurante lo contacte; el resto de las cuentas
+     * se contactan por correo y lo dejan vacío.
+     */
+    @Column(length = 20)
+    private String celular;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
@@ -82,6 +90,22 @@ public class Usuario extends AuditableEntity {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public String getCelular() {
+        return celular;
+    }
+
+    /**
+     * Guarda el celular de contacto (repartidor). Es opcional: si viene
+     * vacío, la cuenta se contacta solo por correo.
+     */
+    public void asignarCelular(String celular) {
+        if (celular == null || celular.isBlank()) {
+            this.celular = null;
+            return;
+        }
+        this.celular = celular.trim();
     }
 
     public boolean isActivo() {

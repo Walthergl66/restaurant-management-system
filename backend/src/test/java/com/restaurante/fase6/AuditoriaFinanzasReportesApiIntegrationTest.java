@@ -38,7 +38,8 @@ class AuditoriaFinanzasReportesApiIntegrationTest extends AbstractIntegracionApi
     void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        gestorToken = asegurarUsuario("gestor_f6", "ADMIN", "clave678");
+        // La cuenta ADMIN es unica y no se replica desde el panel: se usa la sembrada.
+        gestorToken = tokenAdmin();
     }
 
     @AfterEach
@@ -321,23 +322,4 @@ class AuditoriaFinanzasReportesApiIntegrationTest extends AbstractIntegracionApi
         return objectMapper.readTree(body).path("id").asLong();
     }
 
-    private String asegurarUsuario(String username, String rol, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + administradorToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"%s"}
-                                    """.formatted(username, username, password, rol)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar el usuario " + username, e);
-        }
-        return loginToken(username, password);
-    }
 }

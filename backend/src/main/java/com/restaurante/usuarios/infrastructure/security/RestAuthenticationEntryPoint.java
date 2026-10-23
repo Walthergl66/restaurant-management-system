@@ -40,7 +40,6 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         problem.setProperty("path", request.getRequestURI());
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-        response.getWriter().write(objectMapper.writeValueAsString(problem));
+        ProblemaJson.escribir(response, MediaType.APPLICATION_PROBLEM_JSON_VALUE, problem, objectMapper);
     }
 }
