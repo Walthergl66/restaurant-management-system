@@ -22,13 +22,11 @@ import { decodePolyline, type LatLng } from '../polyline';
  * Atribución obligatoria: Google muestra su logo automáticamente con
  * PROVIDER_GOOGLE; añadimos además el crédito de datos de ruta de ORS/OSM.
  *
- * Multientrega (fase 8): acepta una lista opcional `paradas` numeradas. Como el
- * backend NO devuelve lat/lng por parada en PropuestaMultientrega
- * (ParadaPropuesta solo trae orden/asignacionId/codigo/direccion), aquí solo se
- * dibuja un marcador numerado por parada SI el consumidor aporta coordenadas
- * fiables. Mientras no haya coords, se prioriza: recorrido completo dibujado +
- * marcador del restaurante (origen); la numeración correcta de paradas se
- * muestra en la LISTA de la pantalla. Ver nota de limitación en MultientregaScreen.
+ * Multientrega: acepta una lista opcional `paradas` numeradas con coordenadas
+ * fiables (desde fase 9 el backend las provee en lat/lng por parada). Si se
+ * aportan, se pinta un marcador numerado por parada. El `origen` (restaurante)
+ * puede pasarse explícito (origenLat/origenLng del backend) para posicionarlo
+ * con precisión; si no, se usa el PRIMER punto de la polyline como fallback.
  */
 
 /** Parada numerada opcional para marcadores (requiere coords fiables). */
@@ -37,6 +35,8 @@ export interface ParadaMapa {
   latitude: number;
   longitude: number;
   codigo?: string | null;
+  /** Estado logístico para atenuar las resueltas (opcional). */
+  resuelta?: boolean;
 }
 
 interface MapaRutaProps {
@@ -50,15 +50,26 @@ interface MapaRutaProps {
    * modo individual (restaurante como origen, último punto como destino).
    */
   paradas?: ParadaMapa[];
+  /**
+   * Coordenada del restaurante (origen). Si se aporta, el marcador del origen
+   * se posiciona con precisión; si no, se usa el primer punto de la polyline.
+   */
+  origen?: LatLng | null;
 }
 
 const PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
 
-export default function MapaRuta({ geometria, ubicacionRepartidor, paradas }: MapaRutaProps) {
+export default function MapaRuta({
+  geometria,
+  ubicacionRepartidor,
+  paradas,
+  origen,
+}: MapaRutaProps) {
   const mapRef = useRef<MapView>(null);
 
   const ruta = useMemo(() => decodePolyline(geometria), [geometria]);
-  const restaurante = ruta.length > 0 ? ruta[0] : null;
+  // Origen explícito del backend (preciso) o el primer punto de la polyline.
+  const restaurante = origen ?? (ruta.length > 0 ? ruta[0] : null);
   const esMultiparada = (paradas?.length ?? 0) > 0;
   // En multiparada los destinos los marcan las `paradas`; no pintamos "destino".
   const destino = !esMultiparada && ruta.length > 1 ? ruta[ruta.length - 1] : null;
@@ -76,6 +87,7 @@ export default function MapaRuta({ geometria, ubicacionRepartidor, paradas }: Ma
 
   const encuadrar = () => {
     const puntos = [...ruta];
+    if (restaurante) puntos.push(restaurante);
     if (ubicacionRepartidor) puntos.push(ubicacionRepartidor);
     if (paradas) {
       for (const p of paradas) {
@@ -89,7 +101,12 @@ export default function MapaRuta({ geometria, ubicacionRepartidor, paradas }: Ma
     });
   };
 
-  if (ruta.length === 0) {
+  // Hay algo que mostrar si existe la polyline o al menos un marcador fiable
+  // (origen preciso, paradas con coords o la ubicación del repartidor). Así la
+  // pantalla de recorrido activo puede dibujar marcadores aunque todavía no se
+  // haya calculado/recalculado la geometría de la ruta.
+  const hayMarcadores = esMultiparada || restaurante != null || ubicacionRepartidor != null;
+  if (ruta.length === 0 && !hayMarcadores) {
     return (
       <View style={styles.vacio} accessibilityLabel="Ruta no disponible">
         <Text style={styles.vacioText}>Ruta no disponible.</Text>
@@ -141,7 +158,8 @@ export default function MapaRuta({ geometria, ubicacionRepartidor, paradas }: Ma
             coordinate={{ latitude: parada.latitude, longitude: parada.longitude }}
             title={`Parada ${parada.orden + 1}`}
             description={parada.codigo ?? undefined}
-            pinColor={colors.neonPink}
+            pinColor={parada.resuelta ? colors.success : colors.neonPink}
+            opacity={parada.resuelta ? 0.6 : 1}
             accessibilityLabel={`Marcador de la parada ${parada.orden + 1}`}
           />
         ))}

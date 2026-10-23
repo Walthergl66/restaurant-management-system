@@ -7,6 +7,7 @@ export default function DeliveryLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="entrega/[id]" />
       <Stack.Screen name="multientrega" />
+      <Stack.Screen name="recorrido/[id]" />
     </Stack>
   );
 }

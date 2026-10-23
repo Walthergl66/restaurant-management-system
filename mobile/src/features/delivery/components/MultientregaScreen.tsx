@@ -14,7 +14,7 @@ import { colors } from '@/theme/colors';
 import { useMisEntregas } from '../useMisEntregas';
 import { MIN_PARADAS_MULTIENTREGA, useMultientrega } from '../useMultientrega';
 import type { CriterioOptimizacion, EntregaResumen, ParadaPropuesta } from '../types';
-import MapaRuta from './MapaRuta';
+import MapaRuta, { type ParadaMapa } from './MapaRuta';
 import { useUbicacion } from '../useUbicacion';
 
 /**
@@ -25,15 +25,13 @@ import { useUbicacion } from '../useUbicacion';
  * propuesto + totales estimados -> "Iniciar recorrido" (crea MULTIPLE en ese
  * orden y lo inicia) -> vuelve a Mis entregas con el recorrido EN_CURSO.
  *
- * La confirmación parada-por-parada y el recálculo son FASE 9.
+ * Tras iniciar, navega a la pantalla de recorrido en curso (FASE 9) para la
+ * confirmación parada-por-parada y el recálculo.
  *
- * LIMITACIÓN DE MARCADORES: el backend no devuelve lat/lng por parada en
- * PropuestaMultientrega (ParadaPropuesta trae orden/asignacionId/codigo/
- * direccion, sin coordenadas). Por eso el mapa dibuja el recorrido completo
- * (polyline) + el origen (restaurante), y las paradas se numeran de forma
- * fiable en la LISTA de abajo. Para marcadores numerados precisos en el mapa
- * haría falta ampliar el backend para incluir lat/lng por parada (pendiente,
- * no se toca el backend en esta fase).
+ * MARCADORES: desde fase 9 el backend devuelve lat/lng por parada y las coords
+ * del origen (origenLat/origenLng) en PropuestaMultientrega, así que el mapa
+ * pinta marcadores numerados precisos + el restaurante; la lista numerada se
+ * mantiene como referencia textual.
  */
 
 function derivarDisponibles(asignaciones: EntregaResumen[]): EntregaResumen[] {
@@ -86,11 +84,29 @@ export default function MultientregaScreen() {
     [propuesta]
   );
 
+  // Marcadores numerados con las coords del backend (fase 9) cuando existan.
+  const paradasMapa = useMemo<ParadaMapa[]>(
+    () =>
+      paradasOrdenadas
+        .filter((p): p is ParadaPropuesta & { lat: number; lng: number } => p.lat != null && p.lng != null)
+        .map((p) => ({ orden: p.orden, latitude: p.lat, longitude: p.lng, codigo: p.codigo })),
+    [paradasOrdenadas]
+  );
+
+  const origenPropuesta = useMemo(
+    () =>
+      propuesta?.origenLat != null && propuesta?.origenLng != null
+        ? { latitude: propuesta.origenLat, longitude: propuesta.origenLng }
+        : null,
+    [propuesta]
+  );
+
   const onIniciar = async () => {
     const iniciado = await iniciarRecorrido();
     if (iniciado) {
       await refrescar();
-      router.replace('/(delivery)');
+      // Va directo al recorrido EN_CURSO para operar parada por parada (fase 9).
+      router.replace(`/(delivery)/recorrido/${iniciado.recorridoId}`);
     }
   };
 
@@ -252,7 +268,12 @@ export default function MultientregaScreen() {
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>RECORRIDO PROPUESTO</Text>
 
-                <MapaRuta geometria={propuesta.geometria} ubicacionRepartidor={ubicacion} />
+                <MapaRuta
+                  geometria={propuesta.geometria}
+                  ubicacionRepartidor={ubicacion}
+                  paradas={paradasMapa}
+                  origen={origenPropuesta}
+                />
 
                 <View style={styles.totales}>
                   <View style={styles.totalItem}>
@@ -271,8 +292,7 @@ export default function MultientregaScreen() {
 
                 <Text style={styles.ayuda}>
                   Totales estimados por el servicio de rutas. El orden lo optimiza
-                  OpenRouteService; los marcadores precisos por parada requieren datos
-                  adicionales (las paradas se numeran en la lista).
+                  OpenRouteService; las paradas se numeran en el mapa y en la lista.
                 </Text>
 
                 {paradasOrdenadas.map((parada) => {

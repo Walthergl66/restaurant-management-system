@@ -27,6 +27,9 @@ export interface ParadaResumen {
   estado: string;
   codigo: string | null;
   direccion: string | null;
+  /** Coordenadas geocodificadas del destino (null si no geocodificó). */
+  lat: number | null;
+  lng: number | null;
 }
 
 /** RecorridoResumen — un recorrido con su estado logístico y paradas en orden. */
@@ -40,6 +43,9 @@ export interface RecorridoResumen {
   duracionTotalS: number | null;
   iniciadoAt: string | null;
   finalizadoAt: string | null;
+  /** Coordenadas del origen (restaurante), null si no está configurado. */
+  origenLat: number | null;
+  origenLng: number | null;
   paradas: ParadaResumen[];
 }
 
@@ -64,6 +70,9 @@ export interface ParadaPropuesta {
   pedidoClienteId: number | null;
   codigo: string | null;
   direccion: string | null;
+  /** Coordenadas geocodificadas del destino (null si no geocodificó). */
+  lat: number | null;
+  lng: number | null;
 }
 
 /** PropuestaMultientrega — orden eficiente + geometría + totales (no persiste). */
@@ -73,6 +82,9 @@ export interface PropuestaMultientrega {
   geometria: string;
   distanciaTotalM: number;
   duracionTotalS: number;
+  /** Coordenadas del origen (restaurante), null si no está configurado. */
+  origenLat: number | null;
+  origenLng: number | null;
 }
 
 /** ParadaResponse — estado de una parada tras operarla (entregada/incidencia). */
@@ -84,6 +96,8 @@ export interface ParadaResponse {
   estado: string;
   codigo: string | null;
   direccion: string | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 /** Criterio de optimización del orden de paradas. */

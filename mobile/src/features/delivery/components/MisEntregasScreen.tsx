@@ -101,18 +101,32 @@ export default function MisEntregasScreen() {
               const resueltas = recorrido.paradas.filter(
                 (p) => p.estado !== 'PENDIENTE'
               ).length;
+              // Solo los recorridos EN_CURSO abren la pantalla de operación.
+              const enCurso = recorrido.estado === 'EN_CURSO';
               return (
-                <View key={recorrido.recorridoId} style={styles.recorridoCard}>
+                <TouchableOpacity
+                  key={recorrido.recorridoId}
+                  style={styles.recorridoCard}
+                  disabled={!enCurso}
+                  onPress={() => router.push(`/(delivery)/recorrido/${recorrido.recorridoId}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Recorrido ${recorrido.recorridoId}`}
+                >
                   <View style={styles.headerRow}>
                     <Text style={styles.recorridoTipo}>
                       {recorrido.tipo === 'MULTIPLE' ? 'Multientrega' : 'Entrega individual'}
                     </Text>
                     <EstadoBadge etiqueta={estado.etiqueta} color={estado.color} />
                   </View>
-                  <Text style={styles.recorridoMeta}>
-                    {resueltas}/{recorrido.paradas.length} paradas resueltas
-                  </Text>
-                </View>
+                  <View style={styles.headerRow}>
+                    <Text style={styles.recorridoMeta}>
+                      {resueltas}/{recorrido.paradas.length} paradas resueltas
+                    </Text>
+                    {enCurso && (
+                      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                    )}
+                  </View>
+                </TouchableOpacity>
               );
             })}
           </View>
