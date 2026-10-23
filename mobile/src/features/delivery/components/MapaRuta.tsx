@@ -1,63 +1,30 @@
-import React, { useMemo, useRef } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import MapView, {
-  Marker,
-  Polyline,
-  PROVIDER_GOOGLE,
-  type MapViewProps,
-} from 'react-native-maps';
+import React, { useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { colors } from '@/theme/colors';
 import { decodePolyline, type LatLng } from '../polyline';
 
 /**
- * Mapa nativo de la ruta individual (restaurante -> destino).
+ * Mapa de la ruta de entrega renderizado con Leaflet dentro de un WebView.
  *
- * IMPORTA react-native-maps AQUÍ. Este archivo solo se consume desde pantallas
- * del grupo (delivery); nunca desde flujos de cliente/mesero (Expo Go).
- *
- * Origen/destino: el backend ya conoce el origen (restaurante) y traza la ruta
- * desde ahí, así que NO pedimos coordenadas extra: el PRIMER punto de la
- * polyline decodificada es el restaurante y el ÚLTIMO es el destino del cliente.
- *
- * Atribución obligatoria: Google muestra su logo automáticamente con
- * PROVIDER_GOOGLE; añadimos además el crédito de datos de ruta de ORS/OSM.
- *
- * Multientrega: acepta una lista opcional `paradas` numeradas con coordenadas
- * fiables (desde fase 9 el backend las provee en lat/lng por parada). Si se
- * aportan, se pinta un marcador numerado por parada. El `origen` (restaurante)
- * puede pasarse explícito (origenLat/origenLng del backend) para posicionarlo
- * con precisión; si no, se usa el PRIMER punto de la polyline como fallback.
+ * Se usa este enfoque para que funcione en Expo Go sin depender de una
+ * Google Maps API key ni de un development build. Las teselas son de
+ * OpenStreetMap/CARTO y la geometría la calcula el backend con ORS.
  */
-
-/** Parada numerada opcional para marcadores (requiere coords fiables). */
 export interface ParadaMapa {
   orden: number;
   latitude: number;
   longitude: number;
   codigo?: string | null;
-  /** Estado logístico para atenuar las resueltas (opcional). */
   resuelta?: boolean;
 }
 
 interface MapaRutaProps {
-  /** Polyline codificado (precisión 5) de la geometría del recorrido. */
   geometria: string;
-  /** Ubicación actual del repartidor, o null si no hay permiso/lectura. */
   ubicacionRepartidor: LatLng | null;
-  /**
-   * Paradas numeradas de una multientrega (opcional). Solo se pintan marcadores
-   * si cada parada trae coordenadas fiables; si se omite, el mapa funciona en
-   * modo individual (restaurante como origen, último punto como destino).
-   */
   paradas?: ParadaMapa[];
-  /**
-   * Coordenada del restaurante (origen). Si se aporta, el marcador del origen
-   * se posiciona con precisión; si no, se usa el primer punto de la polyline.
-   */
   origen?: LatLng | null;
 }
-
-const PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
 
 export default function MapaRuta({
   geometria,
@@ -65,48 +32,45 @@ export default function MapaRuta({
   paradas,
   origen,
 }: MapaRutaProps) {
-  const mapRef = useRef<MapView>(null);
-
-  const ruta = useMemo(() => decodePolyline(geometria), [geometria]);
-  // Origen explícito del backend (preciso) o el primer punto de la polyline.
-  const restaurante = origen ?? (ruta.length > 0 ? ruta[0] : null);
+  const route = useMemo(() => decodePolyline(geometria), [geometria]);
+  const restaurante = origen ?? (route.length > 0 ? route[0] : null);
   const esMultiparada = (paradas?.length ?? 0) > 0;
-  // En multiparada los destinos los marcan las `paradas`; no pintamos "destino".
-  const destino = !esMultiparada && ruta.length > 1 ? ruta[ruta.length - 1] : null;
+  const destino =
+    !esMultiparada && route.length > 1 ? route[route.length - 1] : null;
 
-  const regionInicial = useMemo<MapViewProps['initialRegion']>(() => {
-    const centro = restaurante ?? ubicacionRepartidor;
-    if (!centro) return undefined;
-    return {
-      latitude: centro.latitude,
-      longitude: centro.longitude,
-      latitudeDelta: 0.05,
-      longitudeDelta: 0.05,
-    };
-  }, [restaurante, ubicacionRepartidor]);
-
-  const encuadrar = () => {
-    const puntos = [...ruta];
-    if (restaurante) puntos.push(restaurante);
-    if (ubicacionRepartidor) puntos.push(ubicacionRepartidor);
-    if (paradas) {
-      for (const p of paradas) {
-        puntos.push({ latitude: p.latitude, longitude: p.longitude });
-      }
+  const markers = useMemo(() => {
+    const result: Array<{ lat: number; lng: number; label: string; color: string }> = [];
+    if (restaurante) {
+      result.push({ lat: restaurante.latitude, lng: restaurante.longitude, label: 'Restaurante', color: colors.neonOrange });
     }
-    if (puntos.length < 2 || !mapRef.current) return;
-    mapRef.current.fitToCoordinates(puntos, {
-      edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
-      animated: true,
+    if (destino) {
+      result.push({ lat: destino.latitude, lng: destino.longitude, label: 'Destino', color: colors.neonPink });
+    }
+    paradas?.forEach((parada) => {
+      result.push({
+        lat: parada.latitude,
+        lng: parada.longitude,
+        label: `Parada ${parada.orden + 1}${parada.codigo ? ` · ${parada.codigo}` : ''}`,
+        color: parada.resuelta ? colors.success : colors.neonPink,
+      });
     });
-  };
+    if (ubicacionRepartidor) {
+      result.push({
+        lat: ubicacionRepartidor.latitude,
+        lng: ubicacionRepartidor.longitude,
+        label: 'Tu ubicación',
+        color: colors.success,
+      });
+    }
+    return result;
+  }, [restaurante, destino, paradas, ubicacionRepartidor]);
 
-  // Hay algo que mostrar si existe la polyline o al menos un marcador fiable
-  // (origen preciso, paradas con coords o la ubicación del repartidor). Así la
-  // pantalla de recorrido activo puede dibujar marcadores aunque todavía no se
-  // haya calculado/recalculado la geometría de la ruta.
-  const hayMarcadores = esMultiparada || restaurante != null || ubicacionRepartidor != null;
-  if (ruta.length === 0 && !hayMarcadores) {
+  const routeCoords = useMemo(
+    () => route.map((point) => [point.latitude, point.longitude]),
+    [route]
+  );
+
+  if (routeCoords.length === 0 && markers.length === 0) {
     return (
       <View style={styles.vacio} accessibilityLabel="Ruta no disponible">
         <Text style={styles.vacioText}>Ruta no disponible.</Text>
@@ -114,72 +78,73 @@ export default function MapaRuta({
     );
   }
 
+  const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+      html, body, #map { height: 100%; margin: 0; padding: 0; background: #0a0a0a; }
+      .leaflet-control-attribution { font-size: 10px; background: rgba(0,0,0,.65); color: #888; }
+      .marker { width: 14px; height: 14px; border-radius: 7px; border: 2px solid #fff; box-shadow: 0 0 4px rgba(0,0,0,.7); }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      const routeCoords = ${JSON.stringify(routeCoords)};
+      const markers = ${JSON.stringify(markers)};
+      const map = L.map('map', { zoomControl: true, attributionControl: true });
+      const tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+      });
+      tiles.addTo(map);
+      tiles.on('tileerror', function () {
+        const note = document.createElement('div');
+        note.textContent = 'No se pudieron cargar las teselas del mapa.';
+        note.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:999;color:#ef4444;font-size:12px;background:rgba(0,0,0,.7);padding:4px 8px;border-radius:8px;';
+        document.body.appendChild(note);
+      });
+      const latLngs = routeCoords.map(function (coord) { return L.latLng(coord[0], coord[1]); });
+      if (latLngs.length > 1) {
+        L.polyline(latLngs, { color: '#F5A623', weight: 5, opacity: 0.95 }).addTo(map);
+      }
+      markers.forEach(function (marker) {
+        const icon = L.divIcon({
+          className: '',
+          html: '<div class="marker" style="background:' + marker.color + ';"></div>',
+          iconSize: [14, 14],
+          iconAnchor: [7, 7]
+        });
+        L.marker([marker.lat, marker.lng], { icon: icon }).addTo(map).bindPopup(marker.label);
+      });
+      const bounds = L.latLngBounds([]);
+      latLngs.forEach(function (coord) { bounds.extend(coord); });
+      markers.forEach(function (marker) { bounds.extend([marker.lat, marker.lng]); });
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+      } else if (markers.length > 0) {
+        map.setView([markers[0].lat, markers[0].lng], 14);
+      } else {
+        map.setView([0, 0], 2);
+      }
+    </script>
+  </body>
+</html>`;
+
   return (
     <View style={styles.contenedor}>
-      <MapView
-        ref={mapRef}
+      <WebView
+        source={{ html }}
         style={styles.mapa}
-        provider={PROVIDER}
-        initialRegion={regionInicial}
-        onMapReady={encuadrar}
-        showsUserLocation={false}
-        showsMyLocationButton={false}
-        accessibilityLabel="Mapa de la ruta de entrega"
-      >
-        <Polyline
-          coordinates={ruta}
-          strokeColor={colors.neonOrange}
-          strokeWidth={5}
-        />
-
-        {restaurante && (
-          <Marker
-            coordinate={restaurante}
-            title="Restaurante"
-            description="Punto de partida"
-            pinColor={colors.neonOrange}
-            accessibilityLabel="Marcador del restaurante"
-          />
-        )}
-
-        {destino && (
-          <Marker
-            coordinate={destino}
-            title="Destino"
-            description="Entrega del cliente"
-            pinColor={colors.neonPink}
-            accessibilityLabel="Marcador del destino"
-          />
-        )}
-
-        {paradas?.map((parada) => (
-          <Marker
-            key={parada.orden}
-            coordinate={{ latitude: parada.latitude, longitude: parada.longitude }}
-            title={`Parada ${parada.orden + 1}`}
-            description={parada.codigo ?? undefined}
-            pinColor={parada.resuelta ? colors.success : colors.neonPink}
-            opacity={parada.resuelta ? 0.6 : 1}
-            accessibilityLabel={`Marcador de la parada ${parada.orden + 1}`}
-          />
-        ))}
-
-        {ubicacionRepartidor && (
-          <Marker
-            coordinate={ubicacionRepartidor}
-            title="Tu ubicación"
-            pinColor={colors.success}
-            accessibilityLabel="Marcador de tu ubicación"
-          />
-        )}
-      </MapView>
-
-      {/* Atribución de datos de ruta (ORS/OSM). Google añade su logo aparte. */}
-      <View style={styles.atribucion} pointerEvents="none">
-        <Text style={styles.atribucionText}>
-          Rutas por OpenRouteService / OpenStreetMap contributors
-        </Text>
-      </View>
+        javaScriptEnabled
+        domStorageEnabled
+        originWhitelist={['*']}
+        mixedContentMode="always"
+      />
     </View>
   );
 }
@@ -193,7 +158,7 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
     backgroundColor: colors.surface,
   },
-  mapa: { flex: 1 },
+  mapa: { flex: 1, backgroundColor: colors.surface },
   vacio: {
     height: 160,
     borderRadius: 16,
@@ -204,14 +169,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   vacioText: { color: colors.textMuted, fontWeight: '700' },
-  atribucion: {
-    position: 'absolute',
-    left: 8,
-    bottom: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: colors.overlay,
-  },
-  atribucionText: { color: colors.textSecondary, fontSize: 10 },
 });
