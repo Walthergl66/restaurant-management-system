@@ -63,10 +63,10 @@ public class OrsClient {
         }
         JsonNode cuerpo = ejecutar("geocoding", () -> restClient.get()
                 .uri(uri -> uri.path("/geocode/search")
+                        .queryParam("api_key", propiedades.getApiKey())
                         .queryParam("text", textoDireccion)
                         .queryParam("size", 1)
                         .build())
-                .header("Authorization", propiedades.getApiKey())
                 .header("Accept", "application/json")
                 .retrieve()
                 .body(JsonNode.class));
@@ -105,10 +105,10 @@ public class OrsClient {
         int size = Math.max(1, Math.min(limite, 10));
         JsonNode cuerpo = ejecutar("geocoding", () -> restClient.get()
                 .uri(uri -> uri.path("/geocode/search")
+                        .queryParam("api_key", propiedades.getApiKey())
                         .queryParam("text", textoDireccion)
                         .queryParam("size", size)
                         .build())
-                .header("Authorization", propiedades.getApiKey())
                 .header("Accept", "application/json")
                 .retrieve()
                 .body(JsonNode.class));
@@ -160,8 +160,9 @@ public class OrsClient {
         }
 
         JsonNode cuerpo = ejecutar("directions", () -> restClient.post()
-                .uri("/v2/directions/" + PERFIL)
-                .header("Authorization", propiedades.getApiKey())
+                .uri(uri -> uri.path("/v2/directions/" + PERFIL)
+                        .queryParam("api_key", propiedades.getApiKey())
+                        .build())
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .body(peticion)
@@ -220,8 +221,9 @@ public class OrsClient {
         // ORS Optimization no expone 'shortest' a este nivel.
 
         JsonNode cuerpo = ejecutar("optimization", () -> restClient.post()
-                .uri("/optimization")
-                .header("Authorization", propiedades.getApiKey())
+                .uri(uri -> uri.path("/optimization")
+                        .queryParam("api_key", propiedades.getApiKey())
+                        .build())
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .body(peticion)
