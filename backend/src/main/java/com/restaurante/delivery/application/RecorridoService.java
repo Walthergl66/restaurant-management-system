@@ -502,6 +502,9 @@ public class RecorridoService {
     }
 
     private Coordenada geocodificar(PedidoDomicilioSPI pedido) {
+        if (pedido.lat() != null && pedido.lng() != null) {
+            return new Coordenada(pedido.lat(), pedido.lng());
+        }
         if (pedido.direccionId() == null || pedido.direccion() == null || pedido.direccion().isBlank()) {
             throw new BusinessRuleException(
                     "El pedido " + pedido.pedidoClienteId() + " no tiene una dirección para geocodificar");
@@ -618,8 +621,13 @@ public class RecorridoService {
         }
         try {
             PedidoDomicilioSPI pedido = clientes.datosEntrega(a.getPedidoClienteId()).orElse(null);
-            if (pedido == null || pedido.direccionId() == null
-                    || pedido.direccion() == null || pedido.direccion().isBlank()) {
+            if (pedido == null) {
+                return null;
+            }
+            if (pedido.lat() != null && pedido.lng() != null) {
+                return new Coordenada(pedido.lat(), pedido.lng());
+            }
+            if (pedido.direccionId() == null || pedido.direccion() == null || pedido.direccion().isBlank()) {
                 return null;
             }
             Coordenada origen = configRestaurante.origenConfigurado()

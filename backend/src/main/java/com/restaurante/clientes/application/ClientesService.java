@@ -41,6 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Set;
 
@@ -494,6 +495,15 @@ public class ClientesService implements Clientes {
                 telefono = dir.getTelefono();
             }
         }
+        BigDecimal lat = null;
+        BigDecimal lng = null;
+        if (p.getDireccionId() != null) {
+            DireccionCliente dir = direccionRepository.findById(p.getDireccionId()).orElse(null);
+            if (dir != null) {
+                lat = dir.getLat();
+                lng = dir.getLng();
+            }
+        }
         return new com.restaurante.clientes.PedidoDomicilioSPI(
                 p.getId(),
                 p.getCodigo(),
@@ -502,7 +512,9 @@ public class ClientesService implements Clientes {
                 clienteNombre,
                 p.getDireccionId(),
                 direccionTexto,
-                telefono);
+                telefono,
+                lat,
+                lng);
     }
 
     /** Cédula única con el usuario como prefijo. Si se agota el espacio de

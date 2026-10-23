@@ -23,5 +23,7 @@ public record PedidoDomicilioSPI(
         String clienteNombre,
         Long direccionId,
         String direccion,
-        String telefono) {
+        String telefono,
+        java.math.BigDecimal lat,
+        java.math.BigDecimal lng) {
 }
