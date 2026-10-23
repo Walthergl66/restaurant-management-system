@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, ShoppingBag, Package, Table2, DollarSign,
-  Users, XCircle, ClipboardList, BarChart3, LogOut, ChefHat, Receipt,
+  Users, XCircle, ClipboardList, BarChart3, LogOut, ChefHat, Receipt, Truck,
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth'
 import { hasPermiso } from '@/shared/lib/permissions'
@@ -21,6 +21,7 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; permisos
   { href: '/reportes',    label: 'Reportes',   icon: BarChart3,    permisos: ['reportes:ver'] },
   { href: '/usuarios',    label: 'Usuarios',   icon: Users,        permisos: ['usuarios:ver'] },
   { href: '/anulaciones', label: 'Anulaciones',icon: XCircle,      permisos: ['anulaciones:solicitar', 'anulaciones:aprobar'] },
+  { href: '/entregas',    label: 'Entregas',   icon: Truck,        permisos: ['delivery:asignaciones-gestionar'] },
   { href: '/auditoria',   label: 'Auditoría',  icon: ClipboardList,permisos: ['auditoria:ver'] },
 ]
 
