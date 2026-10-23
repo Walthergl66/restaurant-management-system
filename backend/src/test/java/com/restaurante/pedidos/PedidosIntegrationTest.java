@@ -364,7 +364,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"nombre":"Cocina-%d","descripcion":"área"}
-                                """.formatted(System.nanoTime() % 100000)))
+                                """.formatted(System.nanoTime())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
