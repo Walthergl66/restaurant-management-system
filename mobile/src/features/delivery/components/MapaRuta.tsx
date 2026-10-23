@@ -21,23 +21,47 @@ import { decodePolyline, type LatLng } from '../polyline';
  *
  * Atribución obligatoria: Google muestra su logo automáticamente con
  * PROVIDER_GOOGLE; añadimos además el crédito de datos de ruta de ORS/OSM.
+ *
+ * Multientrega (fase 8): acepta una lista opcional `paradas` numeradas. Como el
+ * backend NO devuelve lat/lng por parada en PropuestaMultientrega
+ * (ParadaPropuesta solo trae orden/asignacionId/codigo/direccion), aquí solo se
+ * dibuja un marcador numerado por parada SI el consumidor aporta coordenadas
+ * fiables. Mientras no haya coords, se prioriza: recorrido completo dibujado +
+ * marcador del restaurante (origen); la numeración correcta de paradas se
+ * muestra en la LISTA de la pantalla. Ver nota de limitación en MultientregaScreen.
  */
 
+/** Parada numerada opcional para marcadores (requiere coords fiables). */
+export interface ParadaMapa {
+  orden: number;
+  latitude: number;
+  longitude: number;
+  codigo?: string | null;
+}
+
 interface MapaRutaProps {
-  /** Polyline codificado (precisión 5) de RutaCalculada.geometria. */
+  /** Polyline codificado (precisión 5) de la geometría del recorrido. */
   geometria: string;
   /** Ubicación actual del repartidor, o null si no hay permiso/lectura. */
   ubicacionRepartidor: LatLng | null;
+  /**
+   * Paradas numeradas de una multientrega (opcional). Solo se pintan marcadores
+   * si cada parada trae coordenadas fiables; si se omite, el mapa funciona en
+   * modo individual (restaurante como origen, último punto como destino).
+   */
+  paradas?: ParadaMapa[];
 }
 
 const PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
 
-export default function MapaRuta({ geometria, ubicacionRepartidor }: MapaRutaProps) {
+export default function MapaRuta({ geometria, ubicacionRepartidor, paradas }: MapaRutaProps) {
   const mapRef = useRef<MapView>(null);
 
   const ruta = useMemo(() => decodePolyline(geometria), [geometria]);
   const restaurante = ruta.length > 0 ? ruta[0] : null;
-  const destino = ruta.length > 1 ? ruta[ruta.length - 1] : null;
+  const esMultiparada = (paradas?.length ?? 0) > 0;
+  // En multiparada los destinos los marcan las `paradas`; no pintamos "destino".
+  const destino = !esMultiparada && ruta.length > 1 ? ruta[ruta.length - 1] : null;
 
   const regionInicial = useMemo<MapViewProps['initialRegion']>(() => {
     const centro = restaurante ?? ubicacionRepartidor;
@@ -53,6 +77,11 @@ export default function MapaRuta({ geometria, ubicacionRepartidor }: MapaRutaPro
   const encuadrar = () => {
     const puntos = [...ruta];
     if (ubicacionRepartidor) puntos.push(ubicacionRepartidor);
+    if (paradas) {
+      for (const p of paradas) {
+        puntos.push({ latitude: p.latitude, longitude: p.longitude });
+      }
+    }
     if (puntos.length < 2 || !mapRef.current) return;
     mapRef.current.fitToCoordinates(puntos, {
       edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
@@ -105,6 +134,17 @@ export default function MapaRuta({ geometria, ubicacionRepartidor }: MapaRutaPro
             accessibilityLabel="Marcador del destino"
           />
         )}
+
+        {paradas?.map((parada) => (
+          <Marker
+            key={parada.orden}
+            coordinate={{ latitude: parada.latitude, longitude: parada.longitude }}
+            title={`Parada ${parada.orden + 1}`}
+            description={parada.codigo ?? undefined}
+            pinColor={colors.neonPink}
+            accessibilityLabel={`Marcador de la parada ${parada.orden + 1}`}
+          />
+        ))}
 
         {ubicacionRepartidor && (
           <Marker

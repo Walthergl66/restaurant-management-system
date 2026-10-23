@@ -118,6 +118,19 @@ export default function MisEntregasScreen() {
           </View>
         )}
 
+        {!noHabilitado && !error && asignaciones.length > 0 && (
+          <TouchableOpacity
+            style={styles.multiBoton}
+            onPress={() => router.push('/(delivery)/multientrega')}
+            accessibilityRole="button"
+            accessibilityLabel="Ruta de múltiples entregas"
+          >
+            <Ionicons name="git-network-outline" size={20} color={colors.neonOrange} />
+            <Text style={styles.multiBotonText}>Ruta de múltiples entregas</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+
         {!noHabilitado && !error && (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>PEDIDOS ASIGNADOS</Text>
@@ -176,6 +189,18 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   recorridoTipo: { color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
   recorridoMeta: { color: colors.textMuted, fontSize: 12 },
+  multiBoton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 16,
+    borderRadius: 14,
+    marginTop: 4,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.neonOrange,
+  },
+  multiBotonText: { flex: 1, color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
   stateBox: {
     alignItems: 'center',
     gap: 8,

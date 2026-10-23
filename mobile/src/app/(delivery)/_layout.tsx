@@ -6,6 +6,7 @@ export default function DeliveryLayout() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="entrega/[id]" />
+      <Stack.Screen name="multientrega" />
     </Stack>
   );
 }

@@ -1,6 +1,7 @@
 export { deliveryService } from './api';
 export { useMisEntregas } from './useMisEntregas';
 export { useEntregaIndividual } from './useEntregaIndividual';
+export { useMultientrega, MIN_PARADAS_MULTIENTREGA } from './useMultientrega';
 export { decodePolyline } from './polyline';
 export { nuevoUuid } from './uuid';
 export {
@@ -10,6 +11,7 @@ export {
 } from './estados';
 export { default as MisEntregasScreen } from './components/MisEntregasScreen';
 export { default as DetalleEntregaScreen } from './components/DetalleEntregaScreen';
+export { default as MultientregaScreen } from './components/MultientregaScreen';
 export { default as EntregaCard } from './components/EntregaCard';
 export { default as EstadoBadge } from './components/EstadoBadge';
 
@@ -19,6 +21,7 @@ export { default as EstadoBadge } from './components/EstadoBadge';
 // módulos nativos a flujos de cliente/mesero en Expo Go.
 export type { LatLng } from './polyline';
 export type { EstadoEntregaIndividual, AccionCargando } from './useEntregaIndividual';
+export type { EstadoMultientrega, AccionMultientrega } from './useMultientrega';
 export type {
   CriterioOptimizacion,
   EntregaResumen,
