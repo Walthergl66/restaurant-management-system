@@ -112,6 +112,7 @@ export interface NuevaDireccionRequest {
   direccion: string;
   telefono?: string;
   observaciones?: string;
+  referencia?: string;
   /** Coordenadas confirmadas del marcador (opcionales, A1). */
   lat?: number;
   lng?: number;
@@ -125,6 +126,7 @@ export interface DireccionCliente {
   direccion: string;
   telefono: string | null;
   observaciones: string | null;
+  referencia: string | null;
   /** Coordenadas confirmadas del marcador (null en direcciones antiguas). */
   lat: number | null;
   lng: number | null;

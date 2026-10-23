@@ -16,6 +16,7 @@ export interface EntregaResumen {
   clienteNombre: string;
   direccion: string;
   telefono: string | null;
+  referencia: string | null;
 }
 
 /** Fase de la doble confirmación de una parada (espejo de FaseConfirmacion). */

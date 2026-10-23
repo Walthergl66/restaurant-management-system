@@ -542,8 +542,8 @@ public class RecorridoService {
                 datos != null ? datos.codigo() : null,
                 datos != null ? datos.clienteNombre() : null,
                 datos != null ? datos.direccion() : null,
-                datos != null ? datos.telefono() : null);
-    }
+                datos != null ? datos.telefono() : null,
+                datos != null ? datos.referencia() : null);    }
 
     private RecorridoResumen recorridoResumen(Recorrido recorrido) {
         List<ParadaResumen> lista = paradas.findByRecorridoIdOrderByOrdenAsc(recorrido.getId()).stream()

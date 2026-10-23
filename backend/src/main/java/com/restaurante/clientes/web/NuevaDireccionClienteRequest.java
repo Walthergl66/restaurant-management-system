@@ -23,6 +23,9 @@ public record NuevaDireccionClienteRequest(
         @Size(max = 200)
         String observaciones,
 
+        @Size(max = 200)
+        String referencia,
+
         /** Latitud confirmada del marcador (opcional; validada si viene). */
         @DecimalMin(value = "-90.0", message = "Latitud fuera de rango")
         @DecimalMax(value = "90.0", message = "Latitud fuera de rango")

@@ -13,5 +13,6 @@ public record EntregaResumen(
         String codigo,
         String clienteNombre,
         String direccion,
-        String telefono) {
+        String telefono,
+        String referencia) {
 }

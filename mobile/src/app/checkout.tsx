@@ -61,6 +61,7 @@ export default function CheckoutScreen() {
     etiqueta: '',
     direccion: '',
     telefono: '',
+    referencia: '',
   });
   const [ubicacion, setUbicacion] = useState<Coordenada | null>(null);
   const [loading, setLoading] = useState(false);
@@ -120,6 +121,7 @@ export default function CheckoutScreen() {
           etiqueta: direccion.etiqueta.trim(),
           direccion: direccion.direccion.trim(),
           telefono: direccion.telefono.trim() || undefined,
+          referencia: direccion.referencia.trim() || undefined,
           lat: ubicacion?.latitude,
           lng: ubicacion?.longitude,
         });
@@ -291,6 +293,16 @@ export default function CheckoutScreen() {
                 maxLength={200}
               />
               <Input
+                label="REFERENCIA (OPCIONAL)"
+                placeholder="Casa blanca, portón negro..."
+                value={direccion.referencia}
+                onChangeText={text =>
+                  setDireccion(prev => ({ ...prev, referencia: text }))
+                }
+                icon="home-outline"
+                maxLength={200}
+              />
+          <Input
                 label="TELÉFONO DE CONTACTO (OPCIONAL)"
                 placeholder="Para coordinar la entrega"
                 value={direccion.telefono}

@@ -18,6 +18,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -44,6 +45,21 @@ public class PedidoCliente extends BaseEntity {
 
     @Column(name = "direccion_id")
     private Long direccionId;
+
+    @Column(name = "direccion_texto", length = 200)
+    private String direccionTexto;
+
+    @Column(length = 200)
+    private String referencia;
+
+    @Column(length = 500)
+    private String observaciones;
+
+    @Column(precision = 10, scale = 7)
+    private BigDecimal lat;
+
+    @Column(precision = 10, scale = 7)
+    private BigDecimal lng;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -179,6 +195,20 @@ public class PedidoCliente extends BaseEntity {
     public String getMetodoPago() { return metodoPago; }
     public String getMetodoEntrega() { return metodoEntrega; }
     public Long getDireccionId() { return direccionId; }
+    public String getDireccionTexto() { return direccionTexto; }
+    public String getReferencia() { return referencia; }
+    public String getObservaciones() { return observaciones; }
+    public BigDecimal getLat() { return lat; }
+    public BigDecimal getLng() { return lng; }
+
+    public void setDireccionSnapshot(String direccionTexto, String referencia, String observaciones,
+                                    BigDecimal lat, BigDecimal lng) {
+        this.direccionTexto = direccionTexto;
+        this.referencia = referencia;
+        this.observaciones = observaciones;
+        this.lat = lat;
+        this.lng = lng;
+    }
     public EstadoPedidoCliente getEstado() { return estado; }
     public String getIdempotencyKey() { return idempotencyKey; }
     public Money getCostoEntrega() { return costoEntrega == null ? Money.ZERO : costoEntrega; }

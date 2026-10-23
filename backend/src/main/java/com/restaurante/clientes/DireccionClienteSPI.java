@@ -11,6 +11,7 @@ public record DireccionClienteSPI(
         String direccion,
         String telefono,
         String observaciones,
+        String referencia,
         BigDecimal lat,
         BigDecimal lng,
         boolean activa,

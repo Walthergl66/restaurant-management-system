@@ -197,6 +197,9 @@ export default function DetalleEntregaScreen() {
 
         <View style={styles.card}>
           <Dato icono="location-outline" etiqueta="Dirección" valor={entrega.direccion} />
+            {entrega.referencia ? (
+              <Dato icono="home-outline" etiqueta="Referencia" valor={entrega.referencia} />
+            ) : null}
           <Dato icono="person-outline" etiqueta="Cliente" valor={entrega.clienteNombre} />
           <Dato
             icono="call-outline"

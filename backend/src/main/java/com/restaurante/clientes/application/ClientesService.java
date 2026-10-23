@@ -156,6 +156,14 @@ public class ClientesService implements Clientes {
                 request.direccionId(),
                 request.idempotencyKey());
 
+        if ("DOMICILIO".equals(metodoEntrega) && request.direccionId() != null) {
+            DireccionCliente dir = direccionRepository.findById(request.direccionId()).orElse(null);
+            if (dir != null) {
+                pedido.setDireccionSnapshot(dir.getDireccion(), dir.getReferencia(), dir.getObservaciones(),
+                        dir.getLat(), dir.getLng());
+            }
+        }
+
         for (CrearPedidoClienteRequest.ItemRequest item : request.items()) {
             ProductoParaPedido producto = catalogo.productoParaPedido(item.productoId())
                     .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + item.productoId()));
@@ -308,6 +316,7 @@ public class ClientesService implements Clientes {
                 request.direccion(),
                 request.telefono(),
                 request.observaciones(),
+                request.referencia(),
                 request.lat(),
                 request.lng());
         direccionRepository.save(dir);
@@ -486,23 +495,23 @@ public class ClientesService implements Clientes {
         String clienteNombre = clienteRepository.findById(p.getClienteId())
                 .map(Cliente::getNombre)
                 .orElse(null);
-        String direccionTexto = null;
+        String direccionTexto = p.getDireccionTexto();
         String telefono = null;
-        if (p.getDireccionId() != null) {
+        String referencia = p.getReferencia();
+        BigDecimal lat = p.getLat();
+        BigDecimal lng = p.getLng();
+        if (direccionTexto == null && p.getDireccionId() != null) {
             DireccionCliente dir = direccionRepository.findById(p.getDireccionId()).orElse(null);
             if (dir != null) {
                 direccionTexto = dir.getDireccion();
                 telefono = dir.getTelefono();
-            }
-        }
-        BigDecimal lat = null;
-        BigDecimal lng = null;
-        if (p.getDireccionId() != null) {
-            DireccionCliente dir = direccionRepository.findById(p.getDireccionId()).orElse(null);
-            if (dir != null) {
+                referencia = dir.getReferencia();
                 lat = dir.getLat();
                 lng = dir.getLng();
             }
+        }
+        if (direccionTexto == null) {
+            direccionTexto = "Domicilio";
         }
         return new com.restaurante.clientes.PedidoDomicilioSPI(
                 p.getId(),
@@ -513,6 +522,7 @@ public class ClientesService implements Clientes {
                 p.getDireccionId(),
                 direccionTexto,
                 telefono,
+                referencia,
                 lat,
                 lng);
     }
@@ -651,6 +661,7 @@ public class ClientesService implements Clientes {
                 d.getDireccion(),
                 d.getTelefono(),
                 d.getObservaciones(),
+                d.getReferencia(),
                 d.getLat(),
                 d.getLng(),
                 d.getActiva(),
