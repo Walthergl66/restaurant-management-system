@@ -6,6 +6,9 @@ import com.restaurante.shared.validation.PasswordSegura;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+// El celular del cliente es OPCIONAL: sin @NotBlank. Si viene, @CelularValido
+// valida el formato (el validador acepta null/blank como válido). El teléfono
+// de contacto para la entrega se pide luego en el checkout a domicilio.
 
 /**
  * Auto-registro público de un cliente de la app móvil (RF-45): crea el usuario
@@ -27,7 +30,6 @@ public record RegistroRequest(
         @CedulaValida
         String cedula,
 
-        @NotBlank(message = "El celular es obligatorio")
         @CelularValido
         String celular,
 

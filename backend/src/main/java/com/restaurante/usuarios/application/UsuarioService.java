@@ -130,8 +130,11 @@ public class UsuarioService implements Usuarios {
         Usuario usuario = new Usuario(limpio, passwordEncoder.encode(rawPassword), nombre.trim(), rol);
         usuario.requiereVerificacionEmail();
         Usuario guardado = usuarioRepository.save(usuario);
+        // Celular OPCIONAL: si no viene, se propaga null (no cadena vacía) para
+        // que el perfil de cliente quede con telefono = NULL, sin placeholders.
+        String celularLimpio = (celular == null || celular.isBlank()) ? null : celular.trim();
         eventPublisher.publishEvent(new ClienteAutoRegistrado(
-                guardado.getId(), nombre.trim(), cedula.trim(), celular.trim()));
+                guardado.getId(), nombre.trim(), cedula.trim(), celularLimpio));
         return guardado;
     }
 
