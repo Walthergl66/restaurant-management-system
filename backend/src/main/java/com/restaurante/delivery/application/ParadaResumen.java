@@ -24,7 +24,11 @@ public record ParadaResumen(
         String codigo,
         String direccion,
         BigDecimal lat,
-        BigDecimal lng) {
+        BigDecimal lng,
+        String faseConfirmacion,
+        java.time.Instant repartidorConfirmoAt,
+        java.time.Instant clienteConfirmoAt,
+        boolean entregaVerificada) {
 
     static ParadaResumen de(Parada parada, EntregaResumen entrega, Coordenada coord) {
         return new ParadaResumen(
@@ -36,6 +40,10 @@ public record ParadaResumen(
                 entrega != null ? entrega.codigo() : null,
                 entrega != null ? entrega.direccion() : null,
                 coord != null ? coord.lat() : null,
-                coord != null ? coord.lng() : null);
+                coord != null ? coord.lng() : null,
+                parada.faseConfirmacion().name(),
+                parada.getRepartidorConfirmoAt(),
+                parada.getClienteConfirmoAt(),
+                parada.isEntregaVerificada());
     }
 }

@@ -9,6 +9,7 @@ import com.restaurante.delivery.domain.CriterioOptimizacion;
 import com.restaurante.delivery.domain.EstadoAsignacion;
 import com.restaurante.delivery.domain.EstadoParada;
 import com.restaurante.delivery.domain.EstadoRecorrido;
+import com.restaurante.delivery.domain.FaseConfirmacion;
 import com.restaurante.delivery.domain.Incidencia;
 import com.restaurante.delivery.domain.Parada;
 import com.restaurante.delivery.domain.Recorrido;
@@ -268,22 +269,110 @@ public class RecorridoService {
      * para trazar el reintento.
      */
     public ParadaResumen marcarParadaEntregada(Long paradaId, String idempotencyKey) {
+        return confirmarLlegadaRepartidor(paradaId, idempotencyKey);
+    }
+
+    /**
+     * CONFIRMACIÓN DEL REPARTIDOR (1 de 2) de una entrega: el repartidor llegó/
+     * entregó. Marca la parada ENTREGADA y la asignación ENTREGADA (estado
+     * LOGÍSTICO) y registra la confirmación del repartidor (fecha/hora + usuario)
+     * en la parada, SEPARADA del estado logístico. Es IDEMPOTENTE: si la parada
+     * ya estaba ENTREGADA (confirmada por el repartidor) no re-aplica y devuelve
+     * el estado actual (reintento offline del móvil); una parada FALLIDA se
+     * rechaza (422). Tras confirmar, DISPARA el aviso al cliente reutilizando el
+     * canal WebSocket del pedido (outbox -> STOMP) para que la app muestre
+     * "tu pedido llegó, confirma la recepción". No bloquea al repartidor: puede
+     * seguir con otras paradas aunque el cliente no confirme.
+     */
+    public ParadaResumen confirmarLlegadaRepartidor(Long paradaId, String idempotencyKey) {
         Repartidor repartidor = repartidorService.repartidorHabilitadoDelUsuarioActual();
         Parada parada = paradaPropia(paradaId, repartidor);
-        // Idempotencia: una parada ya ENTREGADA devuelve su estado sin re-aplicar.
+        // Idempotencia: una parada ya ENTREGADA (confirmada) devuelve su estado.
         if (parada.getEstado() == EstadoParada.ENTREGADA) {
             return paradaResumen(parada);
         }
-        parada.marcarEntregada();
+        parada.confirmarPorRepartidor(actorActual());
         paradas.save(parada);
         Asignacion asignacion = asignaciones.findById(parada.getAsignacionId()).orElseThrow();
         asignacion.marcarEntregada();
         asignaciones.save(asignacion);
-        auditar("PARADA_ENTREGADA", parada.getId(), Map.of(
+        auditar("PARADA_CONFIRMADA_REPARTIDOR", parada.getId(), Map.of(
                 "recorridoId", String.valueOf(parada.getRecorridoId()),
                 "asignacionId", String.valueOf(parada.getAsignacionId()),
                 "idempotencyKey", idempotencyKey != null ? idempotencyKey : ""));
+        // Avisa al cliente (reutiliza outbox -> STOMP): "el repartidor llegó".
+        clientes.notificarEventoEntrega(asignacion.getPedidoClienteId());
         return paradaResumen(parada);
+    }
+
+    /**
+     * CONFIRMACIÓN DEL CLIENTE (2 de 2): el cliente dueño del pedido confirma que
+     * lo recibió. Valida PROPIEDAD vía la SPI de clientes (código -> id interno
+     * del cliente autenticado), localiza la parada activa del pedido, exige que
+     * el repartidor ya haya confirmado (si no, 422) y registra la confirmación
+     * del cliente. Si existen ambas confirmaciones marca la entrega VERIFICADA.
+     * Es IDEMPOTENTE: una segunda confirmación del mismo cliente no duplica. Tras
+     * confirmar, notifica el nuevo estado por el canal del pedido.
+     */
+    public SeguimientoEntregaSPI confirmarRecepcionCliente(String codigo, String clienteUsername,
+                                                           String idempotencyKey) {
+        Long clienteId = clientes.resolverClienteId(clienteUsername);
+        Long pedidoClienteId = clientes.pedidoClienteIdPropio(clienteId, codigo);
+        Parada parada = paradas.findActivaByPedidoClienteId(pedidoClienteId)
+                .orElseThrow(() -> new BusinessRuleException(
+                        "El pedido aún no está en reparto: no hay entrega que confirmar"));
+        boolean yaConfirmado = parada.getClienteConfirmoAt() != null;
+        parada.confirmarPorCliente();
+        paradas.save(parada);
+        if (!yaConfirmado) {
+            auditar("PARADA_CONFIRMADA_CLIENTE", parada.getId(), Map.of(
+                    "pedidoClienteId", String.valueOf(pedidoClienteId),
+                    "verificada", String.valueOf(parada.isEntregaVerificada()),
+                    "idempotencyKey", idempotencyKey != null ? idempotencyKey : ""));
+            clientes.notificarEventoEntrega(pedidoClienteId);
+        }
+        return seguimientoDeParada(parada);
+    }
+
+    /**
+     * ADMIN: paradas con el repartidor confirmado pero pendientes de la
+     * confirmación del cliente (entrega aún no verificada). Permite al admin
+     * revisar incidencias de confirmación.
+     */
+    @Transactional(readOnly = true)
+    public List<ParadaResumen> listarPendientesConfirmacionCliente() {
+        return paradas.buscarPendientesConfirmacionCliente().stream()
+                .map(this::paradaResumen)
+                .toList();
+    }
+
+    /**
+     * ADMIN: resuelve de forma AUDITADA y JUSTIFICADA una entrega cuyo cliente
+     * nunca confirmó. Exige un motivo, marca la entrega VERIFICADA registrando
+     * quién la resolvió y por qué. NO hay cierre automático por tiempo.
+     */
+    public ParadaResumen resolverConfirmacionPendiente(Long paradaId, String motivo) {
+        Parada parada = paradas.findById(paradaId)
+                .orElseThrow(() -> new NotFoundException("La parada no existe"));
+        parada.resolverPorAdmin(actorActual(), motivo);
+        paradas.save(parada);
+        auditar("PARADA_CONFIRMACION_RESUELTA_ADMIN", parada.getId(), Map.of(
+                "asignacionId", String.valueOf(parada.getAsignacionId()),
+                "motivo", motivo != null ? motivo : ""));
+        return paradaResumen(parada);
+    }
+
+    /**
+     * Seguimiento de la entrega de un pedido para la barra de progreso del
+     * cliente: valida propiedad (el pedido es del cliente autenticado) y expone
+     * la fase logística y la fase de confirmación sin PII.
+     */
+    public SeguimientoEntregaSPI seguimientoDePedido(String codigo, String clienteUsername) {
+        Long clienteId = clientes.resolverClienteId(clienteUsername);
+        Long pedidoClienteId = clientes.pedidoClienteIdPropio(clienteId, codigo);
+        return paradas.findActivaByPedidoClienteId(pedidoClienteId)
+                .map(this::seguimientoDeParada)
+                .orElseGet(() -> seguimientoSoloAsignacion(pedidoClienteId));
     }
 
     /**
@@ -456,6 +545,57 @@ public class RecorridoService {
                 .map(this::paradaResumen)
                 .toList();
         return RecorridoResumen.de(recorrido, origenOpcional(), lista);
+    }
+
+    /**
+     * Seguimiento derivado de una parada: fase logística a partir del estado de
+     * la asignación/parada y fase de confirmación a partir de las dos
+     * confirmaciones. Conceptos separados, sin PII.
+     */
+    private SeguimientoEntregaSPI seguimientoDeParada(Parada parada) {
+        Asignacion a = asignaciones.findById(parada.getAsignacionId()).orElse(null);
+        return new SeguimientoEntregaSPI(
+                true,
+                faseLogistica(a, parada).name(),
+                parada.faseConfirmacion().name(),
+                parada.getRepartidorConfirmoAt(),
+                parada.getClienteConfirmoAt(),
+                parada.isEntregaVerificada());
+    }
+
+    /** Seguimiento cuando hay asignación pero aún no parada (sin recorrido). */
+    private SeguimientoEntregaSPI seguimientoSoloAsignacion(Long pedidoClienteId) {
+        Asignacion a = asignaciones.findActivaByPedidoClienteId(pedidoClienteId).orElse(null);
+        if (a == null) {
+            return SeguimientoEntregaSPI.sinEntrega();
+        }
+        FaseLogistica fase = a.getEstado() == EstadoAsignacion.EN_RUTA
+                ? FaseLogistica.EN_CAMINO : FaseLogistica.ASIGNADO;
+        return new SeguimientoEntregaSPI(true, fase.name(),
+                FaseConfirmacion.SIN_CONFIRMAR.name(), null, null, false);
+    }
+
+    /**
+     * Fase logística de una parada, derivada SIN tocar la máquina de estados:
+     * FALLIDA si la parada falló; ENTREGADO_POR_REPARTIDOR si el repartidor
+     * confirmó; EN_CAMINO si la asignación está EN_RUTA; ASIGNADO en otro caso.
+     */
+    private FaseLogistica faseLogistica(Asignacion a, Parada parada) {
+        if (parada.getEstado() == EstadoParada.FALLIDA) {
+            return FaseLogistica.FALLIDA;
+        }
+        if (parada.getRepartidorConfirmoAt() != null) {
+            return FaseLogistica.ENTREGADO_POR_REPARTIDOR;
+        }
+        if (a != null && a.getEstado() == EstadoAsignacion.EN_RUTA) {
+            return FaseLogistica.EN_CAMINO;
+        }
+        return FaseLogistica.ASIGNADO;
+    }
+
+    /** Fase logística del reparto para el seguimiento del cliente (sin PII). */
+    private enum FaseLogistica {
+        SIN_ASIGNAR, ASIGNADO, EN_CAMINO, ENTREGADO_POR_REPARTIDOR, FALLIDA
     }
 
     private ParadaResumen paradaResumen(Parada parada) {

@@ -449,6 +449,24 @@ public class ClientesService implements Clientes {
         return pedidoRepository.findById(pedidoClienteId).map(this::toDomicilioSPI);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Long pedidoClienteIdPropio(Long clienteId, String codigo) {
+        PedidoCliente pedido = pedidoRepository.findByCodigo(codigo)
+                .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
+        protegerPedidoDe(clienteId, pedido);
+        return pedido.getId();
+    }
+
+    @Override
+    public void notificarEventoEntrega(Long pedidoClienteId) {
+        PedidoCliente pedido = pedidoRepository.findById(pedidoClienteId)
+                .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + pedidoClienteId));
+        // Reutiliza el canal RF-43 (outbox -> STOMP): el difusor empujará el
+        // snapshot actualizado al tópico del pedido. No toca el estado del pedido.
+        notificarEstado(pedido);
+    }
+
     private com.restaurante.clientes.PedidoDomicilioSPI toDomicilioSPI(PedidoCliente p) {
         String clienteNombre = clienteRepository.findById(p.getClienteId())
                 .map(Cliente::getNombre)

@@ -97,10 +97,18 @@ public class DeliveryRepartidorController {
 
     @PostMapping("/paradas/{id}/entregada")
     @PreAuthorize("hasAuthority('delivery:recorrido-operar')")
-    @Operation(summary = "Marcar una parada entregada (idempotente por Idempotency-Key)")
+    @Operation(summary = "Confirmación del repartidor: marca la parada entregada (idempotente por Idempotency-Key)")
     public ParadaResponse entregada(@PathVariable Long id,
                                     @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
-        return ParadaResponse.de(recorridos.marcarParadaEntregada(id, idempotencyKey));
+        return ParadaResponse.de(recorridos.confirmarLlegadaRepartidor(id, idempotencyKey));
+    }
+
+    @PostMapping("/paradas/{id}/he-llegado")
+    @PreAuthorize("hasAuthority('delivery:recorrido-operar')")
+    @Operation(summary = "Alias de la confirmación del repartidor (he llegado / entrega realizada)")
+    public ParadaResponse heLlegado(@PathVariable Long id,
+                                    @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        return ParadaResponse.de(recorridos.confirmarLlegadaRepartidor(id, idempotencyKey));
     }
 
     @PostMapping("/paradas/{id}/incidencia")
