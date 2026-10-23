@@ -81,8 +81,11 @@ export function useEntregaIndividual(
     const parada = existente.paradas.find((p) => p.asignacionId === asignacionId);
     setRecorridoId(existente.recorridoId);
     setParadaId(parada?.paradaId ?? null);
-    setRecorridoEnCurso(existente.estado === 'EN_CURSO');
+    setRecorridoEnCurso(existente.estado === 'EN_CURSO' || existente.estado === 'PLANIFICADO');
     setParadaEntregada(parada?.estado === 'ENTREGADA');
+    setRecorridoFinalizado(
+      existente.estado === 'FINALIZADO' || existente.estado === 'CANCELADO'
+    );
   }, [datos, asignacionId]);
 
   // Carga de la ruta individual al montar / cambiar asignación.
