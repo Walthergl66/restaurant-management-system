@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import { useAuditoria } from '../hooks'
 import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
+import QueryBoundary from '@/shared/ui/QueryBoundary'
 
 const TIPO_COLOR: Record<string, string> = {
   CREAR: '#22c55e', ACTUALIZAR: '#F5A623', ELIMINAR: '#ef4444',
@@ -17,7 +18,8 @@ export default function AuditoriaScreen() {
   const [entidad, setEntidad] = useState('')
   const [search,  setSearch]  = useState('')
 
-  const { data: eventos = [], isLoading } = useAuditoria({ desde, hasta, entidad: entidad || undefined })
+  const auditoriaQuery = useAuditoria({ desde, hasta, entidad: entidad || undefined })
+  const { data: eventos = [], isLoading } = auditoriaQuery
 
   const filtered = eventos.filter(e =>
     !search ||
@@ -49,6 +51,7 @@ export default function AuditoriaScreen() {
       </div>
 
       {/* stat */}
+      <QueryBoundary queries={[auditoriaQuery]} label="los eventos de auditoría">
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '6px 14px', fontSize: 13 }}>
           <span style={{ color: 'var(--muted)' }}>Total eventos: </span>
@@ -98,6 +101,7 @@ export default function AuditoriaScreen() {
             )
         }
       </div>
+      </QueryBoundary>
     </div>
   )
 }

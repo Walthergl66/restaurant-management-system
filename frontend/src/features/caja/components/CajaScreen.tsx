@@ -8,25 +8,30 @@ import CierreModal from './CierreModal'
 import EgresoModal from './EgresoModal'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 export default function CajaScreen() {
   const [showApertura, setShowApertura] = useState(false)
   const [showCierre,   setShowCierre]   = useState(false)
   const [showEgreso,   setShowEgreso]   = useState(false)
 
-  const { data: caja, isLoading } = useCajaAbierta()
-  const { data: historial = [] } = useHistorialCajas()
-  const { data: movimientos = [] } = useMovimientos(caja?.id)
+  const cajaQuery = useCajaAbierta()
+  const historialQuery = useHistorialCajas()
+  const movimientosQuery = useMovimientos(cajaQuery.data?.id)
+  const { data: caja, isLoading } = cajaQuery
+  const { data: historial = [] } = historialQuery
+  const { data: movimientos = [] } = movimientosQuery
+  const cajaDisponible = !hasQueryIssue([cajaQuery])
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
         <h1 style={{ fontSize:20, fontWeight:800 }}>Caja</h1>
         <div style={{ display:'flex', gap:8 }}>
-          {!caja && !isLoading && (
+          {cajaDisponible && !caja && (
             <button className="btn-yellow" onClick={() => setShowApertura(true)}><Unlock size={15}/> Abrir caja</button>
           )}
-          {caja && (
+          {cajaDisponible && caja && (
             <>
               <button className="btn-ghost" onClick={() => setShowEgreso(true)}><Plus size={15}/> Egreso</button>
               <button className="btn-fuchsia" onClick={() => setShowCierre(true)}><Lock size={15}/> Cerrar caja</button>
@@ -36,6 +41,7 @@ export default function CajaScreen() {
       </div>
 
       {/* estado */}
+      <QueryBoundary queries={[cajaQuery]} label="la caja actual">
       {isLoading
         ? <p style={{ color:'var(--dim)', padding:16 }}>Cargando…</p>
         : caja
@@ -63,11 +69,13 @@ export default function CajaScreen() {
             </div>
           )
       }
+      </QueryBoundary>
 
       {/* movimientos */}
-      {caja && (
+      {cajaDisponible && caja && (
         <div className="card">
           <h2 style={{ fontWeight:700, fontSize:15, marginBottom:14 }}>Movimientos del turno</h2>
+          <QueryBoundary queries={[movimientosQuery]} label="los movimientos de caja">
           {movimientos.length === 0
             ? <p style={{ fontSize:13, color:'var(--dim)' }}>Sin movimientos</p>
             : movimientos.map(m => (
@@ -87,6 +95,7 @@ export default function CajaScreen() {
                 </div>
               ))
           }
+          </QueryBoundary>
         </div>
       )}
 
@@ -95,6 +104,7 @@ export default function CajaScreen() {
         <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--border)' }}>
           <h2 style={{ fontWeight:700, fontSize:15 }}>Historial de cajas</h2>
         </div>
+        <QueryBoundary queries={[historialQuery]} label="el historial de cajas">
         {historial.length === 0
           ? <p style={{ padding:24, fontSize:13, color:'var(--dim)' }}>Sin historial</p>
           : (
@@ -119,11 +129,12 @@ export default function CajaScreen() {
             </table>
           )
         }
+        </QueryBoundary>
       </div>
 
-      {showApertura && <AperturaModal onClose={() => setShowApertura(false)} />}
-      {showCierre && caja && <CierreModal caja={caja} onClose={() => setShowCierre(false)} />}
-      {showEgreso && caja && <EgresoModal cajaId={caja.id} onClose={() => setShowEgreso(false)} />}
+      {cajaDisponible && !caja && showApertura && <AperturaModal onClose={() => setShowApertura(false)} />}
+      {cajaDisponible && showCierre && caja && <CierreModal caja={caja} onClose={() => setShowCierre(false)} />}
+      {cajaDisponible && showEgreso && caja && <EgresoModal cajaId={caja.id} onClose={() => setShowEgreso(false)} />}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { Minus, Plus, Search, X } from 'lucide-react'
 import { fmt } from '@/shared/lib/utils'
 import { useCrearPedido, useMesasLibres, useProductosActivos } from '../hooks'
 import type { CartItem } from '../types'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 const labelStyle = {
   fontSize: 11, fontWeight: 700, color: 'var(--muted)',
@@ -18,8 +19,11 @@ export default function NuevoPedidoModal({ onClose }: { onClose: () => void }) {
   const [busqueda, setBusqueda] = useState('')
   const [carrito, setCarrito] = useState<CartItem[]>([])
 
-  const { data: mesasLibres = [], isLoading: cargandoMesas } = useMesasLibres()
-  const { data: productos = [], isLoading: cargandoProductos } = useProductosActivos()
+  const mesasQuery = useMesasLibres()
+  const productosQuery = useProductosActivos()
+  const { data: mesasLibres = [], isLoading: cargandoMesas } = mesasQuery
+  const { data: productos = [], isLoading: cargandoProductos } = productosQuery
+  const catalogoDisponible = !hasQueryIssue([mesasQuery, productosQuery])
 
   const crear = useCrearPedido(codigo => { onClose(); router.push(`/pedidos/${codigo}`) })
 
@@ -29,7 +33,7 @@ export default function NuevoPedidoModal({ onClose }: { onClose: () => void }) {
   }, [productos, busqueda])
 
   const total = carrito.reduce((suma, i) => suma + i.precio * i.cantidad, 0)
-  const listo = mesaId !== '' && carrito.length > 0 && !crear.isPending
+  const listo = catalogoDisponible && mesaId !== '' && carrito.length > 0 && !crear.isPending
 
   const agregar = (productoId: number, nombre: string, precio: number) =>
     setCarrito(actual =>
@@ -68,6 +72,7 @@ export default function NuevoPedidoModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
+        <QueryBoundary queries={[mesasQuery, productosQuery]} label="las mesas y los productos del pedido">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
@@ -144,9 +149,10 @@ export default function NuevoPedidoModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
+        </QueryBoundary>
         <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
           <span style={{ fontSize: 13, color: 'var(--muted)' }}>
-            Total <strong style={{ fontSize: 17, fontWeight: 900, color: 'var(--yellow)' }}>{fmt(total)}</strong>
+            Total <strong style={{ fontSize: 17, fontWeight: 900, color: 'var(--yellow)' }}>{catalogoDisponible ? fmt(total) : '—'}</strong>
             {!listo && !crear.isPending && (mesaId === '' || carrito.length === 0) && (
               <span style={{ display: 'block', fontSize: 11, marginTop: 2 }}>Necesitas una mesa y al menos un ítem.</span>
             )}

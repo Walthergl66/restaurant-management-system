@@ -9,14 +9,18 @@ import AdicionModal from './AdicionModal'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 export default function CuentasScreen() {
   const [cobrar, setCobrar] = useState<CuentaResponse | null>(null)
   const [adicion, setAdicion] = useState<CuentaResponse | null>(null)
   const [cerrando, setCerrando] = useState<CuentaResponse | null>(null)
 
-  const { data: cuentas = [], isLoading } = useCuentas()
+  const cuentasQuery = useCuentas()
+  const { data: cuentas = [], isLoading } = cuentasQuery
   const cerrar = useCerrarCuenta()
+
+  if (hasQueryIssue([cuentasQuery])) return <div className="page-stack"><h1>Cuentas de mesa</h1><QueryBoundary queries={[cuentasQuery]} label="las cuentas" /></div>
 
   const abiertas = cuentas.filter(c => c.estado === 'ABIERTA')
   const cerradas = cuentas.filter(c => c.estado === 'CERRADA').slice(0, 20)

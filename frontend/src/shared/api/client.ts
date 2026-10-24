@@ -14,6 +14,7 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config: SessionRequest) => {
+  if ((!config.method || config.method.toLowerCase() === 'get') && !config.timeout) config.timeout = 15_000
   if (typeof window !== 'undefined' && !isSessionEndpoint(config.url)) {
     const session = readSession()
     if (config._retry && config._sessionId !== (session?.id ?? null)) throw new axios.CanceledError('La sesión cambió')
