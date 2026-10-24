@@ -1,12 +1,18 @@
 export { pedidosService } from './api'
 export { suscribirEstadoPedido, toWebSocketUrl } from './estadoSocket'
+export { BarraProgresoPedido } from './components/BarraProgresoPedido'
+export { useAlertaLlegada } from './useAlertaLlegada'
+export type { AlertaLlegada } from './useAlertaLlegada'
 export { generarCodigoPedido, generarIdempotencyKey } from './idempotencia'
 export type {
+  CandidatoDireccion,
   CarritoCliente,
   ConfirmarPedidoRequest,
   CrearPedidoRequest,
   DireccionCliente,
   ExtraLinea,
+  FaseConfirmacion,
+  FaseLogistica,
   ItemPedidoRequest,
   LineaPedido,
   MetodoPagoCliente,
@@ -14,4 +20,5 @@ export type {
   NuevoMetodoPagoRequest,
   Page,
   PedidoCliente,
+  SeguimientoEntrega,
 } from './types'

@@ -6,7 +6,7 @@
  * en tiempo real sin recargar.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -19,14 +19,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
-import { pedidosService } from '@/features/pedidos';
-import { suscribirEstadoPedido } from '@/features/pedidos';
+import {
+  pedidosService,
+  suscribirEstadoPedido,
+  BarraProgresoPedido,
+  useAlertaLlegada,
+  generarIdempotencyKey,
+} from '@/features/pedidos';
 import { authStorage } from '@/shared/storage/authStorage';
-import type { PedidoCliente } from '@/features/pedidos';
+import type { PedidoCliente, SeguimientoEntrega } from '@/features/pedidos';
+import { ApiError } from '@/shared/api/apiError';
 import { Button } from '@/components/ui/Button';
-
-/** Secuencia de estados de un pedido presencial/entrega. */
-const PASOS = ['CONFIRMADO', 'EN_PREPARACION', 'LISTO', 'ENTREGADO'] as const;
 
 const ETIQUETA_ESTADO: Record<string, string> = {
   BORRADOR: 'Borrador',
@@ -41,11 +44,31 @@ export default function PedidoDetalleScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { codigo } = useLocalSearchParams<{ codigo: string }>();
+  const { procesar: procesarAlerta, reset: resetAlerta } = useAlertaLlegada();
 
   const [pedido, setPedido] = useState<PedidoCliente | null>(null);
+  const [seguimiento, setSeguimiento] = useState<SeguimientoEntrega | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [enVivo, setEnVivo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alertaVisible, setAlertaVisible] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  // Clave de idempotencia por intento de confirmación (reutilizada en reintentos).
+  const idempotencyKeyRef = useRef<string | null>(null);
+
+  const refrescarSeguimiento = useCallback(async () => {
+    if (!codigo) return;
+    try {
+      const seg = await pedidosService.getSeguimiento(codigo);
+      setSeguimiento(seg);
+      procesarAlerta(codigo, seg, () => setAlertaVisible(true));
+    } catch {
+      // El seguimiento es de respaldo: no bloquear la pantalla si falla.
+    }
+  }, [codigo, procesarAlerta]);
 
   const cargar = useCallback(async () => {
     if (!codigo) return;
@@ -62,9 +85,11 @@ export default function PedidoDetalleScreen() {
 
   useEffect(() => {
     cargar();
-  }, [cargar]);
+    refrescarSeguimiento();
+  }, [cargar, refrescarSeguimiento]);
 
-  // Suscripción en vivo (RF-43)
+  // Suscripción en vivo (RF-43): al recibir cambios del pedido por el
+  // socket, refresca el seguimiento ligero para detectar la llegada.
   useEffect(() => {
     if (!codigo) return;
     let unsubscribe: (() => void) | undefined;
@@ -76,14 +101,50 @@ export default function PedidoDetalleScreen() {
       unsubscribe = suscribirEstadoPedido(codigo, stored.accessToken, p => {
         setPedido(p);
         setEnVivo(true);
+        void refrescarSeguimiento();
       });
     })();
 
     return () => {
       cancelado = true;
       unsubscribe?.();
+      resetAlerta(codigo);
     };
-  }, [codigo]);
+  }, [codigo, refrescarSeguimiento, resetAlerta]);
+
+  const onConfirmarRecepcion = useCallback(async () => {
+    if (!codigo || confirmando) return;
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = generarIdempotencyKey();
+    }
+    setConfirmando(true);
+    setConfirmError(null);
+    try {
+      const seg = await pedidosService.confirmarRecepcion(
+        codigo,
+        idempotencyKeyRef.current
+      );
+      setSeguimiento(seg);
+      setAlertaVisible(false);
+      idempotencyKeyRef.current = null; // éxito: nuevo intento = nueva clave
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 422) {
+          setConfirmError(
+            'El repartidor aún no marcó la entrega. Inténtalo cuando llegue.'
+          );
+        } else if (err.status === 403) {
+          setConfirmError('Solo puedes confirmar tus propios pedidos.');
+        } else {
+          setConfirmError(err.message);
+        }
+      } else {
+        setConfirmError('No se pudo confirmar la recepción.');
+      }
+    } finally {
+      setConfirmando(false);
+    }
+  }, [codigo, confirmando]);
 
   if (loading) {
     return (
@@ -102,8 +163,10 @@ export default function PedidoDetalleScreen() {
     );
   }
 
-  const pasoActual = PASOS.indexOf(pedido.estado as (typeof PASOS)[number]);
   const anulado = pedido.estado === 'ANULADO';
+  const pendienteConfirmacion =
+    seguimiento?.faseConfirmacion === 'PENDIENTE_CONFIRMACION_CLIENTE';
+  const verificada = seguimiento?.entregaVerificada === true;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -138,42 +201,42 @@ export default function PedidoDetalleScreen() {
             </View>
           </View>
 
-          {!anulado && (
-            <View style={styles.timeline}>
-              {PASOS.map((paso, index) => {
-                const alcanzado = index <= pasoActual;
-                const actual = index === pasoActual;
-                return (
-                  <View key={paso} style={styles.pasoItem}>
-                    <View
-                      style={[
-                        styles.pasoDot,
-                        alcanzado && styles.pasoDotAlcanzado,
-                        actual && styles.pasoDotActual,
-                      ]}
-                    >
-                      {alcanzado && (
-                        <Ionicons
-                          name="checkmark"
-                          size={12}
-                          color={colors.background}
-                        />
-                      )}
-                    </View>
-                    <Text
-                      style={[
-                        styles.pasoText,
-                        alcanzado && styles.pasoTextAlcanzado,
-                      ]}
-                    >
-                      {ETIQUETA_ESTADO[paso]}
-                    </Text>
-                  </View>
-                );
-              })}
+          <View style={styles.timeline}>
+            <BarraProgresoPedido
+              estadoPreparacion={pedido.estado}
+              seguimiento={seguimiento}
+              metodoEntrega={pedido.metodoEntrega}
+              anulado={anulado}
+            />
+          </View>
+
+          {!anulado && pendienteConfirmacion && (
+            <View style={styles.pendienteBanner}>
+              <Ionicons
+                name="time-outline"
+                size={16}
+                color={colors.warning}
+              />
+              <Text style={styles.pendienteText}>
+                PENDIENTE DE CONFIRMACIÓN DEL CLIENTE
+              </Text>
             </View>
           )}
         </View>
+
+        {/* Alerta in-app: el repartidor llegó */}
+        {!anulado && alertaVisible && pendienteConfirmacion && (
+          <View style={styles.alertaLlegada}>
+            <Ionicons
+              name="notifications"
+              size={20}
+              color={colors.neonOrange}
+            />
+            <Text style={styles.alertaLlegadaText}>
+              Tu pedido ha llegado. Confirma su recepción.
+            </Text>
+          </View>
+        )}
 
         {/* Líneas */}
         <View style={styles.section}>
@@ -228,10 +291,34 @@ export default function PedidoDetalleScreen() {
         </View>
       </ScrollView>
 
-      {/* Total */}
+      {/* Footer */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>${pedido.total.toFixed(2)}</Text>
+        {!anulado && pendienteConfirmacion && (
+          <View style={styles.confirmarBox}>
+            {confirmError && (
+              <Text style={styles.confirmError}>{confirmError}</Text>
+            )}
+            <Button
+              title="Confirmar recepción"
+              onPress={onConfirmarRecepcion}
+              loading={confirmando}
+            />
+          </View>
+        )}
+        {!anulado && verificada && (
+          <View style={styles.verificadaBox}>
+            <Ionicons
+              name="checkmark-done-circle"
+              size={18}
+              color={colors.success}
+            />
+            <Text style={styles.verificadaText}>Entrega confirmada</Text>
+          </View>
+        )}
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalValue}>${pedido.total.toFixed(2)}</Text>
+        </View>
       </View>
     </View>
   );
@@ -461,14 +548,72 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: colors.surface,
     paddingHorizontal: 20,
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceBorder,
+  },
+  confirmarBox: {
+    marginBottom: 14,
+    gap: 8,
+  },
+  confirmError: {
+    color: colors.error,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  verificadaBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  verificadaText: {
+    color: colors.success,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pendienteBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  pendienteText: {
+    color: colors.warning,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  alertaLlegada: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.neonOrangeAlpha,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.neonOrange,
+  },
+  alertaLlegadaText: {
+    color: colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
+    flex: 1,
   },
   totalLabel: {
     color: colors.textSecondary,

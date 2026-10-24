@@ -35,9 +35,16 @@ import { CartItemRow } from '@/components/CartItemRow';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Header } from '@/components/Header';
+import { SelectorUbicacion, type Coordenada } from '@/features/ubicacion';
 
 const METODOS_PAGO = ['EFECTIVO', 'TARJETA'] as const;
 const METODOS_ENTREGA = ['RETIRAR', 'DOMICILIO'] as const;
+
+/** Recargo fijo de domicilio (debe coincidir con app.delivery.recargo-domicilio). */
+const RECARGO_DOMICILIO = 1.5;
+
+/** Teléfono de contacto opcional: 7-15 dígitos (admite espacios/guiones/+). */
+const TELEFONO_REGEX = /^\+?[\d\s-]{7,15}$/;
 
 type MetodoPago = (typeof METODOS_PAGO)[number];
 type MetodoEntrega = (typeof METODOS_ENTREGA)[number];
@@ -54,7 +61,9 @@ export default function CheckoutScreen() {
     etiqueta: '',
     direccion: '',
     telefono: '',
+    referencia: '',
   });
+  const [ubicacion, setUbicacion] = useState<Coordenada | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,9 +72,21 @@ export default function CheckoutScreen() {
   const codigoPedido = useRef(generarCodigoPedido());
 
   const esDomicilio = metodoEntrega === 'DOMICILIO';
+  const telefonoValido =
+    direccion.telefono.trim().length === 0 ||
+    TELEFONO_REGEX.test(direccion.telefono.trim());
   const direccionValida =
     direccion.etiqueta.trim().length > 0 &&
-    direccion.direccion.trim().length > 0;
+    direccion.direccion.trim().length > 0 &&
+    ubicacion != null &&
+    telefonoValido;
+
+  // Desglose proyectado para el checkout (antes de confirmar). El backend
+  // congela el costo definitivo al confirmar DOMICILIO; aquí se refleja el
+  // mismo recargo fijo para mostrar subtotal + entrega + total sin duplicarlo.
+  const subtotal = totalPrice;
+  const costoEntrega = esDomicilio ? RECARGO_DOMICILIO : 0;
+  const totalConEntrega = subtotal + costoEntrega;
 
   const handleConfirmar = async () => {
     if (items.length === 0) {
@@ -73,9 +94,22 @@ export default function CheckoutScreen() {
       return;
     }
 
-    if (esDomicilio && !direccionValida) {
-      setError('Para domicilio completa etiqueta y dirección');
-      return;
+    if (esDomicilio) {
+      if (
+        direccion.etiqueta.trim().length === 0 ||
+        direccion.direccion.trim().length === 0
+      ) {
+        setError('Para domicilio completa etiqueta y dirección');
+        return;
+      }
+      if (!ubicacion) {
+        setError('Selecciona tu ubicación en el mapa para la entrega');
+        return;
+      }
+      if (!telefonoValido) {
+        setError('Revisa el teléfono de contacto (7 a 15 dígitos)');
+        return;
+      }
     }
 
     setError(null);
@@ -87,6 +121,9 @@ export default function CheckoutScreen() {
           etiqueta: direccion.etiqueta.trim(),
           direccion: direccion.direccion.trim(),
           telefono: direccion.telefono.trim() || undefined,
+          referencia: direccion.referencia.trim() || undefined,
+          lat: ubicacion?.latitude,
+          lng: ubicacion?.longitude,
         });
         direccionId = nueva.id;
       }
@@ -215,10 +252,10 @@ export default function CheckoutScreen() {
             </View>
           </View>
 
-          {/* Dirección (solo domicilio) */}
+          {/* Dirección y ubicación (solo domicilio) */}
           {esDomicilio && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Dirección</Text>
+              <Text style={styles.sectionTitle}>Dirección de entrega</Text>
               <Input
                 label="ETIQUETA"
                 placeholder="Casa, oficina..."
@@ -229,9 +266,25 @@ export default function CheckoutScreen() {
                 icon="bookmark-outline"
                 maxLength={40}
               />
+
+              {/* Selector de ubicación: mapa + GPS + búsqueda + marcador */}
+              <Text style={styles.subLabel}>UBICACIÓN EN EL MAPA</Text>
+              <SelectorUbicacion
+                valor={ubicacion}
+                onCambio={setUbicacion}
+                onDescripcion={desc =>
+                  setDireccion(prev =>
+                    prev.direccion.trim().length === 0
+                      ? { ...prev, direccion: desc }
+                      : prev
+                  )
+                }
+              />
+
+              <View style={{ height: 12 }} />
               <Input
-                label="DIRECCIÓN"
-                placeholder="Calle, número, colonia..."
+                label="DIRECCIÓN (DESCRIPCIÓN)"
+                placeholder="Calle, número, colonia, referencias..."
                 value={direccion.direccion}
                 onChangeText={text =>
                   setDireccion(prev => ({ ...prev, direccion: text }))
@@ -240,8 +293,18 @@ export default function CheckoutScreen() {
                 maxLength={200}
               />
               <Input
-                label="TELÉFONO (OPCIONAL)"
-                placeholder="555 000 0000"
+                label="REFERENCIA (OPCIONAL)"
+                placeholder="Casa blanca, portón negro..."
+                value={direccion.referencia}
+                onChangeText={text =>
+                  setDireccion(prev => ({ ...prev, referencia: text }))
+                }
+                icon="home-outline"
+                maxLength={200}
+              />
+          <Input
+                label="TELÉFONO DE CONTACTO (OPCIONAL)"
+                placeholder="Para coordinar la entrega"
                 value={direccion.telefono}
                 onChangeText={text =>
                   setDireccion(prev => ({ ...prev, telefono: text }))
@@ -249,6 +312,7 @@ export default function CheckoutScreen() {
                 icon="call-outline"
                 keyboardType="phone-pad"
                 maxLength={20}
+                error={telefonoValido ? undefined : 'Teléfono no válido'}
               />
             </View>
           )}
@@ -271,10 +335,20 @@ export default function CheckoutScreen() {
         <View
           style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
         >
+          <View style={styles.desgloseRow}>
+            <Text style={styles.desgloseLabel}>Subtotal</Text>
+            <Text style={styles.desgloseValue}>${subtotal.toFixed(2)}</Text>
+          </View>
+          <View style={styles.desgloseRow}>
+            <Text style={styles.desgloseLabel}>Costo de entrega</Text>
+            <Text style={styles.desgloseValue}>
+              {esDomicilio ? `$${costoEntrega.toFixed(2)}` : 'Gratis'}
+            </Text>
+          </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>
-              ${totalPrice.toFixed(2)}
+              ${totalConEntrega.toFixed(2)}
             </Text>
           </View>
           <Button
@@ -365,6 +439,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 12,
   },
+  subLabel: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   opcionesRow: {
     flexDirection: 'row',
     gap: 10,
@@ -416,10 +498,26 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.surfaceBorder,
   },
+  desgloseRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  desgloseLabel: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  desgloseValue: {
+    color: colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 8,
     marginBottom: 16,
   },
   totalLabel: {

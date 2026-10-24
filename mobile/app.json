@@ -22,7 +22,17 @@
         "backgroundColor": "#0A0A0A",
         "foregroundImage": "./public/brand-adaptive.png"
       },
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "//": "react-native-maps en Android usa Google Maps. Coloca aqui la API key real de Google Maps (restringida por package name + SHA-1) antes de generar el development/production build. NO la subas al repo; usa una variable de entorno o EAS secret.",
+          "apiKey": "REEMPLAZAR_CON_GOOGLE_MAPS_ANDROID_API_KEY"
+        }
+      }
     },
     "web": {
       "favicon": "./public/brand-favicon.png"
@@ -32,7 +42,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Estación Burger usa tu ubicación para mostrar tu posición en el mapa y guiar las entregas mientras repartes."
+        }
+      ]
     ],
     "scheme": "estacionburger"
   }

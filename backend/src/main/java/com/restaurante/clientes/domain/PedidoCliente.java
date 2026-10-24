@@ -1,9 +1,12 @@
 package com.restaurante.clientes.domain;
 
 import com.restaurante.shared.domain.BaseEntity;
+import com.restaurante.shared.domain.Money;
 import com.restaurante.shared.domain.exception.BusinessRuleException;
+import com.restaurante.shared.infrastructure.MoneyConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -15,6 +18,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -42,12 +46,32 @@ public class PedidoCliente extends BaseEntity {
     @Column(name = "direccion_id")
     private Long direccionId;
 
+    @Column(name = "direccion_texto", length = 200)
+    private String direccionTexto;
+
+    @Column(length = 200)
+    private String referencia;
+
+    @Column(length = 500)
+    private String observaciones;
+
+    @Column(precision = 10, scale = 7)
+    private BigDecimal lat;
+
+    @Column(precision = 10, scale = 7)
+    private BigDecimal lng;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoPedidoCliente estado = EstadoPedidoCliente.BORRADOR;
 
     @Column(name = "idempotency_key", nullable = false, length = 100)
     private String idempotencyKey;
+
+    /** Recargo de entrega congelado al confirmar (0 para RETIRAR). */
+    @Convert(converter = MoneyConverter.class)
+    @Column(name = "costo_entrega", nullable = false)
+    private Money costoEntrega = Money.ZERO;
 
     @Version
     @Column(nullable = false)
@@ -94,7 +118,14 @@ public class PedidoCliente extends BaseEntity {
 
     // ---- transiciones en una sola clase ----
 
-    public void confirmar(String claveReintento) {
+    /**
+     * Confirma el pedido y CONGELA el costo de entrega: {@code recargoDomicilio}
+     * si el método de entrega es DOMICILIO, cero en otro caso. El recargo lo
+     * decide la capa de servicio (config), el dominio no lee propiedades. El
+     * congelado ocurre SOLO en la transición BORRADOR -> CONFIRMADO: un reintento
+     * idempotente (misma clave) retorna temprano y NO vuelve a sumar el recargo.
+     */
+    public void confirmar(String claveReintento, Money recargoDomicilio) {
         if (estado != EstadoPedidoCliente.BORRADOR) {
             if (!idempotencyKey.equals(claveReintento)) {
                 throw new BusinessRuleException("409 RF-41: clave idempotencia distinta (RF-24/25)");
@@ -104,6 +135,7 @@ public class PedidoCliente extends BaseEntity {
         if (lineas.isEmpty()) {
             throw new BusinessRuleException("RF-41: carrito vacío, no se confirma");
         }
+        this.costoEntrega = "DOMICILIO".equals(metodoEntrega) ? recargoDomicilio : Money.ZERO;
         this.estado = EstadoPedidoCliente.CONFIRMADO;
         this.confirmadoAt = Instant.now();
     }
@@ -163,8 +195,23 @@ public class PedidoCliente extends BaseEntity {
     public String getMetodoPago() { return metodoPago; }
     public String getMetodoEntrega() { return metodoEntrega; }
     public Long getDireccionId() { return direccionId; }
+    public String getDireccionTexto() { return direccionTexto; }
+    public String getReferencia() { return referencia; }
+    public String getObservaciones() { return observaciones; }
+    public BigDecimal getLat() { return lat; }
+    public BigDecimal getLng() { return lng; }
+
+    public void setDireccionSnapshot(String direccionTexto, String referencia, String observaciones,
+                                    BigDecimal lat, BigDecimal lng) {
+        this.direccionTexto = direccionTexto;
+        this.referencia = referencia;
+        this.observaciones = observaciones;
+        this.lat = lat;
+        this.lng = lng;
+    }
     public EstadoPedidoCliente getEstado() { return estado; }
     public String getIdempotencyKey() { return idempotencyKey; }
+    public Money getCostoEntrega() { return costoEntrega == null ? Money.ZERO : costoEntrega; }
     public Long getVersion() { return version; }
     public Instant getConfirmadoAt() { return confirmadoAt; }
     public Instant getCreadoAt() { return creadoAt; }
