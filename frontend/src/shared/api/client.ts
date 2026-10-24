@@ -1,49 +1,53 @@
 'use client'
-import axios from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
+import { endSession, readSession, refreshSession } from './session'
+
+type SessionRequest = InternalAxiosRequestConfig & { _retry?: boolean; _sessionId?: string | null; _accessToken?: string | null }
+
+function isSessionEndpoint(url = '') {
+  return url.startsWith('/auth/') && url !== '/auth/me'
+}
 
 const api = axios.create({
   baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json' },
 })
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token')
-    if (token) config.headers.Authorization = `Bearer ${token}`
+api.interceptors.request.use((config: SessionRequest) => {
+  if (typeof window !== 'undefined' && !isSessionEndpoint(config.url)) {
+    const session = readSession()
+    if (config._retry && config._sessionId !== (session?.id ?? null)) throw new axios.CanceledError('La sesión cambió')
+    config._sessionId = session?.id ?? null
+    config._accessToken = session?.accessToken ?? null
+    if (session?.accessToken) config.headers.set('Authorization', `Bearer ${session.accessToken}`)
+    else config.headers.delete('Authorization')
   }
   return config
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    const config = res.config as SessionRequest
+    if (typeof window !== 'undefined' && !isSessionEndpoint(config.url)
+      && config._sessionId !== (readSession()?.id ?? null)) throw new axios.CanceledError('La sesión cambió')
+    return res
+  },
   async (err) => {
-    const original = err.config
-    const url = original?.url ?? ''
-    const esLlamadaAuth = url.includes('/auth/login') || url.includes('/auth/refresh')
-    const enLogin = typeof window !== 'undefined' && window.location.pathname.startsWith('/login')
-
-    if (err.response?.status === 401 && original && !original._retry && !esLlamadaAuth) {
-      original._retry = true
-      const refresh = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null
-      if (refresh) {
-        try {
-          const { data } = await axios.post('/api/v1/auth/refresh', { refreshToken: refresh })
-          localStorage.setItem('access_token', data.accessToken)
-          localStorage.setItem('refresh_token', data.refreshToken)
-          original.headers.Authorization = `Bearer ${data.accessToken}`
-          return api(original)
-        } catch {
-          localStorage.clear()
-          if (!enLogin) window.location.href = '/login'
-        }
-      } else {
-        if (typeof window !== 'undefined') {
-          localStorage.clear()
-          if (!enLogin) window.location.href = '/login'
-        }
-      }
+    const original = err.config as SessionRequest | undefined
+    if (typeof window === 'undefined' || !original || isSessionEndpoint(original.url)) throw err
+    const session = readSession()
+    if (original._sessionId !== (session?.id ?? null)) throw new axios.CanceledError('La sesión cambió')
+    if (err.response?.status !== 401) throw err
+    if (original._retry || !session?.refreshToken) {
+      endSession(session?.id ?? null)
+      throw err
     }
-    return Promise.reject(err)
+    original._retry = true
+    // Una respuesta 401 tardía puede llegar después de una renovación exitosa.
+    if (!session.accessToken || session.accessToken === original._accessToken) {
+      await refreshSession(session, original._accessToken ?? null)
+    }
+    return api(original)
   }
 )
 
