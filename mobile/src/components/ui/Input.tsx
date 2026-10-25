@@ -29,9 +29,10 @@ export function Input({
   isPassword,
   compact = false,
   style,
+  onFocus,
+  onBlur,
   ...props
 }: InputProps) {
-  const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -41,7 +42,6 @@ export function Input({
         style={[
           styles.inputContainer,
           compact && styles.inputContainerCompact,
-          focused && styles.inputContainerFocused,
           error && styles.inputContainerError,
         ]}
       >
@@ -49,15 +49,15 @@ export function Input({
           <Ionicons
             name={icon}
             size={20}
-            color={focused ? colors.neonOrange : colors.textMuted}
+            color={colors.textMuted}
             style={styles.icon}
           />
         )}
         <TextInput
           style={[styles.input, compact && styles.inputCompact, style]}
           placeholderTextColor={colors.textMuted}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onFocus={onFocus}
+          onBlur={onBlur}
           secureTextEntry={isPassword && !showPassword}
           {...props}
         />
@@ -116,14 +116,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
     paddingHorizontal: 16,
-  },
-  inputContainerFocused: {
-    borderColor: colors.neonOrange,
-    shadowColor: colors.neonOrange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   inputContainerError: {
     borderColor: colors.error,

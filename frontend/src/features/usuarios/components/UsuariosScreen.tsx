@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { Plus, Pencil, Trash2, Shield, UserCheck, UserX } from 'lucide-react'
-import { useUsuarios, useRoles, useEliminarUsuario, useCambiarEstadoUsuario } from '../hooks'
+import { useUsuarios, useRoles, useTaxonomiaRoles, useEliminarUsuario, useCambiarEstadoUsuario } from '../hooks'
 import type { UsuarioAdminResponse } from '../types'
 import UsuarioModal from './UsuarioModal'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 type Confirmacion = { u: UsuarioAdminResponse; tipo: 'estado' | 'eliminar' }
 
@@ -15,10 +16,16 @@ export default function UsuariosScreen() {
   const [filtroRol, setFiltroRol] = useState('TODOS')
   const [confirma, setConfirma] = useState<Confirmacion | null>(null)
 
-  const { data: usuarios = [], isLoading } = useUsuarios()
-  const { data: roles = [] } = useRoles()
+  const usuariosQuery = useUsuarios()
+  const rolesQuery = useRoles()
+  const taxonomiaQuery = useTaxonomiaRoles()
+  const { data: usuarios = [], isLoading } = usuariosQuery
+  const { data: roles = [] } = rolesQuery
+  const { data: taxonomia } = taxonomiaQuery
   const eliminar = useEliminarUsuario()
   const cambiarEstado = useCambiarEstadoUsuario()
+
+  const queries = tab === 'usuarios' ? [usuariosQuery, taxonomiaQuery] : [taxonomiaQuery]
 
   const usuariosVisibles = usuarios.filter(u => filtroRol === 'TODOS' || u.rol === filtroRol)
 
@@ -26,7 +33,7 @@ export default function UsuariosScreen() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <h1 style={{ fontSize: 20, fontWeight: 800 }}>Usuarios y Roles</h1>
-        <button className="btn-fuchsia" onClick={() => { setEditing(null); setShowForm(true) }}>
+        <button className="btn-fuchsia" disabled={hasQueryIssue(queries)} onClick={() => { setEditing(null); setShowForm(true) }}>
           <Plus size={15} /> Nuevo usuario
         </button>
       </div>
@@ -42,12 +49,19 @@ export default function UsuariosScreen() {
         ))}
       </div>
 
+      <QueryBoundary queries={queries} label={tab === 'usuarios' ? 'los usuarios y sus roles' : 'los roles'}>
       {tab === 'usuarios' ? (
         <>
           <div className="filter-row">
             <select className="input filter-select" value={filtroRol} onChange={e => setFiltroRol(e.target.value)} aria-label="Filtrar por rol">
               <option value="TODOS">Todos los roles</option>
-              {roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
+              {taxonomia?.categorias.length
+                ? taxonomia.categorias.map(categoria => (
+                    <optgroup key={categoria.codigo} label={categoria.descripcion}>
+                      {categoria.roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
+                    </optgroup>
+                  ))
+                : roles.map(r => <option key={r.id} value={r.codigo}>{r.codigo}</option>)}
             </select>
             {filtroRol !== 'TODOS' && (
               <span style={{ fontSize: 12, color: 'var(--muted)' }}>{usuariosVisibles.length} usuario(s) con rol {filtroRol}</span>
@@ -61,7 +75,7 @@ export default function UsuariosScreen() {
               : (
               <table className="tbl">
                 <thead>
-                  <tr>{['Usuario', 'Nombre', 'Rol', 'Estado', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr>
+                  <tr>{['Usuario', 'Nombre', 'Rol', 'Celular', 'Estado', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {usuariosVisibles.map(u => (
@@ -73,6 +87,7 @@ export default function UsuariosScreen() {
                           {u.rol}
                         </span>
                       </td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{u.celular ?? '—'}</td>
                       <td><span className={`badge ${u.activo ? 'badge-abierta' : 'badge-cerrada'}`}>{u.activo ? 'Activo' : 'Inactivo'}</span></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
@@ -106,28 +121,50 @@ export default function UsuariosScreen() {
           </div>
         </>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
-          {roles.map(r => (
-            <div key={r.id} className="card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <Shield size={16} color="var(--yellow)" />
-                <h3 style={{ fontWeight: 700, fontSize: 14 }}>{r.codigo}</h3>
-                <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>{r.permisos.length} permisos</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+          {taxonomia?.categorias.map(categoria => (
+            <section key={categoria.codigo} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <h2 style={{ fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' }}>{categoria.descripcion}</h2>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>{categoria.codigo}</span>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                {r.permisos.slice(0, 12).map(p => (
-                  <span key={p} style={{ fontSize: 10, background: 'var(--surface-2)', color: 'var(--muted)', borderRadius: 20, padding: '2px 8px' }}>{p}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
+                {categoria.roles.map(r => (
+                  <div key={r.id} className="card">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <Shield size={16} color="var(--yellow)" />
+                      <h3 style={{ fontWeight: 700, fontSize: 14 }}>{r.codigo}</h3>
+                      <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>{r.permisos.length} permisos</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
+                      {r.permisos.slice(0, 12).map(p => (
+                        <span key={p} style={{ fontSize: 10, background: 'var(--surface-2)', color: 'var(--muted)', borderRadius: 20, padding: '2px 8px' }}>{p}</span>
+                      ))}
+                      {r.permisos.length > 12 && (
+                        <span style={{ fontSize: 10, background: 'var(--surface-2)', color: 'var(--muted)', borderRadius: 20, padding: '2px 8px' }}>+{r.permisos.length - 12} más</span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      <span style={{ fontSize: 10, borderRadius: 20, padding: '2px 8px', background: r.asignablePorAdmin ? 'rgba(245,166,35,.15)' : 'var(--surface-2)', color: r.asignablePorAdmin ? 'var(--yellow)' : 'var(--muted)' }}>
+                        {r.asignablePorAdmin ? 'Asignable desde el panel' : 'No asignable'}
+                      </span>
+                      <span style={{ fontSize: 10, background: 'var(--surface-2)', color: 'var(--muted)', borderRadius: 20, padding: '2px 8px' }}>
+                        {r.configurable ? 'Funcionalidades ajustables' : 'Funcionalidades fijas'}
+                      </span>
+                      <span style={{ fontSize: 10, background: 'var(--surface-2)', color: 'var(--muted)', borderRadius: 20, padding: '2px 8px' }}>
+                        {r.origen === 'AUTO_REGISTRO' ? 'Nace por auto-registro' : 'Nace desde el panel'}
+                      </span>
+                    </div>
+                  </div>
                 ))}
-                {r.permisos.length > 12 && (
-                  <span style={{ fontSize: 10, background: 'var(--surface-2)', color: 'var(--muted)', borderRadius: 20, padding: '2px 8px' }}>+{r.permisos.length - 12} más</span>
-                )}
               </div>
-            </div>
+            </section>
           ))}
         </div>
       )}
 
-      {showForm && <UsuarioModal editing={editing} roles={roles} onClose={() => setShowForm(false)} />}
+      </QueryBoundary>
+      {!hasQueryIssue(queries) && showForm && <UsuarioModal editing={editing} roles={roles} onClose={() => setShowForm(false)} />}
 
       {confirma?.tipo === 'estado' && (
         <ConfirmDialog

@@ -3,8 +3,8 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { queryClient } from '@/shared/api/queryClient'
 import { errMsg } from '@/shared/lib/utils'
-import { listarUsuarios, listarRoles, listarPermisos, eliminarUsuario, cambiarEstadoUsuario, crearUsuario, actualizarUsuario } from './api'
-import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, RolDto, UsuarioAdminResponse } from './types'
+import { listarUsuarios, listarTaxonomiaRoles, listarPermisos, eliminarUsuario, cambiarEstadoUsuario, crearUsuario, actualizarUsuario } from './api'
+import type { ActualizarUsuarioPayload, CrearUsuarioPayload, PermisoDto, RolDto, TaxonomiaRolesDto, UsuarioAdminResponse } from './types'
 
 export function useUsuarios() {
   return useQuery<UsuarioAdminResponse[]>({
@@ -14,9 +14,22 @@ export function useUsuarios() {
 }
 
 export function useRoles() {
-  return useQuery<RolDto[]>({
+  return useQuery<TaxonomiaRolesDto, Error, RolDto[]>({
     queryKey: ['roles'],
-    queryFn: listarRoles,
+    queryFn: listarTaxonomiaRoles,
+    select: (taxonomia) => taxonomia.roles,
+  })
+}
+
+/**
+ * Taxonomía completa de roles: las categorías con los roles que contienen.
+ * Comparte la misma consulta que useRoles, así que no hay una segunda
+ * petición al backend.
+ */
+export function useTaxonomiaRoles() {
+  return useQuery<TaxonomiaRolesDto>({
+    queryKey: ['roles'],
+    queryFn: listarTaxonomiaRoles,
   })
 }
 

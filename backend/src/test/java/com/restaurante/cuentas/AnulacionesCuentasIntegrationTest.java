@@ -30,6 +30,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
 
+    /** Numerador de mesas propio del test: evita colisiones de `numero`
+     *  con otras clases que comparten el mismo contenedor de PostgreSQL.
+     *  La base (300000) queda fuera de los rangos que usan las demas clases
+     *  (10000 en Pedidos, 20000 en Comandas). */
+    private static final java.util.concurrent.atomic.AtomicInteger MESA_SECUENCIA =
+            new java.util.concurrent.atomic.AtomicInteger(300000);
+
     private String administradorToken;
     private String meseroToken;
     private String gestorToken;
@@ -38,7 +45,8 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
     void preparar() {
         administradorToken = tokenAdmin();
         meseroToken = tokenMesero();
-        gestorToken = asegurarUsuario("gestor_test", "ADMIN", "clave789");
+        // La cuenta ADMIN es unica y no se replica desde el panel: se usa la sembrada.
+        gestorToken = tokenAdmin();
     }
 
     @Test
@@ -635,7 +643,7 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"numero":%d,"capacidad":4}
-                                """.formatted((int) (1000 + System.nanoTime() % 5000))))
+                                """.formatted(MESA_SECUENCIA.incrementAndGet())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
@@ -654,23 +662,4 @@ class AnulacionesCuentasIntegrationTest extends AbstractIntegracionApi {
         return objectMapper.readTree(body).path("id").asLong();
     }
 
-    private String asegurarUsuario(String username, String rol, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + administradorToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"%s"}
-                                    """.formatted(username, username, password, rol)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar el usuario " + username, e);
-        }
-        return loginToken(username, password);
-    }
 }

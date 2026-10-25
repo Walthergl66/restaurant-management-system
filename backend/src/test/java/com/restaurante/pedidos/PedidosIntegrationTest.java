@@ -190,8 +190,8 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                                 """.formatted(mesaId)))
                 .andExpect(status().isUnauthorized());
 
-        // Cocinero sin permiso de crear → 403
-        String cocineroToken = asegurarUsuario("cocina_test", "EMPLEADO", "clave456");
+        // Empleado sin permiso de crear → 403 (el admin no le habilitó pedidos:crear)
+        String cocineroToken = tokenMeseroConPermisos("cocina_test_" + System.nanoTime(), "comandas:ver", "pedidos:estado-preparacion");
         mockMvc.perform(post("/api/v1/pedidos")
                         .header("Authorization", "Bearer " + cocineroToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -262,7 +262,8 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
 
         // La cocina avanza el pedido; el reintento con la MISMA llave sigue
         // siendo idempotente (RNF-17) y una llave distinta es conflicto.
-        String cocineroToken = asegurarUsuario("cocina_test", "EMPLEADO", "clave456");
+        String cocineroToken = tokenMeseroConPermisos("cocina_avanza_" + System.nanoTime(),
+                "comandas:ver", "pedidos:estado-preparacion", "pedidos:estado-listo");
         String body = mockMvc.perform(get("/api/v1/comandas")
                         .header("Authorization", "Bearer " + cocineroToken))
                 .andExpect(status().isOk())
@@ -403,25 +404,5 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body).path("id").asLong();
-    }
-
-    private String asegurarUsuario(String username, String rol, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + administradorToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"%s"}
-                                    """.formatted(username, username, password, rol)))
-                    .andExpect(result -> {
-                        int status = result.getResponse().getStatus();
-                        if (status != 201 && status != 409) {
-                            throw new AssertionError("Esperaba 201 o 409, fue " + status);
-                        }
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar el usuario " + username, e);
-        }
-        return loginToken(username, password);
     }
 }

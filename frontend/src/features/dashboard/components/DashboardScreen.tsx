@@ -7,8 +7,8 @@ import CocinaDashboard from './CocinaDashboard'
 /*
  * El dashboard se resuelve por PERMISO, no por nombre de rol:
  *  - reportes:ver  → panel de Ventas/Caja (ADMIN, que ve todo y cobra)
- *  - pedidos:crear → panel de Salón (EMPLEADO con mesas asignadas)
- *  - resto         → panel de Cocina (EMPLEADO de cocina / DELIVERY)
+ *  - pedidos:crear → panel de Salón (MESERO)
+ *  - resto         → panel de Cocina (quien tenga comandas:ver)
  */
 export default function DashboardScreen() {
   const { user } = useAuthStore()

@@ -7,6 +7,7 @@ import {
 import type { ReactNode } from 'react'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
 import { useReporte, useReporteAyer, useReporteSemana, usePedidos, useCaja } from '../hooks'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 /* etiqueta dd/MM a partir de la fecha (ISO o yyyy-MM-dd) que devuelve el backend */
 function etiquetaDia(fecha: string): string {
@@ -24,11 +25,19 @@ function variacion(actual: number, previo: number): { text: string; up: boolean 
 /* ================================================================ */
 export default function VentasDashboard() {
   const router = useRouter()
-  const { data: reporte, isLoading: loadR } = useReporte()
-  const { data: ayer, isLoading: loadA } = useReporteAyer()
-  const { data: semana, isLoading: loadSemana } = useReporteSemana()
-  const { data: pedidos = [], isLoading: loadP } = usePedidos()
-  const { data: caja } = useCaja()
+  const reporteQuery = useReporte()
+  const ayerQuery = useReporteAyer()
+  const semanaQuery = useReporteSemana()
+  const pedidosQuery = usePedidos()
+  const cajaQuery = useCaja()
+  const { data: reporte, isLoading: loadR } = reporteQuery
+  const { data: ayer, isLoading: loadA } = ayerQuery
+  const { data: semana, isLoading: loadSemana } = semanaQuery
+  const { data: pedidos = [], isLoading: loadP } = pedidosQuery
+  const { data: caja } = cajaQuery
+
+  const queries = [reporteQuery, ayerQuery, semanaQuery, pedidosQuery, cajaQuery]
+  if (hasQueryIssue(queries)) return <QueryBoundary queries={queries} label="el resumen de ventas" />
 
   const porDia = semana?.porDia ?? []
   const maxMonto = porDia.reduce((max, d) => Math.max(max, d.total), 0)

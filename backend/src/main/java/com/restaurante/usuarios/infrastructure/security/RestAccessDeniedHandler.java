@@ -37,7 +37,6 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
         problem.setProperty("path", request.getRequestURI());
 
         response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-        response.getWriter().write(objectMapper.writeValueAsString(problem));
+        ProblemaJson.escribir(response, MediaType.APPLICATION_PROBLEM_JSON_VALUE, problem, objectMapper);
     }
 }

@@ -37,7 +37,7 @@ class CargaConcurrenteTest extends AbstractIntegracionApi {
     void preparar() {
         adminToken = tokenAdmin();
         meseroToken = tokenMesero();
-        clienteToken = asegurarCliente("carga_cli_" + System.nanoTime(), "claveCarga123");
+        clienteToken = tokenCliente("carga_cli_" + System.nanoTime(), "claveCarga123");
     }
 
     @Test
@@ -229,21 +229,4 @@ class CargaConcurrenteTest extends AbstractIntegracionApi {
         return objectMapper.readTree(body).path("id").asLong();
     }
 
-    private String asegurarCliente(String username, String password) {
-        try {
-            mockMvc.perform(post("/api/v1/usuarios")
-                            .header("Authorization", "Bearer " + adminToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"CLIENTE"}
-                                    """.formatted(username, username, password)))
-                    .andExpect(result -> {
-                        int st = result.getResponse().getStatus();
-                        if (st != 201 && st != 409) throw new AssertionError("Esperaba 201 o 409, fue " + st);
-                    });
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo asegurar cliente " + username, e);
-        }
-        return loginToken(username, password);
-    }
 }

@@ -11,10 +11,15 @@
 #   DB_USER / DB_PASSWORD   Credenciales de la base PostgreSQL.
 #   CORS_ALLOWED_ORIGINS    Lista de orígenes permitidos para navegador, p.ej.
 #                           "https://app.midominio.com,https://admin.midominio.com"
+#   BREVO_API_KEY           Clave de la API transaccional de Brevo (envío de
+#                           códigos de verificación y recuperación).
+#   BREVO_REMITENTE_EMAIL   Remitente verificado en la cuenta de Brevo; si no
+#                           está verificado la API responde 400.
 #
 # Opcionales con default razonable:
 #   DB_HOST (localhost) / DB_PORT (5432) / DB_NAME
 #   JWT_EXPIRATION_MS (3600000 = 1 hora) / JWT_REFRESH_EXPIRATION_MS (7 días)
+#   BREVO_REMITENTE_NOMBRE (Estación Burger) / BREVO_TIMEOUT (5s)
 # =============================================================================
 spring:
   # La URL JDBC (con sslmode=require y timeouts) y las credenciales se
@@ -50,6 +55,14 @@ app:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hora (A-04: ventana corta)
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 días
+  correo:
+    brevo:
+      # En producción el correo SIEMPRE sale por Brevo; sin la clave o el
+      # remitente la app no arranca (validación en BrevoProperties).
+      habilitado: true
+      api-key: ${BREVO_API_KEY}
+      remitente-email: ${BREVO_REMITENTE_EMAIL}
+      remitente-nombre: ${BREVO_REMITENTE_NOMBRE:Estación Burger}
 
 management:
   endpoints:

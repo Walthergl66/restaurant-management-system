@@ -39,16 +39,42 @@ public class EventoAuditoria {
     @Column(nullable = false)
     private Instant fecha = Instant.now();
 
+    @Column(nullable = false, length = 20)
+    private String categoria;
+
+    @JdbcTypeCode(SqlTypes.INET)
+    @Column(columnDefinition = "inet")
+    private String ip;
+
+    @Column(name = "user_agent", length = 255)
+    private String userAgent;
+
+    @Column(name = "request_id", length = 36)
+    private String requestId;
+
     protected EventoAuditoria() {
     }
 
     public EventoAuditoria(String usuario, String tipo, String entidad,
                            String entidadId, String detalle) {
+        this(usuario, tipo, entidad, entidadId, detalle, "NEGOCIO", null, null, null);
+    }
+
+    public EventoAuditoria(String usuario, String tipo, String entidad,
+                           String entidadId, String detalle,
+                           String categoria, String ip, String userAgent, String requestId) {
         this.usuario = usuario;
         this.tipo = tipo;
         this.entidad = entidad;
         this.entidadId = entidadId;
         this.detalle = detalle;
+        this.categoria = categoria == null ? "NEGOCIO" : categoria;
+        this.ip = ip;
+        this.userAgent = userAgent;
+        this.requestId = requestId;
+        if (this.fecha == null) {
+            this.fecha = Instant.now();
+        }
     }
 
     public Long getId() {
@@ -77,5 +103,21 @@ public class EventoAuditoria {
 
     public Instant getFecha() {
         return fecha;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public String getRequestId() {
+        return requestId;
     }
 }

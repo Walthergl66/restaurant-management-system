@@ -2,6 +2,11 @@ package com.restaurante.clientes;
 
 import com.restaurante.AbstractIntegrationTest;
 import com.restaurante.clientes.infrastructure.DifusorEstadoPedidoCliente;
+import com.restaurante.usuarios.domain.Rol;
+import com.restaurante.usuarios.domain.RolCodigo;
+import com.restaurante.usuarios.domain.Usuario;
+import com.restaurante.usuarios.infrastructure.RolRepository;
+import com.restaurante.usuarios.infrastructure.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +16,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import tools.jackson.databind.JsonNode;
@@ -52,6 +58,15 @@ class PedidoClienteStompIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private DifusorEstadoPedidoCliente difusor;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private RolRepository rolRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5)).build();
@@ -196,11 +211,14 @@ class PedidoClienteStompIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String clienteNuevo(String username) throws Exception {
-        String admin = tokenDe("admin", "admin123");
-        http("/api/v1/usuarios",
-                """
-                        {"username":"%s","nombre":"%s","password":"clave_stomp_%s","rolCodigo":"CLIENTE"}
-                        """.formatted(username, username, shortSufijo(username)), admin, 201);
+        // Fixture: el panel no crea usuarios CLIENTE (nacen por auto-registro
+        // en la app movil), asi que el test los crea contra el repositorio.
+        if (!usuarioRepository.existsByUsername(username)) {
+            Rol rol = rolRepository.findByCodigo(RolCodigo.CLIENTE)
+                    .orElseThrow(() -> new IllegalStateException("No existe el rol CLIENTE"));
+            usuarioRepository.save(new Usuario(
+                    username, passwordEncoder.encode(passDe(username)), username, rol));
+        }
         return username;
     }
 

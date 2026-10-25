@@ -712,31 +712,41 @@ INSERT INTO seguridad.permisos (id, codigo, modulo, descripcion) VALUES
  (40, 'pedidos:retiro-mostrador', 'pedidos', 'Confirmar retiro de pedido en mostrador');
 
 -- ---------------------------------------------------------------
--- Roles (ADMIN | EMPLEADO | DELIVERY | CLIENTE)
+-- Roles (ADMIN | MESERO | COCINA | DELIVERY | CLIENTE)
 -- ---------------------------------------------------------------
 INSERT INTO seguridad.roles (id, codigo, descripcion) VALUES
  (1, 'ADMIN',    'Administrador del sistema'),
+ (2, 'MESERO',   'Mesero con acceso al flujo de pedidos'),
+ (3, 'COCINA',   'Personal de cocina'),
  (5, 'CLIENTE',  'Cliente de la app móvil con QR'),
- (6, 'EMPLEADO', 'Personal interno: mesero, cocina o caja según sus permisos'),
  (7, 'DELIVERY', 'Repartidor: entrega pedidos y confirma retiros');
 
 -- ---------------------------------------------------------------
 -- Asignaciones rol ↔ permiso (permisos por defecto; el administrador
--- puede agregar o quitar funcionalidades por usuario en el panel)
+-- puede agregar o quitar funcionalidades por usuario en el panel,
+-- solo en los roles configurables MESERO/COCINA/DELIVERY)
 -- ---------------------------------------------------------------
 -- ADMIN: todos los permisos
 INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
 SELECT 1, id FROM seguridad.permisos;
 
--- EMPLEADO: unión de los defaults de los antiguos MESERO y COCINA
+-- MESERO
 INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
-SELECT 6, id FROM seguridad.permisos WHERE codigo IN (
+SELECT 2, id FROM seguridad.permisos WHERE codigo IN (
     'catalogo:ver', 'mesas:ver',
     'pedidos:ver', 'pedidos:crear', 'pedidos:editar', 'pedidos:confirmar',
-    'pedidos:estado-preparacion', 'pedidos:estado-listo',
-    'comandas:ver', 'comandas:reenviar',
+    'pedidos:estado-listo',
+    'comandas:ver',
     'anulaciones:solicitar', 'cuentas:ver', 'cuentas:gestionar',
     'clientes:gestionar');
+
+-- COCINA
+INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)
+SELECT 3, id FROM seguridad.permisos WHERE codigo IN (
+    'catalogo:ver',
+    'pedidos:ver', 'pedidos:estado-preparacion', 'pedidos:estado-listo',
+    'comandas:ver', 'comandas:reenviar',
+    'anulaciones:solicitar');
 
 -- DELIVERY: ver/fluir pedidos de entrega y consultar catálogo y mesas
 INSERT INTO seguridad.roles_permisos (rol_id, permiso_id)

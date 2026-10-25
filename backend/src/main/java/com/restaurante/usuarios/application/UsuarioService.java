@@ -9,6 +9,7 @@ import com.restaurante.usuarios.domain.Permiso;
 import com.restaurante.usuarios.domain.Rol;
 import com.restaurante.usuarios.domain.RolCodigo;
 import com.restaurante.usuarios.domain.Usuario;
+import com.restaurante.usuarios.infrastructure.CategoriaRolRepository;
 import com.restaurante.usuarios.infrastructure.PermisoRepository;
 import com.restaurante.usuarios.infrastructure.RefreshTokenRepository;
 import com.restaurante.usuarios.infrastructure.RolRepository;
@@ -16,9 +17,11 @@ import com.restaurante.usuarios.infrastructure.UsuarioRepository;
 import com.restaurante.usuarios.web.dto.ActualizarEstadoRequest;
 import com.restaurante.usuarios.web.dto.ActualizarUsuarioRequest;
 import com.restaurante.usuarios.web.dto.CambiarPasswordRequest;
+import com.restaurante.usuarios.web.dto.CategoriaRolDto;
 import com.restaurante.usuarios.web.dto.CrearUsuarioRequest;
 import com.restaurante.usuarios.web.dto.PermisoDto;
 import com.restaurante.usuarios.web.dto.RolDto;
+import com.restaurante.usuarios.web.dto.TaxonomiaRolesDto;
 import com.restaurante.usuarios.web.dto.UsuarioAdminResponse;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,8 +31,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,23 +47,32 @@ public class UsuarioService implements Usuarios {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final CategoriaRolRepository categoriaRolRepository;
     private final PermisoRepository permisoRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.restaurante.auditoria.Auditoria auditoriaService;
+    private final tools.jackson.databind.ObjectMapper objectMapper;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           RolRepository rolRepository,
+                          CategoriaRolRepository categoriaRolRepository,
                           PermisoRepository permisoRepository,
                           RefreshTokenRepository refreshTokenRepository,
                           PasswordEncoder passwordEncoder,
-                          ApplicationEventPublisher eventPublisher) {
+                          ApplicationEventPublisher eventPublisher,
+                          com.restaurante.auditoria.Auditoria auditoriaService,
+                          tools.jackson.databind.ObjectMapper objectMapper) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
+        this.categoriaRolRepository = categoriaRolRepository;
         this.permisoRepository = permisoRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.auditoriaService = auditoriaService;
+        this.objectMapper = objectMapper;
     }
 
     public UsuarioAdminResponse crear(CrearUsuarioRequest request) {
@@ -71,15 +85,26 @@ public class UsuarioService implements Usuarios {
         if (!rol.isActivo()) {
             throw new BusinessRuleException("El rol está desactivado");
         }
+        exigirRolAsignable(rol);
         Usuario usuario = new Usuario(
                 username,
                 passwordEncoder.encode(request.password()),
                 request.nombre().trim(),
                 rol);
         if (request.permisos() != null && !request.permisos().isEmpty()) {
+            if (!rol.isConfigurable()) {
+                throw new BusinessRuleException(
+                        "El rol " + rol.getCodigo() + " no admite permisos personalizados: nace con sus funcionalidades por defecto");
+            }
             usuario.asignarPermisosExplicitos(resolverPermisos(request.permisos()));
         }
-        return UsuarioAdminResponse.from(usuarioRepository.save(usuario));
+        Usuario guardado = usuarioRepository.save(usuario);
+        try {
+            auditoriaService.registrar(usuarioActual(), "USUARIO_CREADO", "USUARIO",
+                    guardado.getUsername(), json(Map.of("rol", rol.getCodigo(), "nombre", guardado.getNombre())), "USUARIOS");
+        } catch (Exception ignored) {
+        }
+        return UsuarioAdminResponse.from(guardado);
     }
 
     /**
@@ -110,6 +135,35 @@ public class UsuarioService implements Usuarios {
         return guardado;
     }
 
+    /**
+     * Auto-registro público de un repartidor (rol DELIVERY): crea la cuenta
+     * con su celular de contacto, pendiente de verificar el correo.
+     *
+     * <p>El rol DELIVERY no se asigna desde el panel (el administrador solo
+     * lo gestiona), así que este es el único camino para que un repartidor
+     * tenga cuenta. A diferencia del cliente, no publica evento: el
+     * repartidor no tiene perfil en el módulo de clientes.
+     */
+    public Usuario registrarRepartidor(String username, String rawPassword,
+                                       String nombre, String celular) {
+        String limpio = normalizarUsername(username);
+        if (limpio == null || limpio.isBlank()) {
+            throw new BusinessRuleException("El nombre de usuario es obligatorio");
+        }
+        if (usuarioRepository.existsByUsername(limpio)) {
+            throw new ConflictException("Ya existe un usuario con el nombre '" + limpio + "'");
+        }
+        Rol rol = rolRepository.findByCodigo(RolCodigo.DELIVERY)
+                .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + RolCodigo.DELIVERY));
+        if (!rol.isActivo()) {
+            throw new BusinessRuleException("El rol está desactivado");
+        }
+        Usuario usuario = new Usuario(limpio, passwordEncoder.encode(rawPassword), nombre.trim(), rol);
+        usuario.asignarCelular(celular);
+        usuario.requiereVerificacionEmail();
+        return usuarioRepository.save(usuario);
+    }
+
     @Transactional(readOnly = true)
     public Page<UsuarioAdminResponse> listar(Pageable pageable) {
         return usuarioRepository.findAll(pageable).map(UsuarioAdminResponse::from);
@@ -129,6 +183,10 @@ public class UsuarioService implements Usuarios {
         if (request.rolCodigo() != null && !usuario.getRol().getCodigo().equals(request.rolCodigo())) {
             Rol rol = rolRepository.findByCodigo(request.rolCodigo())
                     .orElseThrow(() -> new NotFoundException("Rol no encontrado: " + request.rolCodigo()));
+            if (!rol.isActivo()) {
+                throw new BusinessRuleException("El rol está desactivado");
+            }
+            exigirRolAsignable(rol);
             usuario.asignarRol(rol);
             // El set explícito quedó armado sobre el rol anterior: al cambiar de
             // rol se limpia para que rijan los defaults del nuevo rol.
@@ -136,6 +194,10 @@ public class UsuarioService implements Usuarios {
             credencialesCambiadas = true;
         }
         if (request.permisos() != null) {
+            if (!usuario.getRol().isConfigurable()) {
+                throw new BusinessRuleException(
+                        "El rol " + usuario.getRol().getCodigo() + " no admite permisos personalizados");
+            }
             if (request.permisos().isEmpty()) {
                 throw new BusinessRuleException("El usuario debe conservar al menos una funcionalidad");
             }
@@ -154,6 +216,22 @@ public class UsuarioService implements Usuarios {
             invalidarSesiones(usuario);
         }
         return UsuarioAdminResponse.from(usuario);
+    }
+
+    /**
+     * El administrador solo puede crear y asignar los roles marcados como
+     * asignables en la base de datos: ADMIN tiene una sola cuenta y las
+     * cuentas de CLIENTE y DELIVERY nacen por auto-registro.
+     */
+    private void exigirRolAsignable(Rol rol) {
+        if (rol.isAsignablePorAdmin()) {
+            return;
+        }
+        String motivo = "AUTO_REGISTRO".equals(rol.getOrigen())
+                ? "las cuentas con ese rol nacen por auto-registro"
+                : "hay una sola cuenta con ese rol";
+        throw new BusinessRuleException(
+                "El rol " + rol.getCodigo() + " no se asigna desde el panel: " + motivo);
     }
 
     /**
@@ -193,9 +271,15 @@ public class UsuarioService implements Usuarios {
     public void eliminar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+        String username = usuario.getUsername();
         try {
             usuarioRepository.delete(usuario);
             usuarioRepository.flush();
+            try {
+                auditoriaService.registrar(usuarioActual(), "USUARIO_ELIMINADO", "USUARIO",
+                        username, "{\"accion\":\"ELIMINADO_DEFINITIVO\"}", "USUARIOS");
+            } catch (Exception ignored) {
+            }
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("No se puede eliminar al usuario: tiene un perfil de cliente asociado");
         }
@@ -215,12 +299,42 @@ public class UsuarioService implements Usuarios {
         return UsuarioAdminResponse.from(usuario);
     }
 
+    /**
+     * Taxonomía de roles para el panel: las categorías con los roles que
+     * contienen y la lista plana de todos ellos. Solo roles activos.
+     */
     @Transactional(readOnly = true)
-    public List<RolDto> listarRoles() {
-        return rolRepository.findAll().stream()
+    public TaxonomiaRolesDto listarTaxonomiaRoles() {
+        List<RolDto> roles = rolRepository.findAll().stream()
                 .filter(Rol::isActivo)
-                .map(r -> new RolDto(r.getId(), r.getCodigo(), r.getDescripcion(), r.getPermisoCodigos()))
+                .sorted(Comparator
+                        .comparing((Rol r) -> r.getCategoria().getCodigo())
+                        .thenComparing(Rol::getCodigo))
+                .map(this::aDtoRol)
                 .toList();
+        List<CategoriaRolDto> categorias = categoriaRolRepository.findAll().stream()
+                .sorted(Comparator.comparing(c -> c.getCodigo()))
+                .map(c -> new CategoriaRolDto(
+                        c.getCodigo(),
+                        c.getDescripcion(),
+                        roles.stream()
+                                .filter(r -> r.categoria().equals(c.getCodigo()))
+                                .toList()))
+                .toList();
+        return new TaxonomiaRolesDto(categorias, roles);
+    }
+
+    private RolDto aDtoRol(Rol rol) {
+        return new RolDto(
+                rol.getId(),
+                rol.getCodigo(),
+                rol.getDescripcion(),
+                rol.getCategoria().getCodigo(),
+                rol.getCategoria().getDescripcion(),
+                rol.isAsignablePorAdmin(),
+                rol.isConfigurable(),
+                rol.getOrigen(),
+                rol.getPermisoCodigos());
     }
 
     /** Catálogo completo de permisos para el checklist del panel. */
@@ -284,6 +398,28 @@ public class UsuarioService implements Usuarios {
                 u.getNombre(),
                 u.getRol() != null ? u.getRol().getCodigo() : null,
                 u.isActivo());
+    }
+
+    private String usuarioActual() {
+        try {
+            org.springframework.security.core.Authentication auth =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getPrincipal() == null
+                    || "anonymousUser".equals(auth.getPrincipal()) || "sistema".equals(auth.getPrincipal())) {
+                return "sistema";
+            }
+            return auth.getName();
+        } catch (Exception e) {
+            return "sistema";
+        }
+    }
+
+    private String json(Map<String, String> datos) {
+        try {
+            return objectMapper.writeValueAsString(datos);
+        } catch (Exception e) {
+            return "{\"detalle\":\"no serializable\"}";
+        }
     }
 
     private String normalizarUsername(String username) {

@@ -6,13 +6,15 @@ import type { Mesa } from '../types'
 import MesaModal from './MesaModal'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { hasPermiso, useAuthStore } from '@/features/auth'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 export default function MesasScreen() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Mesa | null>(null)
   const [alternar, setAlternar] = useState<Mesa | null>(null)
   const user = useAuthStore(state => state.user)
-  const { data: mesas = [], isLoading, isError, refetch } = useMesas()
+  const mesasQuery = useMesas()
+  const { data: mesas = [], isLoading, isError, refetch } = mesasQuery
   const cambiarHabilitacion = useCambiarHabilitacionMesa()
   const puedeGestionar = hasPermiso(user, 'mesas:gestionar')
 
@@ -39,6 +41,8 @@ export default function MesasScreen() {
       </div>
     )
   }
+
+  if (hasQueryIssue([mesasQuery])) return <div className="page-stack"><h1>Mesas</h1><QueryBoundary queries={[mesasQuery]} label="las mesas" /></div>
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

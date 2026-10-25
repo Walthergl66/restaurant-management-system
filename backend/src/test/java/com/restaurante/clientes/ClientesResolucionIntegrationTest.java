@@ -110,15 +110,8 @@ class ClientesResolucionIntegrationTest extends AbstractIntegracionApi {
     private String asegurarUsuarioCliente() throws Exception {
         String username = "cli_resol_" + System.nanoTime();
         String password = "claveResol123";
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .post("/api/v1/usuarios")
-                        .header("Authorization", "Bearer " + tokenAdmin())
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"username":"%s","nombre":"%s","password":"%s","rolCodigo":"CLIENTE"}
-                                """.formatted(username, username, password)))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                        .status().isCreated());
+        // Fixture: el panel no crea usuarios CLIENTE (nacen por auto-registro).
+        tokenCliente(username, password);
         return username;
     }
 }

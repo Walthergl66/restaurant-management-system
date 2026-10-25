@@ -1,5 +1,5 @@
 export { useAuthStore, hasPermiso } from './store'
-export { login, refresh, logout, me } from './api'
+export { login, logout, me } from './api'
 export type { UsuarioInfo, AuthResponse, UserInfo } from './types'
 export { default as AuthGuard } from './components/AuthGuard'
 export { default as LoginForm } from './components/LoginForm'
