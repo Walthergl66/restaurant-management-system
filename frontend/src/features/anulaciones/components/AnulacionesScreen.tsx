@@ -6,6 +6,7 @@ import { useAnulaciones, useAprobarAnulacion, useRechazarAnulacion } from '../ho
 import type { EstadoAnulacion } from '../types'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 const CFG: Record<EstadoAnulacion, { label: string; badge: string }> = {
   SOLICITADA: { label: 'Solicitada', badge: 'badge-solicitada' },
@@ -18,7 +19,8 @@ export default function AnulacionesScreen() {
   const user = useAuthStore(s => s.user)
   const puedeAprobar = hasPermiso(user, 'anulaciones:aprobar')
 
-  const { data: anulaciones = [], isLoading } = useAnulaciones(filtro)
+  const anulacionesQuery = useAnulaciones(filtro)
+  const { data: anulaciones = [], isLoading } = anulacionesQuery
   const aprobar = useAprobarAnulacion()
   const rechazar = useRechazarAnulacion()
 
@@ -28,7 +30,7 @@ export default function AnulacionesScreen() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 20, fontWeight: 800 }}>Anulaciones</h1>
-        {pendientes > 0 && (
+        {!hasQueryIssue([anulacionesQuery]) && pendientes > 0 && (
           <span style={{ background: 'var(--fuchsia)', color: '#fff', fontSize: 12, fontWeight: 700, borderRadius: 20, padding: '2px 10px' }}>
             {pendientes} pendiente{pendientes > 1 ? 's' : ''}
           </span>
@@ -50,6 +52,7 @@ export default function AnulacionesScreen() {
       </div>
 
       {/* tabla */}
+      <QueryBoundary queries={[anulacionesQuery]} label="las anulaciones">
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {isLoading
           ? <p style={{ padding: 32, textAlign: 'center', color: 'var(--dim)' }}>Cargando…</p>
@@ -96,6 +99,7 @@ export default function AnulacionesScreen() {
             )
         }
       </div>
+      </QueryBoundary>
     </div>
   )
 }

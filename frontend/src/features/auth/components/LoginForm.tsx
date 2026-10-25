@@ -1,5 +1,6 @@
 'use client'
 import { useState, FormEvent } from 'react'
+import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuthStore } from '../store'
@@ -26,7 +27,10 @@ export default function LoginForm() {
       toast.success('Bienvenido')
       router.push('/dashboard')
     } catch (err: unknown) {
-      setError(errMsg(err, 'Credenciales incorrectas'))
+      if (!axios.isCancel(err)) {
+        const temporary = axios.isAxiosError(err) && (!err.response || err.response.status >= 500)
+        setError(temporary ? 'No se pudo iniciar sesión. Revisa la conexión e intenta nuevamente.' : errMsg(err, 'Credenciales incorrectas'))
+      }
     } finally {
       setLoading(false)
     }

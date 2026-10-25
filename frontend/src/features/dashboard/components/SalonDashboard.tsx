@@ -7,14 +7,21 @@ import { fmt, ESTADO_PEDIDO, ESTADO_MESA } from '@/shared/lib/utils'
 import { useMesas } from '@/features/mesas'
 import { usePedidos, NuevoPedidoModal } from '@/features/pedidos'
 import { useCuentas } from '@/features/cuentas'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 /* ================================================================ */
 export default function SalonDashboard() {
   const router = useRouter()
   const [nuevo, setNuevo] = useState(false)
-  const { data: mesas = [], isLoading: loadM } = useMesas()
-  const { data: pedidos = [], isLoading: loadP } = usePedidos()
-  const { data: cuentas = [], isLoading: loadC } = useCuentas()
+  const mesasQuery = useMesas()
+  const pedidosQuery = usePedidos()
+  const cuentasQuery = useCuentas()
+  const { data: mesas = [], isLoading: loadM } = mesasQuery
+  const { data: pedidos = [], isLoading: loadP } = pedidosQuery
+  const { data: cuentas = [], isLoading: loadC } = cuentasQuery
+
+  const queries = [mesasQuery, pedidosQuery, cuentasQuery]
+  if (hasQueryIssue(queries)) return <QueryBoundary queries={queries} label="el resumen del salón" />
 
   const mesasOcupadas = mesas.filter(m => m.estado === 'OCUPADA')
   const mesasLibres = mesas.filter(m => m.estado === 'LIBRE')

@@ -32,6 +32,9 @@ build/
 # Archivos locales generados por Playwright MCP (capturas y snapshots)
 /.playwright-mcp/
 
+# Documentación de calidad
+docs/qa/
+
 # Backups locales (no se versionan)
 database/backups/
 

@@ -3,9 +3,11 @@ import { useMemo, useState } from 'react'
 import { X, Check, Eye, EyeOff } from 'lucide-react'
 import { useCrearUsuario, useActualizarUsuario, usePermisos, useTaxonomiaRoles } from '../hooks'
 import type { RolDto, UsuarioAdminResponse } from '../types'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 export default function UsuarioModal({ editing, roles, onClose }: { editing: UsuarioAdminResponse | null; roles: RolDto[]; onClose: () => void }) {
-  const { data: taxonomia } = useTaxonomiaRoles()
+  const taxonomiaQuery = useTaxonomiaRoles()
+  const { data: taxonomia } = taxonomiaQuery
 
   /* El panel solo ofrece los roles marcados como asignables (lo decide la
    * base de datos: ADMIN es una cuenta única y CLIENTE/DELIVERY nacen por
@@ -32,7 +34,8 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
    * entre los asignables (mesero o cajero). Al editar, el rol actual. */
   const [rolCodigo, setRolCodigo] = useState(editing?.rol ?? '')
 
-  const { data: permisosCatalogo = [] } = usePermisos()
+  const permisosQuery = usePermisos()
+  const { data: permisosCatalogo = [] } = permisosQuery
 
   /* Solo los roles configurables admiten funcionalidades propias; el resto
    * (ADMIN, CLIENTE, DELIVERY) nacen con las suyas por defecto. */
@@ -101,6 +104,8 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
     : [{ label: 'USUARIO', value: username, set: setUsername, type: 'text' }, { label: 'NOMBRE', value: nombre, set: setNombre, type: 'text' }, { label: 'CONTRASEÑA', value: password, set: setPassword, type: 'password' }]
 
   const muestraChecklist = esConfigurable && permisosCatalogo.length > 0
+  const queries = esConfigurable ? [taxonomiaQuery, permisosQuery] : [taxonomiaQuery]
+  const datosDisponibles = !hasQueryIssue(queries)
 
   return (
     <div className="overlay">
@@ -109,6 +114,7 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
           <h2 style={{ fontWeight: 700, fontSize: 16 }}>{editing ? 'Editar usuario' : 'Nuevo usuario'}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}><X size={18} /></button>
         </div>
+        <QueryBoundary queries={queries} label="los roles y las funcionalidades del usuario">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {fields.map(({ label, value, set, type }) => (
             <div key={label}>
@@ -207,8 +213,9 @@ export default function UsuarioModal({ editing, roles, onClose }: { editing: Usu
             </div>
           )}
         </div>
+        </QueryBoundary>
         <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={guardar} disabled={isPending || !nombre || !rolCodigo || (!editing && !username) || (muestraChecklist && permisos.length === 0)}>
+          <button className="btn-yellow" style={{ flex: 1, justifyContent: 'center' }} onClick={guardar} disabled={!datosDisponibles || isPending || !nombre || !rolCodigo || (!editing && !username) || (muestraChecklist && permisos.length === 0)}>
             <Check size={14} /> {isPending ? 'Guardando…' : 'Guardar'}
           </button>
           <button className="btn-ghost" onClick={onClose}>Cancelar</button>
