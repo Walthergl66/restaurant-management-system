@@ -35,6 +35,22 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(com.restaurante.shared.domain.exception.AlmacenamientoNoDisponible.class)
+    public ResponseEntity<ProblemDetail> handleStorage(com.restaurante.shared.domain.exception.AlmacenamientoNoDisponible ex, HttpServletRequest request) {
+        log.warn("Almacenamiento no disponible en {}", request.getRequestURI(), ex);
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "almacenamiento-no-disponible", ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ProblemDetail> handleUploadSize(Exception ex, HttpServletRequest request) {
+        return build(HttpStatus.PAYLOAD_TOO_LARGE, "archivo-grande", "El archivo supera el tamaño permitido (100 MB)", request, null);
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
+    public ResponseEntity<ProblemDetail> handleMissingPart(Exception ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "archivo-faltante", "Selecciona un archivo para subir", request, null);
+    }
+
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private static final String PROBLEM_BASE = "urn:problem:restaurante:";

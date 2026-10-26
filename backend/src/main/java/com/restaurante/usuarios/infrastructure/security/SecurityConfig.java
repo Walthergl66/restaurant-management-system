@@ -94,6 +94,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/verificar-email", "/api/v1/auth/reenviar-verificacion",
                                 "/api/v1/auth/solicitar-recuperacion", "/api/v1/auth/restablecer-password").permitAll()
                         .requestMatchers("/api/v1/menu", "/api/v1/menu/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/archivos/*/contenido").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.HEAD, "/api/v1/archivos/*/contenido").permitAll()
                         .requestMatchers("/ws").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()

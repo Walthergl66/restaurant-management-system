@@ -5,6 +5,8 @@ import com.restaurante.catalogo.domain.Producto;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
+import com.restaurante.archivos.Archivos;
 
 /**
  * Vista de un producto para administración.
@@ -21,7 +23,10 @@ public record ProductoResponse(
         String areaNombre,
         boolean activo,
         List<ExtraResponse> extras,
-        List<String> ingredientes) {
+        List<String> ingredientes,
+        UUID imagenArchivoId,
+        UUID videoArchivoId,
+        String videoUrl) {
 
     public static ProductoResponse from(Producto producto) {
         return new ProductoResponse(
@@ -39,6 +44,7 @@ public record ProductoResponse(
                 producto.getIngredientes().stream()
                         .filter(IngredienteRemovible::isActivo)
                         .map(IngredienteRemovible::getNombre)
-                        .toList());
+                        .toList(),
+                producto.getImagenArchivoId(), producto.getVideoArchivoId(), Archivos.url(producto.getVideoArchivoId()));
     }
 }

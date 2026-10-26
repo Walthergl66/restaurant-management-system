@@ -10,6 +10,10 @@ spring:
     import: optional:file:.env[.properties],optional:file:backend/.env[.properties]
   application:
     name: restaurant-management-system
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 101MB
   # NO se fija spring.profiles.active aquí a propósito: con un perfil por
   # defecto la app arrancaba en 'dev' (secreto y ajustes laxos) en cualquier
   # despliegue que no lo eligiera explícitamente. El perfil se elige solo por
@@ -73,6 +77,16 @@ management:
       show-details: never
 
 app:
+  archivos:
+    habilitado: ${ARCHIVOS_HABILITADO:false}
+    host: ${ARCHIVOS_HOST:192.168.100.77}
+    puerto: ${ARCHIVOS_PUERTO:22}
+    usuario: ${ARCHIVOS_USUARIO:archivosapp}
+    clave-privada: ${ARCHIVOS_CLAVE_PRIVADA:}
+    known-hosts: ${ARCHIVOS_KNOWN_HOSTS:}
+    directorio: ${ARCHIVOS_DIRECTORIO:/srv/restaurante/media}
+    lectura-url: ${ARCHIVOS_LECTURA_URL:http://192.168.100.77/media/}
+    timeout: ${ARCHIVOS_TIMEOUT:15s}
   cors:
     # Sin valor por defecto a propósito: una instancia sin perfil no acepta
     # orígenes de navegador (fail-closed). El perfil 'dev' lo abre a '*' y

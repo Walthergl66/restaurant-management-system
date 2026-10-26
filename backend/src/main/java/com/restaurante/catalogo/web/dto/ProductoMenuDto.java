@@ -4,6 +4,7 @@ import com.restaurante.catalogo.domain.Producto;
 
 import java.math.BigDecimal;
 import java.util.List;
+import com.restaurante.archivos.Archivos;
 
 /**
  * Producto visible en el menú público.
@@ -15,7 +16,8 @@ public record ProductoMenuDto(
         String imagenUrl,
         BigDecimal precio,
         List<ExtraResponse> extras,
-        List<String> ingredientes) {
+        List<String> ingredientes,
+        String videoUrl) {
 
     public static ProductoMenuDto from(Producto producto) {
         return new ProductoMenuDto(
@@ -28,6 +30,6 @@ public record ProductoMenuDto(
                 producto.getIngredientes().stream()
                         .filter(i -> i.isActivo())
                         .map(i -> i.getNombre())
-                        .toList());
+                        .toList(), Archivos.url(producto.getVideoArchivoId()));
     }
 }

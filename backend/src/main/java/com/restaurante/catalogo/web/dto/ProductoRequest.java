@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Solicitud para crear o actualizar un producto del catálogo.
@@ -35,5 +36,13 @@ public record ProductoRequest(
         @NotNull(message = "La lista de extras es obligatoria")
         Set<Long> extraIds,
 
-        List<String> ingredientes) {
+        List<String> ingredientes,
+        UUID imagenArchivoId,
+        UUID videoArchivoId,
+        Boolean quitarVideo) {
+
+    public ProductoRequest(String nombre, String descripcion, String imagenUrl, BigDecimal precio,
+                           Long categoriaId, Long areaId, Set<Long> extraIds, List<String> ingredientes) {
+        this(nombre, descripcion, imagenUrl, precio, categoriaId, areaId, extraIds, ingredientes, null, null, false);
+    }
 }

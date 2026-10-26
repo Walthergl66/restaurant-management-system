@@ -46,6 +46,16 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>sshj</artifactId>
+            <version>0.40.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>3.2.3</version>
+        </dependency>
         <!-- Web / API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -15,6 +15,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import java.util.UUID;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -37,6 +39,15 @@ public class Producto extends AuditableEntity {
 
     @Column(name = "imagen_url", length = 300)
     private String imagenUrl;
+
+    @Column(name="imagen_archivo_id") private UUID imagenArchivoId;
+    @Column(name="video_archivo_id") private UUID videoArchivoId;
+    @Version private long version;
+
+    public UUID getImagenArchivoId() { return imagenArchivoId; }
+    public UUID getVideoArchivoId() { return videoArchivoId; }
+    public void cambiarImagenArchivoId(UUID id) { imagenArchivoId=id; }
+    public void cambiarVideoArchivoId(UUID id) { videoArchivoId=id; }
 
     @Convert(converter = MoneyConverter.class)
     @Column(nullable = false, precision = 12, scale = 2)

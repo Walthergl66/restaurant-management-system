@@ -26,6 +26,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Objects;
+import java.util.UUID;
+import com.restaurante.archivos.Archivos;
+import com.restaurante.archivos.TipoArchivo;
 
 /**
  * Administración de productos del catálogo. También implementa {@link Catalogo},
@@ -39,22 +43,26 @@ public class ProductoService implements Catalogo {
     private final CategoriaRepository categoriaRepository;
     private final AreaRepository areaRepository;
     private final ExtraRepository extraRepository;
+    private final Archivos archivos;
 
     public ProductoService(ProductoRepository productoRepository,
                            CategoriaRepository categoriaRepository,
                            AreaRepository areaRepository,
-                           ExtraRepository extraRepository) {
+                           ExtraRepository extraRepository, Archivos archivos) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.areaRepository = areaRepository;
         this.extraRepository = extraRepository;
+        this.archivos = archivos;
     }
 
     public ProductoResponse crear(ProductoRequest request) {
         validarNombreDisponible(request.nombre(), null);
         Producto producto = new Producto(request.nombre(), Money.of(request.precio()));
         aplicarCampos(producto, request);
-        return ProductoResponse.from(productoRepository.save(producto));
+        productoRepository.saveAndFlush(producto);
+        aplicarArchivos(producto, request);
+        return ProductoResponse.from(producto);
     }
 
     @Transactional(readOnly = true)
@@ -74,6 +82,7 @@ public class ProductoService implements Catalogo {
         validarNombreDisponible(request.nombre(), id);
         producto.cambiarNombre(request.nombre());
         aplicarCampos(producto, request);
+        aplicarArchivos(producto, request);
         return ProductoResponse.from(producto);
     }
 
@@ -107,12 +116,28 @@ public class ProductoService implements Catalogo {
 
     private void aplicarCampos(Producto producto, ProductoRequest request) {
         producto.cambiarDescripcion(request.descripcion());
-        producto.cambiarImagenUrl(request.imagenUrl());
         producto.cambiarPrecio(Money.of(request.precio()));
         producto.cambiarCategoria(cargarCategoria(request.categoriaId()));
         producto.cambiarArea(cargarArea(request.areaId()));
         producto.reemplazarExtras(cargarExtras(request.extraIds()));
         producto.reemplazarIngredientes(request.ingredientes());
+    }
+
+    private void aplicarArchivos(Producto producto, ProductoRequest request) {
+        UUID anterior=producto.getImagenArchivoId();
+        UUID imagen=request.imagenArchivoId();
+        // Clientes antiguos devuelven imagenUrl pero aún no conocen imagenArchivoId.
+        if (imagen == null && anterior != null && Objects.equals(request.imagenUrl(), Archivos.url(anterior))) imagen=anterior;
+        if (imagen != null) archivos.vincular(imagen, TipoArchivo.IMAGEN, producto.getId());
+        if (!Objects.equals(anterior, imagen)) archivos.retirar(anterior, producto.getId());
+        producto.cambiarImagenArchivoId(imagen);
+        producto.cambiarImagenUrl(imagen != null ? Archivos.url(imagen) : request.imagenUrl());
+        if (Boolean.TRUE.equals(request.quitarVideo()) || request.videoArchivoId() != null) {
+            UUID video=Boolean.TRUE.equals(request.quitarVideo()) ? null : request.videoArchivoId();
+            if (video != null) archivos.vincular(video, TipoArchivo.VIDEO, producto.getId());
+            if (!Objects.equals(producto.getVideoArchivoId(), video)) archivos.retirar(producto.getVideoArchivoId(), producto.getId());
+            producto.cambiarVideoArchivoId(video);
+        }
     }
 
     @Override
