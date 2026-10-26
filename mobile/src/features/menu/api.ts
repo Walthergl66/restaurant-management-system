@@ -7,6 +7,7 @@
  */
 
 import { apiClient } from '@/shared/api/apiClient';
+import { API_BASE_URL } from '@/config/environment';
 import type { CategoriaMenu, MenuDto, ProductoMenu } from './types';
 
 const ENDPOINTS = {
@@ -16,7 +17,11 @@ const ENDPOINTS = {
 export const menuService = {
   /** Menú público: datos del restaurante + categorías con productos. */
   async getMenu(): Promise<MenuDto> {
-    return apiClient.get<MenuDto>(ENDPOINTS.menu);
+    const menu = await apiClient.get<MenuDto>(ENDPOINTS.menu);
+    const resolver = (url?: string | null) => url ? new URL(url, API_BASE_URL).toString() : null;
+    return { ...menu, categorias: menu.categorias.map(c => ({ ...c,
+      productos: c.productos.map(p => ({ ...p, imagenUrl: resolver(p.imagenUrl), videoUrl: resolver(p.videoUrl) })),
+    })) };
   },
 
   /** Categorías del menú público. */

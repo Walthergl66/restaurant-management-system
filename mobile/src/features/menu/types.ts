@@ -26,6 +26,7 @@ export interface ProductoMenu {
   nombre: string;
   descripcion: string | null;
   imagenUrl: string | null;
+  videoUrl?: string | null;
   precio: number;
   extras: ExtraMenu[];
   ingredientes: string[];

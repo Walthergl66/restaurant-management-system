@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -132,6 +133,9 @@ export default function ProductDetailScreen() {
           {/* Info */}
           <Text style={styles.name}>{producto.nombre}</Text>
           <Text style={styles.description}>{producto.descripcion}</Text>
+          {producto.videoUrl && <Button title="Ver video del producto" onPress={() => {
+            Linking.openURL(producto.videoUrl!).catch(() => setError('No se pudo abrir el video'));
+          }} />}
 
           {/* Precio base */}
           <View style={styles.priceRow}>
