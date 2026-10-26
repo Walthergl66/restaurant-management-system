@@ -2,6 +2,10 @@
 
 Almacenamiento local de imágenes y videos: [guía de Ubuntu y configuración](docs/archivos-ubuntu.md).
 
+La guía incluye red de VirtualBox, IP estática, Nginx, permisos, claves SFTP,
+preparación de PostgreSQL y uso del selector de archivos. Para actualizar la
+configuración local, consulta [qué archivo `.env` editar y qué significa cada variable](docs/variables-entorno.md).
+
 Sistema integral para la gestión operativa y administrativa de restaurantes: catálogo de productos, salones y mesas, pedidos presenciales, comandas por área de preparación, cuentas, adiciones, anulaciones, facturación, cierres de caja y auditoría.
 
 Repositorio estructurado como **monorepo**: cada componente reside en su propio directorio con su propia documentación, configuración por `.env` y ciclo de vida independiente.
@@ -46,6 +50,20 @@ Repositorio estructurado como **monorepo**: cada componente reside en su propio 
 ### 1. Variables de Entorno (Por Módulo)
 
 Cada aplicación gestiona sus variables de manera independiente:
+
+#### Docker Compose local
+
+Para una instalación nueva, copia también la plantilla de la raíz y adapta sus
+valores antes de crear el volumen de PostgreSQL:
+
+```bash
+cp .env.example .env
+```
+
+Si ya existe `.env`, incorpora las variables nuevas conservando los secretos y
+la configuración actual. Compose toma de la raíz los valores que interpola en
+su YAML. Los secretos del backend se configuran en `backend/.env`; consulta la
+[referencia de variables](docs/variables-entorno.md) para su precedencia.
 
 #### Backend
 Copia la plantilla y configura la conexión a PostgreSQL:
@@ -155,9 +173,10 @@ npx expo start
 ### 5. Base de Datos (PostgreSQL)
 
 - **Migraciones:** Se aplican automáticamente al iniciar el backend mediante Flyway.
-- **Esquema:** 7 schemas por responsabilidad (`seguridad`, `catalogo`, `configuracion`,
-  `operaciones`, `comercial`, `tesoreria`, `auditoria`) y 35 tablas. El SQL consolidado
-  vive en `database/schema/restaurante_completo.sql`.
+- **Esquema vigente:** lo definen las migraciones de Flyway. Incluye los schemas
+  `seguridad`, `catalogo`, `configuracion`, `operaciones`, `comercial`, `tesoreria`,
+  `auditoria` y `archivos`. `database/schema/restaurante_completo.sql` es material
+  de referencia; usa las migraciones del backend para instalar la versión actual.
 - **Respaldos:**
   ```bash
   ./database/backup.sh
@@ -173,7 +192,7 @@ npx expo start
 
 ```bash
 cd backend
-./mvnw test          # 215 tests (JUnit 5 + Testcontainers con PostgreSQL real)
+./mvnw test          # JUnit + Testcontainers con PostgreSQL real
 ```
 
 Las pruebas requieren Docker levantado (Testcontainers levanta un PostgreSQL efímero).
@@ -198,6 +217,8 @@ Consulta más detalles en [docs/produccion.md](docs/produccion.md).
 Documentación complementaria:
 
 - [docs/api.md](docs/api.md) — endpoints, permisos por rol, errores y WebSocket.
+- [docs/archivos-ubuntu.md](docs/archivos-ubuntu.md) — instalación completa del almacenamiento local y flujo de subida/lectura.
+- [docs/variables-entorno.md](docs/variables-entorno.md) — plantillas `.env`, conexión SFTP/HTTP y actualización de configuración.
 - [docs/carga.md](docs/carga.md) — pruebas de carga.
 - [docs/decision-escalado.md](docs/decision-escalado.md) — criterios de escalado.
 - [backend/README.md](backend/README.md) — detalle técnico del API y arquitectura modular.

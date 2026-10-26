@@ -16,12 +16,19 @@ Este directorio contiene las herramientas, documentación y scripts de utilidad 
 
 Las credenciales de acceso de la base de datos se definen en el archivo `backend/.env` (o plantilla `backend/.env.example`):
 
+Con Docker Compose, las variables de `.env` en la raíz seleccionan la base y las
+credenciales del stack. Los scripts de este directorio leen `backend/.env`:
+mantén sus valores `DB_NAME`, `DB_USER` y `DB_PASSWORD` coherentes con la base que
+quieres respaldar. Consulta [la referencia de variables](../docs/variables-entorno.md)
+y [la preparación de PostgreSQL para archivos](../docs/archivos-ubuntu.md#9-preparar-postgresql-y-arrancar).
+
 ```env
-DB_HOST=localhost          # o la IP del servidor de BD (ej. 192.168.1.230)
+# Host local o dirección del servidor de PostgreSQL.
+DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=restaurante
+DB_NAME=restaurante_archivos
 DB_USER=restaurante
-DB_PASSWORD=restaurante
+DB_PASSWORD=una-contrasena-propia
 ```
 
 Los scripts de este directorio (`backup.sh` y `restore.sh`) detectan y cargan automáticamente las variables desde `backend/.env`.

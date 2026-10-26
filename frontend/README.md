@@ -1,5 +1,11 @@
 # Frontend — Sistema de Gestión de Restaurante
 
+El formulario de productos permite seleccionar una imagen y un video desde el
+dispositivo, previsualizarlos y subirlos al guardar. La conexión con Ubuntu la
+gestiona el backend. Consulta [el recorrido completo](../docs/archivos-ubuntu.md)
+y [qué variables configurar](../docs/variables-entorno.md); Next.js solo necesita
+la dirección del backend en `BACKEND_URL`.
+
 Aplicación web desarrollada en **Next.js 16** con **React 19**, **TypeScript** y **Tailwind CSS**, diseñada para la operativa del restaurante: salones, mesas, pedidos en tiempo real, cocina (KDS), caja, cuentas, anulaciones, reportes y administración.
 
 El frontend se ejecuta directamente en el entorno de desarrollo del cliente con Node.js y se comunica con la API REST del backend en `http://localhost:8080`.

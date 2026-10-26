@@ -1,5 +1,11 @@
 # Backend — Sistema de Gestión de Pedidos de Restaurante
 
+Para preparar la conexión al servidor local de imágenes y videos, consulta
+[la guía completa de Ubuntu](../docs/archivos-ubuntu.md) y
+[la referencia de variables de entorno](../docs/variables-entorno.md). Explican
+la escritura por SFTP, lectura por Nginx, autenticación con clave SSH y diferencias
+entre ejecución nativa y Docker.
+
 API REST del backend de un sistema integral para la gestión operativa y
 administrativa de un restaurante: productos, mesas, pedidos, comandas por
 área, impresión (patrón outbox), usuarios con permisos por rol y, en fases
@@ -102,7 +108,7 @@ base de datos.
 | `DB_USER` | `restaurante` | Usuario de BD |
 | `DB_PASSWORD` | *(obligatoria en el entorno)* | Contraseña de BD |
 | `SERVER_PORT` | `8080` | Puerto HTTP |
-| `JWT_SECRET` | *(obligatorio en todos los perfiles)* | Secreto de firma HS512, mínimo 32 chars (64+ recomendado). Sin él la app no arranca. |
+| `JWT_SECRET` | *(obligatorio en todos los perfiles)* | Secreto de firma JWT, mínimo 32 chars (64+ recomendado). Sin él la app no arranca. |
 | `JWT_EXPIRATION_MS` | `3600000` | Expiración del access token (1 hora) |
 | `JWT_REFRESH_EXPIRATION_MS` | `604800000` | Expiración del refresh token |
 | `IVA_RATE` | `0.15` | Tasa de IVA (15 %, incluido en precios) |
