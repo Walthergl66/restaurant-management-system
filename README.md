@@ -1,5 +1,7 @@
 # Sistema de Gestión de Restaurante (restaurant-management-system)
 
+Almacenamiento local de imágenes y videos: [guía de Ubuntu y configuración](docs/archivos-ubuntu.md).
+
 Sistema integral para la gestión operativa y administrativa de restaurantes: catálogo de productos, salones y mesas, pedidos presenciales, comandas por área de preparación, cuentas, adiciones, anulaciones, facturación, cierres de caja y auditoría.
 
 Repositorio estructurado como **monorepo**: cada componente reside en su propio directorio con su propia documentación, configuración por `.env` y ciclo de vida independiente.
