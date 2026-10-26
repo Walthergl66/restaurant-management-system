@@ -11,6 +11,7 @@ export interface Extra {
 }
 
 export interface Producto {
+  imagenArchivoId?: string | null; videoArchivoId?: string | null; videoUrl?: string | null
   id: number; nombre: string; descripcion?: string | null; imagenUrl?: string | null; precio: number
   categoriaId?: number | null; categoriaNombre?: string | null
   areaId?: number | null; areaNombre?: string | null
@@ -18,6 +19,9 @@ export interface Producto {
 }
 
 export interface ProductoPayload {
+  imagenArchivoId?: string | null
+  videoArchivoId?: string | null
+  quitarVideo?: boolean
   nombre: string
   descripcion: string | null
   imagenUrl: string | null
