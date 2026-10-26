@@ -10,6 +10,7 @@ README.md
 # del demonio y en las capas, aunque el Dockerfile no los copie).
 .env
 .env.*
+.local/
 *.pem
 *.key
 *.p12

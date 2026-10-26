@@ -51,6 +51,12 @@ services:
       # Perfil explícito: la app ya no tiene perfil por defecto (a propósito),
       # así que se declara aquí en lugar de depender de heredar el de .env.
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      ARCHIVOS_HABILITADO: ${ARCHIVOS_HABILITADO:-false}
+      ARCHIVOS_HOST: ${ARCHIVOS_HOST:-192.168.100.77}
+      ARCHIVOS_USUARIO: ${ARCHIVOS_USUARIO:-archivosapp}
+      ARCHIVOS_CLAVE_PRIVADA: /run/archivos/archivos_backend
+      ARCHIVOS_KNOWN_HOSTS: /run/archivos/known_hosts
+      ARCHIVOS_LECTURA_URL: ${ARCHIVOS_LECTURA_URL:-http://192.168.100.77/media/}
       # JWT_SECRET NO se declara acá: una línea en `environment:` con
       # ${JWT_SECRET:-} (vacío si no está exportada) pisaría el valor real que
       # llega del env_file backend/.env. El secreto sale solo de ahí.
@@ -59,6 +65,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./backend/.local/ssh:/run/archivos:ro
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     extra_hosts:

@@ -12,6 +12,7 @@
 .env.*
 !.env.example
 docker/secrets/
+backend/.local/
 *.p12
 *.jks
 
