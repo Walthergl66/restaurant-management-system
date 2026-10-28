@@ -22,7 +22,6 @@ export default function TabsLayout() {
 
   return (
     <Tabs
-      initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -45,8 +44,8 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Menú',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="restaurant" size={size} color={color} />
+          tabBarIcon: ({ focused, size }) => (
+            <Ionicons name="restaurant" size={size} color={focused ? colors.neonOrange : colors.textMuted} />
           ),
         }}
       />
@@ -54,9 +53,9 @@ export default function TabsLayout() {
         name="cart"
         options={{
           title: 'Carrito',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ focused, size }) => (
             <View>
-              <Ionicons name="bag" size={size} color={color} />
+              <Ionicons name="bag" size={size} color={focused ? colors.neonOrange : colors.textMuted} />
               <TabBarBadge count={totalItems} />
             </View>
           ),
@@ -66,8 +65,8 @@ export default function TabsLayout() {
         name="orders"
         options={{
           title: 'Pedidos',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt" size={size} color={color} />
+          tabBarIcon: ({ focused, size }) => (
+            <Ionicons name="receipt" size={size} color={focused ? colors.neonOrange : colors.textMuted} />
           ),
         }}
       />
@@ -75,8 +74,8 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+          tabBarIcon: ({ focused, size }) => (
+            <Ionicons name="person" size={size} color={focused ? colors.neonOrange : colors.textMuted} />
           ),
         }}
       />

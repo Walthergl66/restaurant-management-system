@@ -143,7 +143,7 @@ El frontend estará disponible en `http://localhost:3000` y redirige automática
 
 ### 4. App móvil (opcional)
 
-La app móvil (Expo SDK 57) cubre dos perfiles: **cliente** (menú, carrito, checkout,
+La app móvil (Expo SDK 58) cubre dos perfiles: **cliente** (menú, carrito, checkout,
 pedidos en vivo, direcciones, métodos de pago) y **mesero** (atención de mesas).
 
 ```bash
