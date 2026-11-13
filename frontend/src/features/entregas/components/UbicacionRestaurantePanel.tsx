@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { MapPin, Save } from 'lucide-react'
 import { useAuthStore, hasPermiso } from '@/features/auth'
@@ -24,29 +24,32 @@ export default function UbicacionRestaurantePanel() {
   const puedeGestionar = hasPermiso(user, 'delivery:config-gestionar')
 
   const { data: config, isLoading, isError } = useConfigRestaurante()
+  if (!puedeGestionar) return null
+  if (isLoading) {
+    return <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--dim)' }}>Cargando…</div>
+  }
+  if (isError || !config) {
+    return (
+      <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--error)' }}>
+        No se pudo cargar la configuración
+      </div>
+    )
+  }
+
+  return <FormularioUbicacion config={config} />
+}
+
+function FormularioUbicacion({ config }: { config: NonNullable<ReturnType<typeof useConfigRestaurante>['data']> }) {
   const actualizarDireccion = useActualizarDireccion()
   const fijarCoordenadas = useFijarCoordenadas()
-
-  const [direccion, setDireccion] = useState('')
+  const coordsGuardadas = config.lat != null && config.lng != null
+    ? { lat: config.lat, lng: config.lng }
+    : null
+  const [direccion, setDireccion] = useState(config.direccion ?? '')
   // Posición marcada en el mapa (puede diferir de la guardada hasta pulsar "Guardar ubicación").
-  const [marcador, setMarcador] = useState<{ lat: number; lng: number } | null>(null)
+  const [marcador, setMarcador] = useState<{ lat: number; lng: number } | null>(coordsGuardadas)
 
-  const coordsGuardadas = useMemo(
-    () => (config?.lat != null && config?.lng != null ? { lat: config.lat, lng: config.lng } : null),
-    [config?.lat, config?.lng],
-  )
-
-  useEffect(() => {
-    setDireccion(config?.direccion ?? '')
-  }, [config?.direccion])
-
-  useEffect(() => {
-    setMarcador(coordsGuardadas)
-  }, [coordsGuardadas])
-
-  if (!puedeGestionar) return null
-
-  const direccionCambiada = direccion.trim() !== (config?.direccion ?? '').trim()
+  const direccionCambiada = direccion.trim() !== (config.direccion ?? '').trim()
   const marcadorCambiado =
     marcador != null &&
     (coordsGuardadas == null ||
@@ -68,14 +71,7 @@ export default function UbicacionRestaurantePanel() {
     <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <h2 style={{ fontSize: 16, fontWeight: 800 }}>Ubicación del restaurante</h2>
 
-      {isLoading ? (
-        <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--dim)' }}>Cargando…</div>
-      ) : isError ? (
-        <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--error)' }}>
-          No se pudo cargar la configuración
-        </div>
-      ) : (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Dirección */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>
@@ -112,13 +108,13 @@ export default function UbicacionRestaurantePanel() {
             </span>
             <span style={{ color: 'var(--muted)' }}>
               Origen:{' '}
-              <span className={`badge ${config?.origenCoords === 'MANUAL' ? 'badge-aprobada' : 'badge-confirmado'}`}>
-                {config?.origenCoords ?? '—'}
+                <span className={`badge ${config.origenCoords === 'MANUAL' ? 'badge-aprobada' : 'badge-confirmado'}`}>
+                {config.origenCoords ?? '—'}
               </span>
             </span>
           </div>
 
-          {config?.requiereSeleccionManual && (
+          {config.requiereSeleccionManual && (
             <div
               role="alert"
               style={{
@@ -159,7 +155,6 @@ export default function UbicacionRestaurantePanel() {
             </div>
           </div>
         </div>
-      )}
     </section>
   )
 }
