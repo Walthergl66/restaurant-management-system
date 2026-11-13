@@ -29,19 +29,29 @@ Cada módulo vive en `com.restaurante.<modulo>` con los sub-paquetes
 ## Requisitos
 
 - JDK 25 (Temurin) con `JAVA_HOME` apuntando a él
-- Docker (base de datos local y pruebas con Testcontainers)
+- Docker (ejecución del backend y pruebas con Testcontainers); una instancia
+  PostgreSQL externa accesible
 
 ## Puesta en marcha (local)
 
 Tienes dos alternativas para ejecutar el backend:
 
-### Opción 1: Con Docker Compose (recomendado)
+### Opción 1: Con Docker Compose
 
 Desde la raíz del repositorio:
 
 ```bash
 docker compose up --build -d
 ```
+
+Compose inicia solo el backend. Configura `DB_HOST`, `DB_PORT`, `DB_NAME`,
+`DB_USER`, `DB_PASSWORD` y `DB_SSLMODE` en `backend/.env` o en el `.env` de la
+raíz (este último prevalece si repites variables). La base debe existir y ser
+accesible desde Docker. Flyway aplica las migraciones al iniciar, por lo que el
+usuario necesita permisos para crear y modificar los objetos del esquema. Si
+la BD está en el mismo equipo que Docker, usa `DB_HOST=host.docker.internal`;
+para un host remoto, usa su DNS o IP. TLS es obligatorio por defecto
+(`DB_SSLMODE=require`); usa `disable` solo si el servidor no admite TLS.
 
 ### Opción 2: De forma nativa con Maven
 
@@ -96,11 +106,12 @@ base de datos.
 
 | Variable | Default | Descripción |
 | --- | --- | --- |
-| `DB_HOST` | `localhost` | Host PostgreSQL |
+| `DB_HOST` | `localhost` | Host PostgreSQL (en Docker, configura el host externo; si corre en el equipo local, `host.docker.internal`) |
 | `DB_PORT` | `5432` | Puerto PostgreSQL |
 | `DB_NAME` | `restaurante` | Base de datos |
 | `DB_USER` | `restaurante` | Usuario de BD |
 | `DB_PASSWORD` | *(obligatoria en el entorno)* | Contraseña de BD |
+| `DB_SSLMODE` | `require` | Modo TLS de PostgreSQL; `disable` para servidores sin TLS |
 | `SERVER_PORT` | `8080` | Puerto HTTP |
 | `JWT_SECRET` | *(obligatorio en todos los perfiles)* | Secreto de firma HS512, mínimo 32 chars (64+ recomendado). Sin él la app no arranca. |
 | `JWT_EXPIRATION_MS` | `3600000` | Expiración del access token (1 hora) |
@@ -197,7 +208,7 @@ open http://localhost:8080/swagger-ui.html
 ./database/restore.sh ./database/backups/restaurante_20260922_120000.dump  # DROP+CREATE+pg_restore --if-exists
 ```
 
-El backup usa `pg_dump -F c` (custom) contra el contenedor `restaurante-postgres` o directo. Validación con `pg_restore --list`.
+El backup usa `pg_dump -F c` (custom) contra el servidor PostgreSQL configurado; requiere `pg_dump` en el host o un cliente PostgreSQL disponible. Validación con `pg_restore --list`.
 
 ## Pruebas de carga (RNF-04/RNF-17)
 
