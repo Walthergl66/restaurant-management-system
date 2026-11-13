@@ -7,11 +7,7 @@ services:
     env_file:
       - path: ./backend/.env
         required: false
-      - path: .env
-        required: false
-    # La conexion externa se configura con DB_* en backend/.env.
-    # El .env de la raiz tiene prioridad si define las mismas variables.
-    # No fijar DB_* aqui: sobrescribiria las credenciales de env_file.
+    # Variables del backend: backend/.env. Puertos/perfil: --env-file explícitos.
     environment:
       SERVER_PORT: 8080
       # Perfil explícito: la app ya no tiene perfil por defecto (a propósito),
