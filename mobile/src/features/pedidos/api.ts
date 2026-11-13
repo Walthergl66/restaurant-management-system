@@ -5,6 +5,7 @@
 
 import { apiClient } from '@/shared/api/apiClient';
 import type {
+  CandidatoDireccion,
   CarritoCliente,
   ConfirmarPedidoRequest,
   CrearPedidoRequest,
@@ -14,6 +15,7 @@ import type {
   NuevoMetodoPagoRequest,
   Page,
   PedidoCliente,
+  SeguimientoEntrega,
 } from './types';
 
 const ENDPOINTS = {
@@ -21,8 +23,13 @@ const ENDPOINTS = {
   pedidos: '/clientes/pedidos',
   pedido: (codigo: string) => `/clientes/pedidos/${codigo}`,
   confirmar: (codigo: string) => `/clientes/pedidos/${codigo}/confirmar`,
+  seguimiento: (codigo: string) =>
+    `/clientes/pedidos/${codigo}/seguimiento`,
+  confirmarRecepcion: (codigo: string) =>
+    `/clientes/pedidos/${codigo}/confirmar-recepcion`,
   historial: '/clientes/historial',
   direcciones: '/clientes/direcciones',
+  geocodificar: '/clientes/geocodificar',
   metodosPago: '/clientes/metodos-pago',
   metodoPago: (id: number) => `/clientes/metodos-pago/${id}`,
 } as const;
@@ -59,6 +66,33 @@ export const pedidosService = {
   },
 
   /**
+   * Seguimiento logístico y de doble confirmación de un pedido propio.
+   * Consulta ligera de respaldo del estado en vivo del socket.
+   */
+  async getSeguimiento(codigo: string): Promise<SeguimientoEntrega> {
+    return apiClient.get<SeguimientoEntrega>(ENDPOINTS.seguimiento(codigo));
+  },
+
+  /**
+   * Confirma la recepción del pedido por parte del cliente (2.ª de las
+   * dos confirmaciones). Idempotente vía header Idempotency-Key: un
+   * reintento con la misma clave no duplica la confirmación.
+   * 403 si el pedido es ajeno, 422 si el repartidor aún no entregó.
+   */
+  async confirmarRecepcion(
+    codigo: string,
+    idempotencyKey: string
+  ): Promise<SeguimientoEntrega> {
+    return apiClient.request<SeguimientoEntrega>(
+      ENDPOINTS.confirmarRecepcion(codigo),
+      {
+        method: 'POST',
+        headers: { 'Idempotency-Key': idempotencyKey },
+      }
+    );
+  },
+
+  /**
    * Historial paginado del cliente (últimos primeros).
    * El backend limita size a [1, 100].
    */
@@ -81,6 +115,19 @@ export const pedidosService = {
   /** Direcciones activas del cliente (RF-42). */
   async getDirecciones(): Promise<DireccionCliente[]> {
     return apiClient.get<DireccionCliente[]>(ENDPOINTS.direcciones);
+  },
+
+  /**
+   * Busca candidatos de dirección por texto (geocoding) para el mapa del
+   * checkout. El backend reutiliza ORS; la api-key nunca viaja al cliente.
+   * Devuelve lista vacía si no hay resultados (se ajusta el marcador a mano).
+   */
+  async geocodificar(texto: string): Promise<CandidatoDireccion[]> {
+    const t = texto.trim();
+    if (!t) return [];
+    return apiClient.get<CandidatoDireccion[]>(
+      `${ENDPOINTS.geocodificar}?texto=${encodeURIComponent(t)}`
+    );
   },
 
   /** Métodos de pago guardados del cliente (RF-45). */

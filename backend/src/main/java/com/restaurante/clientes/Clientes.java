@@ -81,4 +81,29 @@ public interface Clientes {
 
     /** Resuelve el clienteId real (BD) a partir del username del JWT. */
     Long resolverClienteId(String username);
+
+    /** Delivery (Fase 3): pedidos a DOMICILIO en estado LISTO, candidatos a
+     *  reparto, con sus datos de entrega. El módulo delivery filtra los que ya
+     *  tienen una asignación activa; aquí solo se aporta el criterio de
+     *  preparación ('listo para reparto' = DOMICILIO + LISTO) sin tocarlo. */
+    List<PedidoDomicilioSPI> pedidosDomicilioListos();
+
+    /** Delivery (Fase 3): datos de entrega de un pedido por su id interno
+     *  (el de {@code comercial.pedidos_clientes}, al que apunta
+     *  {@code delivery.asignaciones.pedido_cliente_id}). Vacío si no existe. */
+    java.util.Optional<PedidoDomicilioSPI> datosEntrega(Long pedidoClienteId);
+
+    /** Delivery (Fase 2 — doble confirmación): resuelve el id interno del pedido
+     *  a partir de su código VALIDANDO propiedad (debe ser del {@code clienteId}
+     *  autenticado). Lanza {@code NotFoundException} si el código no existe o no
+     *  pertenece al cliente (no se revela la existencia de códigos ajenos). Lo
+     *  usa delivery para localizar la parada que el cliente va a confirmar. */
+    Long pedidoClienteIdPropio(Long clienteId, String codigo);
+
+    /** Delivery (Fase 2 — doble confirmación): provoca un aviso de estado del
+     *  pedido del cliente (REUTILIZA el outbox -> STOMP ya existente, RF-43) para
+     *  que el difusor empuje al cliente el snapshot actualizado cuando el
+     *  repartidor confirma su llegada. No modifica el estado de preparación del
+     *  pedido; solo dispara la notificación en la misma transacción. */
+    void notificarEventoEntrega(Long pedidoClienteId);
 }

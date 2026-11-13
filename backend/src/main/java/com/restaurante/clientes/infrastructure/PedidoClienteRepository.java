@@ -33,6 +33,9 @@ public interface PedidoClienteRepository extends JpaRepository<PedidoCliente, Lo
 
     List<PedidoCliente> findByClienteIdAndEstado(Long clienteId, EstadoPedidoCliente estado);
 
+    /** Delivery (Fase 3): pedidos a domicilio listos para reparto. */
+    List<PedidoCliente> findByMetodoEntregaAndEstadoOrderByIdAsc(String metodoEntrega, EstadoPedidoCliente estado);
+
     @EntityGraph(attributePaths = {"lineas", "lineas.extras"})
     @Query("SELECT p FROM PedidoCliente p WHERE p.clienteId = :clienteId")
     List<PedidoCliente> findByClienteIdWithLineas(@Param("clienteId") Long clienteId);

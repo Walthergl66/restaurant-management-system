@@ -23,7 +23,12 @@ public class Cliente extends BaseEntity {
     @Column(nullable = false, unique = true, length = 20)
     private String cedula;
 
-    @Column(nullable = false, unique = true, length = 20)
+    /**
+     * Teléfono OPCIONAL (RF-45): puede ser NULL hasta capturar un contacto en
+     * el checkout a domicilio. Se mantiene UNIQUE; PostgreSQL permite múltiples
+     * NULL sin violarlo. No se guardan placeholders ni cadenas vacías.
+     */
+    @Column(unique = true, length = 20)
     private String telefono;
 
     @Column(nullable = false, length = 80)

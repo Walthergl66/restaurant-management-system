@@ -20,6 +20,7 @@ import com.restaurante.clientes.domain.PedidoClienteLinea;
 import com.restaurante.clientes.domain.PedidoClienteLineaExtra;
 import com.restaurante.clientes.domain.PedidoClienteTablet;
 import com.restaurante.clientes.infrastructure.ClienteRepository;
+import com.restaurante.clientes.infrastructure.ClientesDeliveryProperties;
 import com.restaurante.clientes.infrastructure.DireccionClienteRepository;
 import com.restaurante.clientes.infrastructure.MetodoPagoClienteRepository;
 import com.restaurante.clientes.infrastructure.PedidoClienteRepository;
@@ -40,6 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Set;
 
@@ -55,6 +57,7 @@ public class ClientesService implements Clientes {
     private final Catalogo catalogo;
     private final ApplicationEventPublisher eventPublisher;
     private final OutboxRepository outboxRepository;
+    private final ClientesDeliveryProperties deliveryProperties;
 
     public ClientesService(PedidoClienteRepository pedidoRepository,
                            ClienteRepository clienteRepository,
@@ -63,7 +66,8 @@ public class ClientesService implements Clientes {
                            Usuarios usuarios,
                            Catalogo catalogo,
                            ApplicationEventPublisher eventPublisher,
-                           OutboxRepository outboxRepository) {
+                           OutboxRepository outboxRepository,
+                           ClientesDeliveryProperties deliveryProperties) {
         this.pedidoRepository = pedidoRepository;
         this.clienteRepository = clienteRepository;
         this.direccionRepository = direccionRepository;
@@ -72,6 +76,12 @@ public class ClientesService implements Clientes {
         this.catalogo = catalogo;
         this.eventPublisher = eventPublisher;
         this.outboxRepository = outboxRepository;
+        this.deliveryProperties = deliveryProperties;
+    }
+
+    /** Recargo de domicilio configurado (app.delivery.recargo-domicilio). */
+    private Money recargoDomicilio() {
+        return Money.of(deliveryProperties.getRecargoDomicilio());
     }
 
     @Override
@@ -146,6 +156,14 @@ public class ClientesService implements Clientes {
                 request.direccionId(),
                 request.idempotencyKey());
 
+        if ("DOMICILIO".equals(metodoEntrega) && request.direccionId() != null) {
+            DireccionCliente dir = direccionRepository.findById(request.direccionId()).orElse(null);
+            if (dir != null) {
+                pedido.setDireccionSnapshot(dir.getDireccion(), dir.getReferencia(), dir.getObservaciones(),
+                        dir.getLat(), dir.getLng());
+            }
+        }
+
         for (CrearPedidoClienteRequest.ItemRequest item : request.items()) {
             ProductoParaPedido producto = catalogo.productoParaPedido(item.productoId())
                     .orElseThrow(() -> new NotFoundException("Producto no encontrado: " + item.productoId()));
@@ -199,7 +217,7 @@ public class ClientesService implements Clientes {
             throw new ConflictException("La clave de confirmación no coincide con la del pedido (RF-41)");
         }
 
-        pedido.confirmar(clave);
+        pedido.confirmar(clave, recargoDomicilio());
         pedidoRepository.save(pedido);
         publicarConfirmado(pedido);
         return toSPI(pedido);
@@ -246,7 +264,7 @@ public class ClientesService implements Clientes {
         if (!pedido.getIdempotencyKey().equals(clave)) {
             throw new ConflictException("Clave distinta (RF-41)");
         }
-        pedido.confirmar(clave);
+        pedido.confirmar(clave, recargoDomicilio());
         pedidoRepository.save(pedido);
         publicarConfirmado(pedido);
         return pedidoPorCodigo(codigo);
@@ -297,7 +315,10 @@ public class ClientesService implements Clientes {
                 request.etiqueta(),
                 request.direccion(),
                 request.telefono(),
-                request.observaciones());
+                request.observaciones(),
+                request.referencia(),
+                request.lat(),
+                request.lng());
         direccionRepository.save(dir);
         return toSPI(dir);
     }
@@ -394,7 +415,10 @@ public class ClientesService implements Clientes {
         if (clienteRepository.findByCedula(evento.cedula()).isPresent()) {
             throw new ConflictException("La cédula ya está registrada");
         }
-        if (clienteRepository.findByTelefono(evento.celular()).isPresent()) {
+        // Teléfono OPCIONAL: el UNIQUE solo aplica a los clientes que registran
+        // uno. Con telefono nulo no se comprueba duplicidad (PostgreSQL admite
+        // múltiples NULL) ni se guarda un placeholder.
+        if (evento.celular() != null && clienteRepository.findByTelefono(evento.celular()).isPresent()) {
             throw new ConflictException("El celular ya está registrado");
         }
         clienteRepository.save(new Cliente(
@@ -428,6 +452,79 @@ public class ClientesService implements Clientes {
                     .getId();
         }
         return id;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.restaurante.clientes.PedidoDomicilioSPI> pedidosDomicilioListos() {
+        return pedidoRepository
+                .findByMetodoEntregaAndEstadoOrderByIdAsc("DOMICILIO", EstadoPedidoCliente.LISTO)
+                .stream()
+                .map(this::toDomicilioSPI)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<com.restaurante.clientes.PedidoDomicilioSPI> datosEntrega(Long pedidoClienteId) {
+        if (pedidoClienteId == null) {
+            return Optional.empty();
+        }
+        return pedidoRepository.findById(pedidoClienteId).map(this::toDomicilioSPI);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long pedidoClienteIdPropio(Long clienteId, String codigo) {
+        PedidoCliente pedido = pedidoRepository.findByCodigo(codigo)
+                .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
+        protegerPedidoDe(clienteId, pedido);
+        return pedido.getId();
+    }
+
+    @Override
+    public void notificarEventoEntrega(Long pedidoClienteId) {
+        PedidoCliente pedido = pedidoRepository.findById(pedidoClienteId)
+                .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + pedidoClienteId));
+        // Reutiliza el canal RF-43 (outbox -> STOMP): el difusor empujará el
+        // snapshot actualizado al tópico del pedido. No toca el estado del pedido.
+        notificarEstado(pedido);
+    }
+
+    private com.restaurante.clientes.PedidoDomicilioSPI toDomicilioSPI(PedidoCliente p) {
+        String clienteNombre = clienteRepository.findById(p.getClienteId())
+                .map(Cliente::getNombre)
+                .orElse(null);
+        String direccionTexto = p.getDireccionTexto();
+        String telefono = null;
+        String referencia = p.getReferencia();
+        BigDecimal lat = p.getLat();
+        BigDecimal lng = p.getLng();
+        if (direccionTexto == null && p.getDireccionId() != null) {
+            DireccionCliente dir = direccionRepository.findById(p.getDireccionId()).orElse(null);
+            if (dir != null) {
+                direccionTexto = dir.getDireccion();
+                telefono = dir.getTelefono();
+                referencia = dir.getReferencia();
+                lat = dir.getLat();
+                lng = dir.getLng();
+            }
+        }
+        if (direccionTexto == null) {
+            direccionTexto = "Domicilio";
+        }
+        return new com.restaurante.clientes.PedidoDomicilioSPI(
+                p.getId(),
+                p.getCodigo(),
+                p.getEstado().name(),
+                p.getMetodoEntrega(),
+                clienteNombre,
+                p.getDireccionId(),
+                direccionTexto,
+                telefono,
+                referencia,
+                lat,
+                lng);
     }
 
     /** Cédula única con el usuario como prefijo. Si se agota el espacio de
@@ -526,17 +623,30 @@ public class ClientesService implements Clientes {
                     extrasSPI);
         }).toList();
 
-        java.math.BigDecimal total = lineas.stream()
+        Money subtotal = lineas.stream()
                 .map(PedidoClienteLinea::subtotal)
-                .reduce(Money.ZERO, Money::add)
-                .getAmount();
+                .reduce(Money.ZERO, Money::add);
+
+        // El costo de entrega definitivo se CONGELA al confirmar. Mientras el
+        // pedido está en BORRADOR aún no hay valor congelado: se proyecta el
+        // recargo configurado para DOMICILIO para que el checkout muestre el
+        // desglose correcto antes de confirmar.
+        Money costoEntrega;
+        if (p.getEstado() == EstadoPedidoCliente.BORRADOR) {
+            costoEntrega = "DOMICILIO".equals(p.getMetodoEntrega()) ? recargoDomicilio() : Money.ZERO;
+        } else {
+            costoEntrega = p.getCostoEntrega();
+        }
+        Money total = subtotal.add(costoEntrega);
 
         return new PedidoClienteSPI(
                 p.getCodigo(),
                 p.getEstado().name(),
                 p.getMetodoPago(),
                 p.getMetodoEntrega(),
-                total,
+                subtotal.getAmount(),
+                costoEntrega.getAmount(),
+                total.getAmount(),
                 lineasSPI,
                 p.getCreadoAt(),
                 p.getActualizadoAt(),
@@ -551,6 +661,9 @@ public class ClientesService implements Clientes {
                 d.getDireccion(),
                 d.getTelefono(),
                 d.getObservaciones(),
+                d.getReferencia(),
+                d.getLat(),
+                d.getLng(),
                 d.getActiva(),
                 d.getCreadoAt());
     }

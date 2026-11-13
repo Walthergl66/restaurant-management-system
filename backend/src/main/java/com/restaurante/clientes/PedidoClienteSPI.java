@@ -12,6 +12,8 @@ public record PedidoClienteSPI(
         String estado,
         String metodoPago,
         String metodoEntrega,
+        BigDecimal subtotal,
+        BigDecimal costoEntrega,
         BigDecimal total,
         List<LineaSPI> lineas,
         Instant creadoAt,

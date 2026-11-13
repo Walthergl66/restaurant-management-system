@@ -7,6 +7,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -28,6 +29,17 @@ public class DireccionCliente extends BaseEntity {
     @Column(length = 200)
     private String observaciones;
 
+    @Column(length = 200)
+    private String referencia;
+
+    /** Latitud confirmada del marcador en el checkout (nullable: direcciones viejas). */
+    @Column(precision = 10, scale = 7)
+    private BigDecimal lat;
+
+    /** Longitud confirmada del marcador en el checkout (nullable: direcciones viejas). */
+    @Column(precision = 10, scale = 7)
+    private BigDecimal lng;
+
     @Column(nullable = false)
     private Boolean activa = true;
 
@@ -41,11 +53,19 @@ public class DireccionCliente extends BaseEntity {
     }
 
     public DireccionCliente(Long clienteId, String etiqueta, String direccion, String telefono, String observaciones) {
+        this(clienteId, etiqueta, direccion, telefono, observaciones, null, null, null);
+    }
+
+    public DireccionCliente(Long clienteId, String etiqueta, String direccion, String telefono,
+                            String observaciones, String referencia, BigDecimal lat, BigDecimal lng) {
         this.clienteId = clienteId;
         this.etiqueta = etiqueta;
         this.direccion = direccion;
         this.telefono = telefono;
         this.observaciones = observaciones;
+        this.referencia = referencia;
+        this.lat = lat;
+        this.lng = lng;
         this.activa = true;
     }
 
@@ -66,6 +86,9 @@ public class DireccionCliente extends BaseEntity {
     public String getDireccion() { return direccion; }
     public String getTelefono() { return telefono; }
     public String getObservaciones() { return observaciones; }
+    public String getReferencia() { return referencia; }
+    public BigDecimal getLat() { return lat; }
+    public BigDecimal getLng() { return lng; }
     public Boolean getActiva() { return activa; }
     public Instant getCreadoAt() { return creadoAt; }
     public Instant getActualizadoAt() { return actualizadoAt; }

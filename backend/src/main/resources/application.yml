@@ -82,6 +82,10 @@ app:
     secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:3600000}       # 1 hora (A-04: ventana corta)
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 días
+  delivery:
+    # Recargo fijo que el backend suma al total de un pedido DOMICILIO y
+    # congela al confirmarlo. Ajustable sin tocar código.
+    recargo-domicilio: ${DELIVERY_RECARGO_DOMICILIO:1.50}
   iva:
     rate: ${IVA_RATE:0.15}   # 15% incluido en los precios de catálogo
   dinero:
@@ -103,3 +107,17 @@ app:
       remitente-email: ${BREVO_REMITENTE_EMAIL:}
       remitente-nombre: ${BREVO_REMITENTE_NOMBRE:Estación Burger}
       timeout: ${BREVO_TIMEOUT:5s}
+  ors:
+    # OpenRouteService: proveedor de rutas (Directions), optimización de orden
+    # de paradas (Optimization/VROOM) y geocoding. La clave vive SOLO en el
+    # backend; el móvil pide rutas a nuestra API, nunca a ORS directamente.
+    # Sin api-key el módulo delivery no llama a ORS y responde 503 en los
+    # endpoints que la necesitan (fail-closed, no inventa rutas).
+    api-key: ${ORS_API_KEY:}
+    base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}
+    timeout-ms: ${ORS_TIMEOUT_MS:8000}
+    # Origen de las rutas de reparto: la ubicación del restaurante ya NO se
+    # configura por entorno aquí. Se persiste en delivery.config_restaurante y
+    # la edita el administrador desde el panel (ConfigRestauranteService). Sin
+    # coordenadas configuradas, los endpoints que calculan ruta responden 503
+    # (fail-closed, no se inventa un origen).
