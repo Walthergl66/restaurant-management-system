@@ -87,13 +87,13 @@ excepción documentada de la dirección `shared → feature`).
 
 ### 2. Configurar Variables de Entorno
 
-Copia el archivo de ejemplo a `.env.local`:
+Copia el archivo de ejemplo a `frontend/.env`:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-Contenido de `.env.local`:
+Contenido de `frontend/.env`:
 
 ```env
 # Dirección del backend Spring Boot
@@ -116,9 +116,12 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 
 ### Ejecutar con Docker Compose
 
-Desde la raíz del repositorio, `docker compose up --build -d` inicia también la
-web en `http://localhost:7070`. Si cambias el puerto publicado, define
-`FRONTEND_PORT` (por ejemplo, `FRONTEND_PORT=7071`). El proxy `/api/*` del
+Desde la raíz, carga de forma explícita las variables de los componentes:
+`docker compose --env-file backend/.env --env-file frontend/.env up --build -d`.
+La web queda en `http://localhost:7070`; cambia `FRONTEND_PORT` en
+`frontend/.env` si necesitas otro puerto. Para ejecución local, `BACKEND_URL`
+en `frontend/.env` define el destino del rewrite. En Compose el destino interno
+se fija como `http://backend:8080` durante el build. El proxy `/api/*` del
 frontend se conecta al servicio `backend` dentro de la red de Compose.
 
 ---
