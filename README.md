@@ -73,7 +73,7 @@ docker compose up --build -d
 ```
 
 - API: `http://localhost:8080`.
-- Web: `http://localhost:3000` (puerto configurable con `FRONTEND_PORT`).
+- Web: `http://localhost:7070` (puerto configurable con `FRONTEND_PORT`).
 - Healthcheck: `http://localhost:8080/actuator/health`
 - DocumentaciÃ³n OpenAPI/Swagger: `http://localhost:8080/swagger-ui.html`
 
