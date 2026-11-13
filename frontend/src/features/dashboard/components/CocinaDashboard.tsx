@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { ChefHat, Clock, CheckCircle, ArrowRight } from 'lucide-react'
 import { useComandas, useEnPreparacion, useListo } from '@/features/comandas'
 import type { ComandaEstado, ComandaResponse } from '@/features/comandas'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 const COLS: { estado: ComandaEstado; label: string; color: string }[] = [
   { estado: 'PENDIENTE',      label: 'Pendientes', color: 'var(--yellow)'  },
@@ -13,9 +14,12 @@ const COLS: { estado: ComandaEstado; label: string; color: string }[] = [
 /* ================================================================ */
 export default function CocinaDashboard() {
   const router = useRouter()
-  const { data: comandas = [], isLoading } = useComandas()
+  const comandasQuery = useComandas()
+  const { data: comandas = [], isLoading } = comandasQuery
   const enPrep = useEnPreparacion()
   const listo = useListo()
+
+  if (hasQueryIssue([comandasQuery])) return <QueryBoundary queries={[comandasQuery]} label="el resumen de cocina" />
 
   const enMarcha = comandas.filter(c => c.estado !== 'LISTO')
 

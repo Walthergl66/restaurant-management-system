@@ -5,6 +5,7 @@ import { useUsuarios, useRoles, useTaxonomiaRoles, useEliminarUsuario, useCambia
 import type { UsuarioAdminResponse } from '../types'
 import UsuarioModal from './UsuarioModal'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 type Confirmacion = { u: UsuarioAdminResponse; tipo: 'estado' | 'eliminar' }
 
@@ -15,11 +16,16 @@ export default function UsuariosScreen() {
   const [filtroRol, setFiltroRol] = useState('TODOS')
   const [confirma, setConfirma] = useState<Confirmacion | null>(null)
 
-  const { data: usuarios = [], isLoading } = useUsuarios()
-  const { data: roles = [] } = useRoles()
-  const { data: taxonomia } = useTaxonomiaRoles()
+  const usuariosQuery = useUsuarios()
+  const rolesQuery = useRoles()
+  const taxonomiaQuery = useTaxonomiaRoles()
+  const { data: usuarios = [], isLoading } = usuariosQuery
+  const { data: roles = [] } = rolesQuery
+  const { data: taxonomia } = taxonomiaQuery
   const eliminar = useEliminarUsuario()
   const cambiarEstado = useCambiarEstadoUsuario()
+
+  const queries = tab === 'usuarios' ? [usuariosQuery, taxonomiaQuery] : [taxonomiaQuery]
 
   const usuariosVisibles = usuarios.filter(u => filtroRol === 'TODOS' || u.rol === filtroRol)
 
@@ -27,7 +33,7 @@ export default function UsuariosScreen() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <h1 style={{ fontSize: 20, fontWeight: 800 }}>Usuarios y Roles</h1>
-        <button className="btn-fuchsia" onClick={() => { setEditing(null); setShowForm(true) }}>
+        <button className="btn-fuchsia" disabled={hasQueryIssue(queries)} onClick={() => { setEditing(null); setShowForm(true) }}>
           <Plus size={15} /> Nuevo usuario
         </button>
       </div>
@@ -43,6 +49,7 @@ export default function UsuariosScreen() {
         ))}
       </div>
 
+      <QueryBoundary queries={queries} label={tab === 'usuarios' ? 'los usuarios y sus roles' : 'los roles'}>
       {tab === 'usuarios' ? (
         <>
           <div className="filter-row">
@@ -156,7 +163,8 @@ export default function UsuariosScreen() {
         </div>
       )}
 
-      {showForm && <UsuarioModal editing={editing} roles={roles} onClose={() => setShowForm(false)} />}
+      </QueryBoundary>
+      {!hasQueryIssue(queries) && showForm && <UsuarioModal editing={editing} roles={roles} onClose={() => setShowForm(false)} />}
 
       {confirma?.tipo === 'estado' && (
         <ConfirmDialog

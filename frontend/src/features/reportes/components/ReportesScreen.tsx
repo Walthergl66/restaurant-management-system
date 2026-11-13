@@ -5,6 +5,7 @@ import { fmt } from '@/shared/lib/utils'
 import { useReporteVentas, useResumenFinanzas } from '../hooks'
 import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 const COLORS = ['#F5A623','#E91E8C','#22c55e','#3b82f6','#8b5cf6','#f97316']
 
@@ -13,8 +14,11 @@ export default function ReportesScreen() {
   const [desde, setDesde] = useState(format(subDays(today,6),'yyyy-MM-dd'))
   const [hasta, setHasta] = useState(format(today,'yyyy-MM-dd'))
 
-  const { data: rep, isLoading } = useReporteVentas({ desde, hasta })
-  const { data: fin } = useResumenFinanzas({ desde, hasta })
+  const ventasQuery = useReporteVentas({ desde, hasta })
+  const finanzasQuery = useResumenFinanzas({ desde, hasta })
+  const { data: rep } = ventasQuery
+  const { data: fin } = finanzasQuery
+  const finanzasDisponibles = !hasQueryIssue([finanzasQuery])
 
   const ticketPromedio = rep && rep.numeroVentas > 0 ? rep.total / rep.numeroVentas : 0
 
@@ -42,16 +46,17 @@ export default function ReportesScreen() {
         </div>
       </div>
 
-      {isLoading
-        ? <p style={{ color:'var(--dim)', textAlign:'center', padding:32 }}>Cargando…</p>
-        : <>
+      {(ventasQuery.isError || finanzasQuery.isError) && <p role="status" style={{ color: 'var(--muted)', fontSize: 13 }}>
+        El reporte está incompleto. Solo se muestran los datos que se pudieron consultar.
+      </p>}
+      <QueryBoundary queries={[ventasQuery]} label="las ventas del período">
             {/* kpis */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))', gap:12 }}>
               {[
                 { label:'Total ventas',   value: fmt(rep?.total),                 color:'var(--yellow)'  },
                 { label:'Total pedidos',  value: String(rep?.numeroVentas??0),     color:'var(--fuchsia)' },
                 { label:'Ticket promedio',value: fmt(ticketPromedio),              color:'var(--yellow)'  },
-                { label:'Resultado neto', value: fmt(fin?.resultado),              color:(fin?.resultado??0)>=0?'var(--success)':'var(--error)' },
+                { label:'Resultado neto', value: finanzasDisponibles ? fmt(fin?.resultado) : '—', color:finanzasDisponibles ? (fin?.resultado??0)>=0?'var(--success)':'var(--error)' : 'var(--muted)' },
               ].map(k => (
                 <div key={k.label} className="card">
                   <p style={{ fontSize:11, color:'var(--muted)', marginBottom:4 }}>{k.label}</p>
@@ -125,6 +130,8 @@ export default function ReportesScreen() {
               }
             </div>
 
+      </QueryBoundary>
+      <QueryBoundary queries={[finanzasQuery]} label="el resumen financiero">
             {/* finanzas */}
             {fin && (
               <div className="card">
@@ -143,8 +150,7 @@ export default function ReportesScreen() {
                 </div>
               </div>
             )}
-          </>
-      }
+      </QueryBoundary>
     </div>
   )
 }

@@ -2,6 +2,7 @@
 import { RefreshCw, Clock, CheckCircle, Printer } from 'lucide-react'
 import { useComandas, useEnPreparacion, useListo, useReimprimir } from '../hooks'
 import type { ComandaEstado } from '../types'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 const COLS: { estado: ComandaEstado; label: string; color: string; bg: string }[] = [
   { estado: 'PENDIENTE',      label: 'Pendientes', color: '#F5A623', bg: 'rgba(245,166,35,.07)'  },
@@ -10,10 +11,13 @@ const COLS: { estado: ComandaEstado; label: string; color: string; bg: string }[
 ]
 
 export default function CocinaScreen() {
-  const { data: comandas = [], isLoading, refetch } = useComandas()
+  const comandasQuery = useComandas()
+  const { data: comandas = [], isLoading, refetch } = comandasQuery
   const enPrep = useEnPreparacion()
   const listo = useListo()
   const reimprimir = useReimprimir()
+
+  if (hasQueryIssue([comandasQuery])) return <div className="page-stack"><h1>Cocina — Comandas</h1><QueryBoundary queries={[comandasQuery]} label="las comandas" /></div>
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>

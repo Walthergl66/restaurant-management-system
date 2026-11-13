@@ -6,12 +6,15 @@ import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
 import { usePedido, useConfirmarPedido, useAnularPedido } from '../hooks'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import axios from 'axios'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 export default function PedidoDetalle() {
   const { codigo } = useParams<{ codigo: string }>()
   const router = useRouter()
 
-  const { data: pedido, isLoading } = usePedido(codigo)
+  const pedidoQuery = usePedido(codigo)
+  const { data: pedido } = pedidoQuery
 
   const confirmar = useConfirmarPedido({
     mensaje: 'Confirmado',
@@ -24,7 +27,10 @@ export default function PedidoDetalle() {
     onAnulado: () => router.push('/pedidos'),
   })
 
-  if (isLoading) return <p style={{ color:'var(--dim)', padding:32 }}>Cargando…</p>
+  if (axios.isAxiosError(pedidoQuery.error) && pedidoQuery.error.response?.status === 404) {
+    return <div className="card"><p>Pedido no encontrado</p><button className="btn-ghost" onClick={() => router.push('/pedidos')}>Volver a pedidos</button></div>
+  }
+  if (hasQueryIssue([pedidoQuery])) return <QueryBoundary queries={[pedidoQuery]} label="el pedido" />
   if (!pedido) return <p style={{ color:'var(--dim)', padding:32 }}>Pedido no encontrado</p>
 
   return (

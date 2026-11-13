@@ -12,6 +12,7 @@ import ConfirmDialog from './ConfirmDialog'
 import ProductoModal from './ProductoModal'
 import { useReordenCategorias } from '../hooks/useReordenCategorias'
 import AsaCategoria from './AsaCategoria'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 type Tab = 'productos' | 'categorias' | 'areas' | 'extras'
 type CatalogItem = Categoria | Area | Extra
@@ -40,8 +41,8 @@ function ProductsPanel({ search, canManage }: { search: string; canManage: boole
   const habilitacion = useHabilitacionCatalogo('productos')
   const productos = productosQuery.data ?? []; const categorias = categoriasQuery.data ?? []; const areas = areasQuery.data ?? []; const extras = extrasQuery.data ?? []
   const filtered = productos.filter(p => (category === 'TODOS' || p.categoriaId === category) && (status === 'TODOS' || (status === 'ACTIVOS' ? p.activo : !p.activo)) && (!search || `${p.nombre} ${p.descripcion ?? ''}`.toLowerCase().includes(search.toLowerCase())))
-  if (productosQuery.isLoading || categoriasQuery.isLoading || areasQuery.isLoading || extrasQuery.isLoading) return <StateCard text="Cargando catálogo…"/>
-  if (productosQuery.isError || categoriasQuery.isError || areasQuery.isError || extrasQuery.isError) return <StateCard text="No se pudo cargar el catálogo. Revisa la conexión con el backend." error/>
+  const queries = [productosQuery, categoriasQuery, areasQuery, extrasQuery]
+  if (hasQueryIssue(queries)) return <QueryBoundary queries={queries} label="el catálogo" />
   return <>
     <div className="filter-row"><select className="input filter-select" value={category} onChange={e => setCategory(e.target.value === 'TODOS' ? 'TODOS' : Number(e.target.value))}><option value="TODOS">Todas las categorías</option>{categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select><select className="input filter-select" value={status} onChange={e => setStatus(e.target.value as typeof status)}><option value="TODOS">Todos los estados</option><option value="ACTIVOS">Activos</option><option value="INACTIVOS">Inactivos</option></select>{canManage && <button className="btn-fuchsia toolbar-action" onClick={() => setEditing(null)} disabled={!categorias.some(c => c.activo) || !areas.some(a => a.activo)}><Plus size={15}/>Nuevo producto</button>}</div>
     {!categorias.some(c => c.activo) || !areas.some(a => a.activo) ? <div className="notice-warning">Antes de crear productos necesitas al menos una categoría y un área de preparación activas.</div> : null}
@@ -65,8 +66,7 @@ function CatalogPanel({ kind, search, canManage }: { kind: 'categoria' | 'area' 
   const habilitacion = useHabilitacionCatalogo(kind === 'categoria' ? 'categorias' : kind === 'area' ? 'areas' : 'extras')
   const filtered = items.filter(i => !search || `${i.nombre} ${i.descripcion ?? ''}`.toLowerCase().includes(search.toLowerCase()))
   const label = kind === 'categoria' ? 'categoría' : kind === 'area' ? 'área' : 'extra'
-  if (query.isLoading) return <StateCard text="Cargando…"/>
-  if (query.isError) return <StateCard text="No se pudieron cargar los datos." error/>
+  if (hasQueryIssue([query])) return <QueryBoundary queries={[query]} label="los datos del catálogo" />
   return <>
     <div className="panel-heading"><div><strong>{filtered.length}</strong><span> registros</span></div>{canManage && <button className="btn-fuchsia" onClick={() => setEditing(null)}><Plus size={15}/>Nuevo {label}</button>}</div>
     {!filtered.length ? <StateCard text={`No hay ${label}s para mostrar.`}/> : <div className="card table-card"><div className="table-scroll"><table className="tbl"><thead><tr>{kind === 'categoria' && canManage && <th aria-label="Reordenar"/>}<th>Nombre</th><th>Descripción</th>{kind === 'extra' && <th>Precio</th>}<th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody ref={kind === 'categoria' ? orden.lista : undefined}>{filtered.map(item => <tr key={item.id} data-categoria-id={kind === 'categoria' ? item.id : undefined} className={kind === 'categoria' && orden.arrastrando === item.id ? 'category-table-dragging' : undefined}>{kind === 'categoria' && canManage && <td className="category-handle-cell"><AsaCategoria {...orden.getAsaProps(item as Categoria)}/></td>}<td className="strong-cell">{item.nombre}</td><td>{item.descripcion || '—'}</td>{kind === 'extra' && <td>${Number((item as Extra).precio).toFixed(2)}</td>}<td><span className={`status-pill ${item.activo ? 'active' : 'inactive'}`}>{item.activo ? 'Activo' : 'Inactivo'}</span></td>{canManage && <td><div className="row-actions"><button className="icon-button" onClick={() => setEditing(item)} aria-label={`Editar ${item.nombre}`}><Pencil size={14}/></button><button className={item.activo ? 'btn-ghost danger-text' : 'btn-yellow'} onClick={() => setConfirming(item)} disabled={habilitacion.isPending} aria-label={`${item.activo ? 'Desactivar' : 'Activar'} ${item.nombre}`}><Power size={14}/>{item.activo ? 'Desactivar' : 'Activar'}</button></div></td>}</tr>)}</tbody></table></div></div>}

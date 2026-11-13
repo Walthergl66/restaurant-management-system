@@ -9,6 +9,7 @@ import NuevoPedidoModal from './NuevoPedidoModal'
 import { useAuthStore, hasPermiso } from '@/features/auth'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 const ESTADOS: (EstadoPedido | 'TODOS')[] = ['TODOS','BORRADOR','CONFIRMADO','EN_PREPARACION','LISTO','ENTREGADO','ANULADO']
 
@@ -20,7 +21,10 @@ export default function PedidosScreen() {
   const user = useAuthStore(state => state.user)
   const puedeCrear = hasPermiso(user, 'pedidos:crear')
 
-  const { data: pedidos = [], isLoading, refetch } = usePedidos()
+  const pedidosQuery = usePedidos()
+  const { data: pedidos = [], isLoading, refetch } = pedidosQuery
+
+  if (hasQueryIssue([pedidosQuery])) return <div className="page-stack"><h1>Pedidos</h1><QueryBoundary queries={[pedidosQuery]} label="los pedidos" /></div>
 
   const filtered = pedidos.filter(p => {
     const okEstado = filtro === 'TODOS' || p.estado === filtro
