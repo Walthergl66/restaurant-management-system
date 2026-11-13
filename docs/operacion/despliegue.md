@@ -93,3 +93,6 @@ SPRING_PROFILES_ACTIVE=prod java -jar restaurante-backend.jar
 
 Si falta una variable obligatoria, el arranque falla indicando cuál falta.
 La documentación OpenAPI/Swagger está desactivada en este perfil.
+## Usuario administrador inicial
+
+El usuario inicial tiene el nombre de acceso fijo `admin`; `ADMIN_INITIAL_PASSWORD` configura su contraseña. No existe una variable `ADMIN_INITIAL_EMAIL`, por lo que el correo no se configura mediante estas plantillas de entorno.
