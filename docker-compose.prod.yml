@@ -16,6 +16,7 @@ services:
       DB_NAME: ${DB_NAME:?DB_NAME obligatorio}
       DB_USER: ${DB_USER:?DB_USER obligatorio}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD obligatorio}
+      ADMIN_INITIAL_EMAIL: ${ADMIN_INITIAL_EMAIL:?ADMIN_INITIAL_EMAIL obligatorio en prod}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET debe tener al menos 32 caracteres}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}   # 1 hora (plan mejoras 3); antes 24h
       ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:?ADMIN_INITIAL_PASSWORD obligatorio en prod}
