@@ -65,7 +65,7 @@ Tienes dos opciones para ejecutar el backend:
 
 #### Opción A: Con Docker (Recomendado)
 
-`docker compose` levanta solo el backend. Configura primero la conexión a la
+`docker compose` levanta el backend y la aplicación web. Configura primero la conexión a la
 instancia PostgreSQL externa en `backend/.env` (o en `.env` de la raíz):
 
 ```bash
@@ -73,6 +73,7 @@ docker compose up --build -d
 ```
 
 - API: `http://localhost:8080`.
+- Web: `http://localhost:3000` (puerto configurable con `FRONTEND_PORT`).
 - Healthcheck: `http://localhost:8080/actuator/health`
 - Documentación OpenAPI/Swagger: `http://localhost:8080/swagger-ui.html`
 
