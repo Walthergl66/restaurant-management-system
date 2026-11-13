@@ -11,7 +11,7 @@ Docker Compose levanta backend Spring y web Next.js. PostgreSQL es externo y se 
 1. Crear una base PostgreSQL accesible y un usuario con permisos para migraciones.
 2. Configurar `backend/.env` según `backend/.env.example`, incluyendo credenciales, `DB_HOST` y `DB_SSLMODE`.
 3. Copiar las plantillas de cada componente a `backend/.env`, `frontend/.env` y `mobile/.env` según corresponda. Iniciar el entorno web y API con `docker compose --env-file backend/.env --env-file frontend/.env up --build -d` desde la raíz. La web se publica en `http://localhost:7070` (puerto interno 3000) y la API en 8080. Cambiar `FRONTEND_PORT` en `frontend/.env` o `BACKEND_PORT` en `backend/.env` según se necesite. Para producción, cargar `backend/.env` con `--env-file` y usar `docker-compose.prod.yml`.
-4. Next.js proxea `/api/*` al servicio backend en la red Compose. Flyway aplica migraciones al iniciar backend.
+4. En Compose de desarrollo, Next.js corre en modo `dev` con el código de `frontend/` montado como volumen; los cambios de archivos se recargan automáticamente. Las dependencias y la caché `.next` usan volúmenes Docker. Tras cambiar dependencias, ejecuta `docker compose exec frontend npm ci` y recrea el frontend. Next.js proxea `/api/*` al servicio backend; Flyway aplica migraciones al iniciar backend.
 
 ## Observabilidad y tareas
 
