@@ -28,3 +28,7 @@ Recent commits use concise, imperative subjects, often with conventional prefixe
 ## Security & Configuration
 
 Never commit real `.env` files, passwords, API keys, or JWT secrets. Use the checked-in `.env.example` templates. The database is external to Compose; Flyway applies migrations on backend startup, so use an appropriately scoped database account and verify connectivity before running the stack.
+
+## Documentation Maintenance
+
+For every change, assess whether behavior, interfaces, data, configuration, operations, or architecture affect the documentation. Update the relevant `docs/` topic and component README in the same change whenever needed; keep `docs/README.md` links current. Document user-visible capabilities and changed behavior from code or verified requirements, and mark unknown policy or product decisions as pending instead of guessing. Keep substantive documentation grouped by product, module, architecture, API, or operations. Include documentation updates in the change's review and commit history.
