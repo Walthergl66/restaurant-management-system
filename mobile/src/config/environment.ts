@@ -40,10 +40,7 @@ function resolveDevServerApiUrl(): string | null {
 
 function resolveApiUrl(): string {
   // 1) Override explícito al bundlear (Metro inlining de EXPO_PUBLIC_*)
-  const env = (
-    globalThis as { process?: { env?: Record<string, string | undefined> } }
-  ).process;
-  const fromEnv = env?.env?.EXPO_PUBLIC_API_URL;
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL;
   if (fromEnv) return fromEnv;
 
   // 2) En desarrollo, la IP del PC desde el dev server de Expo
