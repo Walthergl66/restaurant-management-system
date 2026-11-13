@@ -16,6 +16,7 @@ app:
   jwt:
     secret: ${JWT_SECRET}
   inicial:
+    admin-email: ${ADMIN_INITIAL_EMAIL:admin}
     admin-password: ${ADMIN_INITIAL_PASSWORD:admin123}
   cors:
     # Solo en desarrollo: el frontend Next.js proxea /api/* desde el servidor
