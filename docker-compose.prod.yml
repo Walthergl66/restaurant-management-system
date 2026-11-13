@@ -7,8 +7,6 @@ services:
     env_file:
       - path: ./backend/.env
         required: false
-      - path: .env
-        required: false
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: ${DB_HOST:?DB_HOST obligatorio}
