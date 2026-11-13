@@ -65,26 +65,29 @@ Tienes dos opciones para ejecutar el backend:
 
 #### Opción A: Con Docker (Recomendado)
 
-`docker compose` levanta **la base de datos PostgreSQL 16 y el backend** (en ese orden,
-el backend espera a que la BD esté sana):
+`docker compose` levanta solo el backend. Configura primero la conexión a la
+instancia PostgreSQL externa en `backend/.env` (o en `.env` de la raíz):
 
 ```bash
 docker compose up --build -d
 ```
 
-- PostgreSQL: `localhost:5432` (puerto configurable con `DB_HOST_PORT`).
 - API: `http://localhost:8080`.
 - Healthcheck: `http://localhost:8080/actuator/health`
 - Documentación OpenAPI/Swagger: `http://localhost:8080/swagger-ui.html`
 
-Los datos de la BD de desarrollo sobreviven a `docker compose down` (volumen `pgdata`);
-para borrarlos también: `docker compose down -v`.
-
-Para detener los contenedores:
+Para detener el backend:
 
 ```bash
 docker compose down
 ```
+
+La base de datos debe existir y ser accesible desde el contenedor. Flyway aplica
+las migraciones al iniciar el backend; el usuario configurado debe tener los
+permisos necesarios sobre esa base. Si PostgreSQL está en el mismo equipo que
+Docker, usa `DB_HOST=host.docker.internal`; para otro servidor, indica su host o
+IP. La conexión usa TLS (`DB_SSLMODE=require`) por defecto; configura
+`DB_SSLMODE=disable` solo si el servidor no ofrece TLS.
 
 #### Opción B: De forma nativa con Maven
 
