@@ -82,13 +82,18 @@ sin `BREVO_API_KEY` o `BREVO_REMITENTE_EMAIL` la aplicación no arranca.
   acepta `*`. El proxy debe reenviar las cabeceras de upgrade
   (`Upgrade`/`Connection`) y soportar `wss`.
 - La duración del access token la define `JWT_EXPIRATION_MS` en el despliegue
-  (default 1 hora). `docker-compose.yml` solo levanta PostgreSQL; el backend no
-  se ejecuta en Compose, de modo que los valores los inyecta el orquestador del
-  proxy (systemd/`EnvironmentFile`, K8s `Secrets`, etc.).
+  (default 1 hora). `docker-compose.yml` levanta backend y web para desarrollo. En producción,
+  `docker-compose.prod.yml` levanta el backend y recibe variables desde
+  `backend/.env`; configura el proxy TLS por separado. El archivo de entorno
+  local no debe versionarse.
 
 ## Arranque
 
 ```bash
+# Desde la raíz del repositorio, usando las variables del backend
+docker compose --env-file backend/.env -f docker-compose.prod.yml up --build -d
+
+# Alternativa: arranque nativo con variables inyectadas por el entorno
 SPRING_PROFILES_ACTIVE=prod java -jar restaurante-backend.jar
 ```
 
