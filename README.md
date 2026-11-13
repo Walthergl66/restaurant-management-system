@@ -189,7 +189,7 @@ prueban el backend (JDK 25) y se lintea y compila el frontend (Node 22).
 
 ## ðŸš€ Despliegue en ProducciÃ³n
 
-Para entornos productivos, utiliza `docker-compose.prod.yml` que valida obligatoriamente variables seguras (`JWT_SECRET`, `ADMIN_INITIAL_PASSWORD`, `CORS_ALLOWED_ORIGINS` sin comodines):
+Para entornos productivos, utiliza `docker-compose.prod.yml` que valida obligatoriamente variables seguras (`JWT_SECRET`, `ADMIN_INITIAL_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `CORS_ALLOWED_ORIGINS` sin comodines):
 
 ```bash
 docker compose -f docker-compose.prod.yml up --build -d
