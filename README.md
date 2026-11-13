@@ -205,3 +205,7 @@ DocumentaciÃ³n complementaria:
 - [backend/README.md](backend/README.md) â€” detalle tÃ©cnico del API y arquitectura modular.
 - [frontend/README.md](frontend/README.md) â€” rutas y componentes de la web.
 - [mobile/README.md](mobile/README.md) â€” estructura de la app mÃ³vil.
+
+## Configuración de entorno
+
+Usa `backend/.env.example` como plantilla para las variables propias del backend. Para Docker Compose, consulta `.env.example` y combina las variables necesarias con el `.env` raíz existente; no sobrescribas el archivo local. Si una variable aparece en ambos archivos, Compose da prioridad al `.env` raíz.
