@@ -17,21 +17,31 @@ Este directorio contiene las herramientas, documentación y scripts de utilidad 
 Las credenciales de acceso de la base de datos se definen en el archivo `backend/.env` (o plantilla `backend/.env.example`):
 
 ```env
-DB_HOST=localhost          # o la IP del servidor de BD (ej. 192.168.1.230)
+DB_HOST=host.docker.internal # BD en el equipo local desde Docker; o DNS/IP remoto
 DB_PORT=5432
 DB_NAME=restaurante
 DB_USER=restaurante
 DB_PASSWORD=restaurante
+DB_SSLMODE=require
 ```
+
+`docker compose up` inicia solo el backend y se conecta a esta instancia
+externa; no crea ni administra un servidor PostgreSQL. La base debe existir y
+el usuario necesita permisos para que Flyway aplique las migraciones al
+arrancar. La conexión requiere TLS por defecto (`DB_SSLMODE=require`); configura
+`disable` si el servidor no ofrece TLS. Si defines las mismas variables en
+`.env` de la raíz y `backend/.env`, el `.env` raíz prevalece en Compose. Al
+ejecutar el backend de forma nativa, `DB_HOST=localhost` sirve para una BD en
+la misma máquina.
 
 Los scripts de este directorio (`backup.sh` y `restore.sh`) detectan y cargan automáticamente las variables desde `backend/.env`.
 
 ### Cliente de PostgreSQL
 
-Ninguno de los dos scripts requiere PostgreSQL instalado en el host:
-- Si el contenedor `restaurante-postgres` (el del `docker compose up -d`) está corriendo, ejecutan el cliente pg **dentro** de ese contenedor.
-- Si no, usan el `pg_dump`/`psql`/`pg_restore` del host como fallback.
-- Con `DB_HOST=localhost` (default del stack Docker) el destino es la BD del compositor, por socket dentro del contenedor. Si `DB_HOST` es otra cosa, conectan por TCP a ese host remoto con las credenciales de `.env` (p. ej. para respaldar la BD de producción).
+Los scripts usan las herramientas PostgreSQL del host (`pg_dump`, `psql` y
+`pg_restore`) para conectarse por TCP al host configurado en `.env`, con las
+credenciales indicadas. Instala el cliente PostgreSQL si esas herramientas no
+están disponibles.
 
 ---
 
