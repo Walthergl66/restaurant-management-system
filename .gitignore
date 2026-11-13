@@ -38,8 +38,7 @@ docs/qa/
 # Backups locales (no se versionan)
 database/backups/
 
-# Contexto de agentes y planes (nunca se commitean)
-AGENTS.md
+
 # CLAUDE.md lo genera Next.js 16 al arrancar el dev server (apunta a AGENTS.md)
 CLAUDE.md
 PLAN_BACKEND_RESTAURANT.md

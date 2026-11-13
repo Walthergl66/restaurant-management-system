@@ -114,6 +114,13 @@ npm run dev
 
 La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
 
+### Ejecutar con Docker Compose
+
+Desde la raíz del repositorio, `docker compose up --build -d` inicia también la
+web en `http://localhost:3000`. Si cambias el puerto publicado, define
+`FRONTEND_PORT` (por ejemplo, `FRONTEND_PORT=3001`). El proxy `/api/*` del
+frontend se conecta al servicio `backend` dentro de la red de Compose.
+
 ---
 
 ## 📜 Scripts Disponibles
