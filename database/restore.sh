@@ -16,15 +16,7 @@ fi
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-if [[ -z "${ENV_FILE:-}" ]]; then
-  if [[ -f "$RAIZ/backend/.env" ]]; then
-    ENV_FILE="$RAIZ/backend/.env"
-  elif [[ -f "$RAIZ/.env" ]]; then
-    ENV_FILE="$RAIZ/.env"
-  else
-    ENV_FILE="$RAIZ/backend/.env"
-  fi
-fi
+ENV_FILE="${ENV_FILE:-$RAIZ/backend/.env}"
 
 if [[ -f "$ENV_FILE" ]]; then
   set -a
