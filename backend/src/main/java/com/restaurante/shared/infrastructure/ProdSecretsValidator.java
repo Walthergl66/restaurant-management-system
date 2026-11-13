@@ -32,7 +32,7 @@ public class ProdSecretsValidator {
     @PostConstruct
     void validar() {
         List<String> faltantes = new ArrayList<>();
-        for (String var : List.of("DB_USER", "DB_PASSWORD", "ADMIN_INITIAL_PASSWORD",
+        for (String var : List.of("DB_USER", "DB_PASSWORD", "ADMIN_INITIAL_EMAIL", "ADMIN_INITIAL_PASSWORD",
                 "JWT_SECRET", "CORS_ALLOWED_ORIGINS")) {
             String valor = environment.getProperty(var);
             if (valor == null || valor.isBlank()) {
@@ -43,6 +43,10 @@ public class ProdSecretsValidator {
             throw new IllegalStateException("Faltan variables obligatorias de producción: "
                     + String.join(", ", faltantes)
                     + ". Suminístrelas por entorno (nunca con valores por defecto).");
+        }
+        String adminEmail = environment.getProperty("ADMIN_INITIAL_EMAIL");
+        if (adminEmail != null && (adminEmail.length() > 50 || !adminEmail.contains("@"))) {
+            throw new IllegalStateException("ADMIN_INITIAL_EMAIL debe ser un correo válido de hasta 50 caracteres");
         }
         String jwtSecret = environment.getProperty("JWT_SECRET");
         if (jwtSecret != null && jwtSecret.trim().length() < JWT_SECRET_MIN_LEN) {
