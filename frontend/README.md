@@ -121,8 +121,12 @@ Desde la raíz, carga de forma explícita las variables de los componentes:
 La web queda en `http://localhost:7070`; cambia `FRONTEND_PORT` en
 `frontend/.env` si necesitas otro puerto. Para ejecución local, `BACKEND_URL`
 en `frontend/.env` define el destino del rewrite. En Compose el destino interno
-se fija como `http://backend:8080` durante el build. El proxy `/api/*` del
-frontend se conecta al servicio `backend` dentro de la red de Compose.
+se configura como `http://backend:8080`. El proxy `/api/*` del frontend se
+conecta al servicio `backend` dentro de la red de Compose. El servicio usa la
+etapa `dev` de `frontend/Dockerfile`, monta `frontend/` dentro del contenedor y
+conserva `node_modules` y `.next` en volúmenes Docker. Los cambios de código se
+reflejan con la recarga de Next.js; al cambiar dependencias, ejecuta
+`docker compose exec frontend npm ci` y reinicia el servicio frontend.
 
 ---
 
