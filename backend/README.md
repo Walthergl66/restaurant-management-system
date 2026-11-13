@@ -41,12 +41,11 @@ Tienes dos alternativas para ejecutar el backend:
 Desde la raÃ­z del repositorio:
 
 ```bash
-docker compose up --build -d
+docker compose --env-file backend/.env --env-file frontend/.env up --build -d
 ```
 
-Compose inicia solo el backend. Configura `DB_HOST`, `DB_PORT`, `DB_NAME`,
-`DB_USER`, `DB_PASSWORD` y `DB_SSLMODE` en `backend/.env` o en el `.env` de la
-raÃ­z (este Ãºltimo prevalece si repites variables). La base debe existir y ser
+Compose inicia backend y web. Configura `DB_HOST`, `DB_PORT`, `DB_NAME`,
+`DB_USER`, `DB_PASSWORD` y `DB_SSLMODE` en `backend/.env`. La base debe existir y ser
 accesible desde Docker. Flyway aplica las migraciones al iniciar, por lo que el
 usuario necesita permisos para crear y modificar los objetos del esquema. Si
 la BD estÃ¡ en el mismo equipo que Docker, usa `DB_HOST=host.docker.internal`;
@@ -77,9 +76,9 @@ La aplicaciÃ³n queda en `http://localhost:8080` (health real:
 
 La aplicaciÃ³n arma la URL JDBC con `DB_HOST`, `DB_PORT` y `DB_NAME`, y lee el
 archivo `.env` **por sÃ­ sola**: `spring.config.import` busca `./.env` y
-`./backend/.env`, asÃ­ que funciona tanto arrancando desde `backend/` como desde
-la raÃ­z del repo. Para Develop se usa `./scripts/run-backend.sh`, que ademÃ¡s
-exporta las variables al entorno.
+`./backend/.env`, así que funciona arrancando desde `backend/` o desde la raíz.
+El archivo pertenece al backend y se comparte con las utilidades de base de datos.
+Para desarrollo se puede usar `./scripts/run-backend.sh`, que exporta las variables.
 
 Ojo con el perfil: `SPRING_PROFILES_ACTIVE` **no activa el perfil si estÃ¡ dentro
 de `.env`** (verificado: el perfil se decide antes de procesar los archivos
@@ -191,7 +190,7 @@ export DB_PORT="5432"
 export DB_NAME="manage_restauran"
 export DB_USER="elpajarowtf"
 export DB_PASSWORD="cambia-db-prod"
-docker compose -f ../docker-compose.prod.yml up --build -d
+docker compose --env-file .env -f ../docker-compose.prod.yml up --build -d
 curl http://localhost:8080/actuator/health  # {"status":"UP"}
 curl http://localhost:8080/v3/api-docs | jq .info.title
 open http://localhost:8080/swagger-ui.html
