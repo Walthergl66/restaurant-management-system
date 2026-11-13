@@ -32,3 +32,7 @@ Never commit real `.env` files, passwords, API keys, or JWT secrets. Use the che
 ## Documentation Maintenance
 
 For every change, assess whether behavior, interfaces, data, configuration, operations, or architecture affect the documentation. Update the relevant `docs/` topic and component README in the same change whenever needed; keep `docs/README.md` links current. Document user-visible capabilities and changed behavior from code or verified requirements, and mark unknown policy or product decisions as pending instead of guessing. Keep substantive documentation grouped by product, module, architecture, API, or operations. Include documentation updates in the change's review and commit history.
+
+## Required Project Context Before Code Changes
+
+Before making the first code change in a task, read `docs/README.md` and review the project documentation relevant to the affected component and behavior, including its architecture, module/function, API, and operational guidance as applicable. Also inspect the component README and nearby implementation/tests. Use this context to preserve existing contracts and module boundaries; do not start coding from an isolated file or assumption. If the documentation conflicts with the implementation, verify the source and update the relevant docs as part of the task.
