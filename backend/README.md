@@ -118,6 +118,7 @@ base de datos.
 | `JWT_REFRESH_EXPIRATION_MS` | `604800000` | ExpiraciÃ³n del refresh token |
 | `IVA_RATE` | `0.15` | Tasa de IVA (15 %, incluido en precios) |
 | `ADMIN_INITIAL_PASSWORD` | `admin123` *(solo dev/test)* | Password inicial del usuario `admin`; obligatoria en prod |
+| `ADMIN_INITIAL_EMAIL` | `admin` *(solo dev)* | Correo usado como nombre de acceso del administrador inicial; obligatorio en prod |
 | `BREVO_HABILITADO` | `false` | Enciende el envÃ­o real por Brevo. Con `false` el correo se escribe en el log (dev/test). |
 | `BREVO_API_KEY` | *(obligatoria con Brevo activo)* | Clave de la API transaccional de Brevo |
 | `BREVO_REMITENTE_EMAIL` | *(obligatoria con Brevo activo)* | Remitente verificado en la cuenta de Brevo |
