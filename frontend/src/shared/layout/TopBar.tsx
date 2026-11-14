@@ -1,5 +1,6 @@
 'use client'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { hasPermiso, useAuthStore } from '@/features/auth'
 import toast from 'react-hot-toast'
@@ -19,6 +20,9 @@ export default function TopBar() {
 
   return (
     <header className="topbar">
+      <div className="topbar-brand" aria-label="Estación Burger">
+        <Image src="/login-logo-propuesta.png" alt="Estación Burger" width={270} height={220} priority />
+      </div>
       <div className="topbar-greeting">
         {showDashboardTitle && <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>Resumen operativo</span></div>}
       </div>
@@ -30,7 +34,7 @@ export default function TopBar() {
       }}>
         <summary className="account-trigger" aria-label="Menú de cuenta">
           <span className="account-avatar" aria-hidden="true"><UserRound size={21} /></span>
-          <span className="account-trigger-text"><strong>{name}</strong></span>
+          <span className="account-trigger-text"><strong>{name}</strong><small>{user?.rol || 'Equipo'}</small></span>
           <ChevronDown size={16} aria-hidden="true" />
         </summary>
         <div className="account-panel">
