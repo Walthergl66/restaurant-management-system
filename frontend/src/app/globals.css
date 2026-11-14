@@ -174,10 +174,12 @@ body {
 .badge-rechazada  { background: rgba(239,68,68,.18);  color: #ef4444; }
 
 /* Navegación principal: grupos compactos para el trabajo de cada turno. */
-.sidebar { width: 260px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 12px; height: 100dvh; position: sticky; top: 0; overflow-y: auto; }
-.sidebar-brand { display: flex; align-items: center; flex-direction: column; padding: 8px 4px 16px; }
-.sidebar-brand-name { display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: .15em; color: var(--yellow); }
-.sidebar-brand-name span { color: var(--fuchsia); }
+.sidebar { width: 260px; flex-shrink: 0; background: #151311; border-right: 1px solid #39312a; display: flex; flex-direction: column; padding: 0 12px 16px; height: 100dvh; position: sticky; top: 0; overflow-y: auto; }
+.sidebar-brand { display: flex; align-items: center; gap: 12px; min-height: 76px; margin: 0 -12px 14px; padding: 10px 16px; border-bottom: 1px solid #39312a; }
+.sidebar-ticket { background: #f5a623; color: #1c1712; padding: 7px 13px; min-width: 105px; line-height: .95; font-size: 13px; font-weight: 800; clip-path: polygon(0 0,100% 0,100% 88%,94% 100%,88% 88%,82% 100%,76% 88%,70% 100%,64% 88%,58% 100%,52% 88%,46% 100%,40% 88%,34% 100%,28% 88%,22% 100%,16% 88%,10% 100%,4% 88%,0 100%); }
+.sidebar-ticket-name strong { font-size: 18px; font-weight: 900; }
+.sidebar-ticket-short { display: none; }
+.sidebar-brand-caption { color: #c4b4a2; font-size: 11px; line-height: 1.3; }
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 14px; }
 .sidebar-group { display: flex; flex-direction: column; gap: 2px; }
 .sidebar-group-label { padding: 4px 12px; color: #aaa; font-size: 12px; font-weight: 600; }
@@ -185,10 +187,11 @@ body {
 .sidebar .nav-item.active { color: #000; }
 .sidebar .nav-item:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 @media (max-width: 680px) {
-  .sidebar { width: 64px; padding: 12px 6px; }
-  .sidebar-brand { overflow: hidden; padding: 0 0 12px; }
-  .sidebar-brand > *:first-child { max-width: 48px; height: auto; }
-  .sidebar-brand-name, .sidebar-group-label, .sidebar-item-label, .sidebar-user { display: none; }
+  .sidebar { width: 64px; padding: 0 6px 12px; }
+  .sidebar-brand { min-height: 68px; justify-content: center; margin: 0 -6px 12px; padding: 8px 6px; }
+  .sidebar-ticket { min-width: 0; padding: 10px 8px 12px; font-size: 13px; }
+  .sidebar-ticket-name, .sidebar-brand-caption, .sidebar-group-label, .sidebar-item-label, .sidebar-user { display: none; }
+  .sidebar-ticket-short { display: inline; font-weight: 900; }
   .sidebar .nav-item { justify-content: center; padding: 10px; }
   .sidebar-nav { gap: 12px; }
 }
@@ -196,7 +199,6 @@ body {
 /* Cuenta en el encabezado */
 .topbar { min-height: 76px; border-bottom: 1px solid #39312a; padding: 12px 28px; display: flex; align-items: center; gap: 20px; background: #151311; flex-shrink: 0; position: relative; z-index: 20; }
 .topbar-greeting { min-width: 0; flex: 1; display: flex; align-items: center; gap: 13px; }
-.topbar-sign { width: 42px; height: 42px; display: grid; place-items: center; flex-shrink: 0; border: 2px solid #f5a623; border-radius: 50%; color: #f5a623; font-size: 13px; font-weight: 900; letter-spacing: -.05em; box-shadow: inset 0 0 0 3px #151311, inset 0 0 0 4px #8b5a20; }
 .topbar-title { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .topbar-title span { color: #c4b4a2; font-size: 11px; font-weight: 600; }
 .topbar-title p { color: #fff5e8; font-size: 19px; font-weight: 800; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -218,7 +220,7 @@ body {
 .account-logout { color: #f87171; border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
 .account-trigger:focus-visible, .account-section summary:focus-visible, .account-logout:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 @media (max-width: 800px) { .topbar-date { display: none; } }
-@media (max-width: 680px) { .topbar { min-height: 68px; padding: 10px 16px; gap: 10px; } .topbar-title p { font-size: 16px; } .topbar-sign { width: 36px; height: 36px; } .account-trigger-text { display: none; } }
+@media (max-width: 680px) { .topbar { min-height: 68px; padding: 10px 16px; gap: 10px; } .topbar-title p { font-size: 16px; } .account-trigger-text { display: none; } }
 
 /* ---- sidebar nav item ---- */
 .nav-item {
