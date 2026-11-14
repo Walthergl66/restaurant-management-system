@@ -264,17 +264,17 @@ body {
 .topbar-brand { position:relative; display:flex; align-items:center; justify-content:center; flex:0 0 var(--brand-width); height:100%; padding:20px 32px 20px 18px; box-sizing:border-box; }
 .topbar-brand::after { content:''; position:absolute; top:-3%; right:0; height:106%; width:clamp(22px,3.2vw,68px); background:#ffa500; clip-path:polygon(83% 0,100% 0,17% 100%,0 100%); }
 .topbar-brand img { width:min(100%,270px); height:min(100%,240px); object-fit:contain; }
-.dashboard-app-shell .topbar-greeting { flex:1; padding:0 clamp(26px,4vw,86px); }
-.topbar-dashboard-title { display:flex; align-items:center; gap:clamp(20px,2.5vw,54px); min-width:0; color:#f9eee2; }
-.topbar-dashboard-title h1 { position:relative; margin:0; padding:0 36px 15px 0; white-space:nowrap; font-family:'Brush Script MT','Segoe Script','Segoe Print',cursive; font-style:italic; font-size:clamp(46px,5vw,106px); font-weight:700; line-height:1; letter-spacing:-.045em; }
+.dashboard-app-shell .topbar-greeting { flex:1; min-width:0; overflow:hidden; padding:0 clamp(24px,2.8vw,60px); }
+.topbar-dashboard-title { display:flex; align-items:center; gap:clamp(18px,2vw,40px); width:100%; min-width:0; overflow:hidden; color:#f9eee2; }
+.topbar-dashboard-title h1 { position:relative; flex:0 1 auto; min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; margin:0; padding:0 36px 15px 0; white-space:nowrap; font-family:'Brush Script MT','Segoe Script','Segoe Print',cursive; font-style:italic; font-size:clamp(46px,4.3vw,92px); font-weight:700; line-height:1; letter-spacing:-.045em; }
 .topbar-dashboard-title h1::after { content:''; position:absolute; left:18%; bottom:1px; width:65%; height:7px; border-radius:100%; background:#ffa500; transform:rotate(-5deg); }
 .topbar-dashboard-title h1::before { content:''; position:absolute; right:0; top:0; width:36px; height:40px; background:linear-gradient(-55deg,transparent 40%,#ffa500 41% 58%,transparent 59%) 0 0/19px 18px no-repeat,linear-gradient(-20deg,transparent 40%,#ffa500 41% 58%,transparent 59%) 12px 12px/24px 11px no-repeat,linear-gradient(15deg,transparent 40%,#ffa500 41% 58%,transparent 59%) 14px 27px/21px 9px no-repeat; }
-.topbar-dashboard-title span { border-left:2px solid #b7ada8; padding:10px 0 10px clamp(20px,1.8vw,40px); white-space:nowrap; font-size:clamp(17px,1.75vw,38px); font-weight:750; }
-.dashboard-app-shell .account-menu { margin-left:auto; }
-.dashboard-app-shell .account-trigger { gap:18px; padding:8px 8px 8px 22px; border-left:1px solid #645a58; border-radius:0; background:transparent; }
+.topbar-dashboard-title span { flex:0 1 auto; min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; border-left:2px solid #b7ada8; padding:10px 0 10px clamp(20px,1.8vw,40px); white-space:nowrap; font-size:clamp(17px,1.5vw,32px); font-weight:750; }
+.dashboard-app-shell .account-menu { min-width:0; max-width:min(32vw,620px); margin-left:auto; }
+.dashboard-app-shell .account-trigger { min-width:0; max-width:100%; gap:clamp(8px,1vw,18px); padding:8px 8px 8px clamp(12px,1.1vw,22px); border-left:1px solid #645a58; border-radius:0; background:transparent; }
 .dashboard-app-shell .account-avatar { width:clamp(42px,3.5vw,76px); height:clamp(42px,3.5vw,76px); border:2px solid #f9eee2; border-radius:50%; background:#f9eee2; }
 .dashboard-app-shell .account-avatar svg { width:58%; height:58%; }
-.dashboard-app-shell .account-trigger-text { max-width:min(21vw,420px); }
+.dashboard-app-shell .account-trigger-text { min-width:0; max-width:min(22vw,440px); }
 .dashboard-app-shell .account-trigger-text strong { font-size:clamp(16px,1.55vw,32px); }
 .dashboard-app-shell .account-trigger-text small { color:#d1c5bd; font-size:clamp(12px,1vw,20px); text-transform:uppercase; }
 .dashboard-app-shell .account-trigger > svg { width:clamp(18px,1.5vw,32px); height:auto; }
