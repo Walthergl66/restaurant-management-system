@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ShoppingBag, Package, Table2, DollarSign,
@@ -32,8 +33,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand" aria-label="Estación Burger">
-        <span className="sidebar-brand-emblem" aria-hidden="true">EB</span>
-        <span className="sidebar-brand-name">Estación Burger</span>
+        <Image className="sidebar-logo" src="/login-logo-propuesta.png" alt="Estación Burger" width={220} height={200} priority />
       </div>
       <nav className="sidebar-nav" aria-label="Navegación principal">
         {(['Operación', 'Administración', 'Control'] as const).map((group) => {
