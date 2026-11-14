@@ -1,6 +1,6 @@
 'use client'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
 import { getGreeting, getTurno } from '@/shared/lib/utils'
 import { format } from 'date-fns'
@@ -10,6 +10,8 @@ import toast from 'react-hot-toast'
 export default function TopBar() {
   const { user, logout } = useAuthStore()
   const router = useRouter()
+  const pathname = usePathname()
+  const section = ({ dashboard: 'Resumen', pedidos: 'Pedidos', cocina: 'Cocina', mesas: 'Mesas', cuentas: 'Cuentas', caja: 'Caja', entregas: 'Entregas', productos: 'Productos', usuarios: 'Usuarios', reportes: 'Reportes', anulaciones: 'Anulaciones', auditoria: 'Auditoría' } as Record<string, string>)[pathname.split('/')[1]] || 'Panel'
   const now = new Date()
   const name = user?.nombre || user?.username || 'Equipo'
 
@@ -22,9 +24,10 @@ export default function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-greeting">
-        <h1>{getGreeting()}, <span>{name}</span></h1>
-        <p>{format(now, "EEEE, d 'de' MMMM", { locale: es })} · {getTurno()}</p>
+        <div className="topbar-route"><span className="topbar-route-mark" aria-hidden="true" /> Estación Burger <span aria-hidden="true">/</span> <strong>{section}</strong></div>
+        <p className="topbar-welcome">{getGreeting()}, <strong>{name}</strong></p>
       </div>
+      <div className="topbar-date"><span>{format(now, "EEEE, d 'de' MMMM", { locale: es })}</span><strong>{getTurno()}</strong></div>
       <details className="account-menu" onKeyDown={(event) => {
         if (event.key === 'Escape') {
           event.currentTarget.open = false
