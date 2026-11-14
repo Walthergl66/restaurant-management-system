@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useAuthStore } from '../store'
 import { errMsg } from '@/shared/lib/utils'
 import toast from 'react-hot-toast'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { Eye, EyeOff, UserRound, LockKeyhole } from 'lucide-react'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -38,12 +38,12 @@ export default function LoginForm() {
 
   return (
     /* ── outer wrapper: split layout en desktop, centrado en mobile ── */
-    <div style={{
+    <div className="login-shell" style={{
       display: 'flex',
       width: '100%',
       maxWidth: 900,
       minHeight: 560,
-      borderRadius: 24,
+      borderRadius: 0,
       overflow: 'hidden',
       background: 'var(--surface)',
       border: '1px solid var(--border)',
@@ -54,7 +54,7 @@ export default function LoginForm() {
       <div
         className="login-brand-panel"
         style={{
-          background: 'radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(145deg, #1c1406 0%, #0d0d0d 75%)',
+          background: 'linear-gradient(180deg, rgba(10,10,10,.1), rgba(10,10,10,.24)), url("/login-counter.png") center / cover',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -64,16 +64,9 @@ export default function LoginForm() {
           overflow: 'hidden',
         }}
       >
-        {/* glow decorativo */}
-        <div style={{ position:'absolute', top:'16%', left:'50%', transform:'translateX(-50%)', width:360, height:360, borderRadius:'50%', background:'radial-gradient(circle, rgba(245,166,35,.16) 0%, transparent 70%)', pointerEvents:'none' }}/>
-        <div style={{ position:'absolute', bottom:'10%', left:'50%', transform:'translateX(-50%)', width:240, height:240, borderRadius:'50%', background:'radial-gradient(circle, rgba(233,30,140,.14) 0%, transparent 70%)', pointerEvents:'none' }}/>
-
-        {/* filo de marca: borde degradado amarillo → fucsia */}
-        <div style={{ position:'absolute', top:0, right:0, width:2, height:'100%', background:'linear-gradient(180deg, var(--yellow), var(--fuchsia))', pointerEvents:'none' }}/>
-
-        <div style={{ width:400, maxWidth:'100%', position:'relative' }}>
+        <div className="login-brand-lockup" style={{ width:400, maxWidth:'100%', position:'relative' }}>
           <Image
-            src="/Estacion-Burger-Logo.png"
+            src="/login-logo-propuesta.png"
             alt="Estación Burger"
             width={1678}
             height={937}
@@ -83,8 +76,6 @@ export default function LoginForm() {
           />
         </div>
 
-        {/* separador */}
-        <div style={{ width:120, height:2, marginTop:26, borderRadius:2, background:'linear-gradient(90deg, transparent, var(--yellow), transparent)', pointerEvents:'none' }}/>
 
       </div>
 
@@ -95,29 +86,14 @@ export default function LoginForm() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          background: 'var(--bg)',
+          background: '#171412',
         }}
       >
         <div className="login-form-body" style={{ padding: '48px 40px' }}>
 
         <div className="login-mobile-reveal-top">
         <div>
-        <svg
-          className="login-mobile-title"
-          viewBox="0 0 320 80"
-          style={{ display:'block', width:'100%', height:'auto', marginBottom:0 }}
-          role="img"
-          aria-label="Bienvenido"
-        >
-          <defs>
-            <path id="bienvenido-arco" d="M 10 80 Q 160 14 310 80" fill="none" />
-          </defs>
-          <text fill="var(--yellow)" fontSize="30" fontWeight="900" letterSpacing="5">
-            <textPath href="#bienvenido-arco" startOffset="50%" textAnchor="middle">
-              BIENVENIDO
-            </textPath>
-          </text>
-        </svg>
+        <h1 className="login-title">Bienvenido</h1>
         </div>
         </div>
 
@@ -145,7 +121,7 @@ export default function LoginForm() {
             <label htmlFor="username" style={{ fontSize:12, fontWeight:700, color:'var(--text)', letterSpacing:.5, display:'block', marginBottom:8 }}>
               Correo o nombre de usuario
             </label>
-            <input
+            <div className="login-field"><UserRound className="login-field-icon" aria-hidden="true" /><input
               id="username"
               type="text"
               value={username}
@@ -155,15 +131,16 @@ export default function LoginForm() {
               style={{ fontSize:14, padding:'13px 16px', borderColor: username ? 'var(--yellow)' : 'var(--border)' }}
               autoComplete="username"
               autoFocus
-            />
+            /></div>
           </div>
 
           {/* password */}
           <div>
-            <label htmlFor="password" style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:8 }}>
+            <label htmlFor="password" style={{ fontSize:12, fontWeight:700, color:'var(--text)', letterSpacing:.5, display:'block', marginBottom:8 }}>
               Contraseña
             </label>
             <div style={{ position:'relative' }}>
+              <LockKeyhole className="login-field-icon" aria-hidden="true" />
               <input
                 id="password"
                 type={showPass ? 'text' : 'password'}
@@ -214,7 +191,7 @@ export default function LoginForm() {
           >
             {loading
               ? <><span style={{ width:16, height:16, border:'2px solid #00000040', borderTop:'2px solid #000', borderRadius:'50%', display:'inline-block', animation:'spin .7s linear infinite' }}/> Iniciando...</>
-              : <><LogIn size={16}/> INICIAR SESIÓN</>
+              : 'Iniciar sesión'
             }
           </button>
         </form>
