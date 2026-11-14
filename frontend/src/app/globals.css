@@ -193,6 +193,29 @@ body {
   .sidebar-nav { gap: 12px; }
 }
 
+/* Cuenta en el encabezado */
+.topbar { border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--bg); flex-shrink: 0; position: relative; z-index: 20; }
+.topbar-greeting { min-width: 0; }
+.topbar-greeting h1 { font-size: 22px; font-weight: 800; }
+.topbar-greeting h1 span { color: var(--yellow); }
+.topbar-greeting p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.account-menu { position: relative; flex-shrink: 0; }
+.account-trigger { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.account-trigger::-webkit-details-marker, .account-section summary::-webkit-details-marker { display: none; }
+.account-avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--yellow); color: #111; font-weight: 800; }
+.account-trigger-text { display: flex; flex-direction: column; align-items: flex-start; max-width: 150px; }
+.account-trigger-text strong, .account-panel-heading strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-size: 13px; }
+.account-trigger-text small { color: #aaa; font-size: 11px; text-transform: capitalize; }
+.account-panel { position: absolute; right: 0; top: calc(100% + 8px); width: min(280px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px; box-shadow: 0 16px 40px #0009; }
+.account-panel-heading { display: flex; flex-direction: column; padding: 10px 12px 12px; border-bottom: 1px solid var(--border); }
+.account-panel-heading span { color: #aaa; font-size: 12px; overflow-wrap: anywhere; }
+.account-section summary, .account-logout { list-style: none; display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; color: var(--text); border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.account-section summary:hover, .account-logout:hover { background: var(--surface-2); }
+.account-section-content { display: flex; flex-direction: column; gap: 5px; padding: 0 12px 12px 39px; color: #bbb; font-size: 12px; overflow-wrap: anywhere; }
+.account-logout { color: #f87171; border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
+.account-trigger:focus-visible, .account-section summary:focus-visible, .account-logout:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+@media (max-width: 680px) { .topbar { padding: 14px 16px; } .topbar-greeting h1 { font-size: 17px; } .account-trigger-text { display: none; } }
+
 /* ---- sidebar nav item ---- */
 .nav-item {
   display: flex;
