@@ -107,6 +107,16 @@ para usuarios con `reportes:ver`; los controles de cuenta siguen disponibles par
 todos los usuarios autenticados. Escape cierra el menú y devuelve el foco al control
 que lo abre.
 
+### Identidad visual del área autenticada
+
+Las rutas protegidas comparten el shell carbón con navegación ámbar y acentos
+magenta. Las superficies de trabajo, tarjetas, formularios y tablas usan una paleta
+crema con texto oscuro; los títulos principales llevan tipografía manuscrita y
+subrayado ámbar. Los estados mantienen colores semánticos con tonos legibles sobre
+crema, y los avisos y estados vacíos siguen el mismo tratamiento de superficie.
+La cocina conserva su distinción entre pendientes, en preparación y listos mediante
+acentos por estado dentro de paneles crema. El login mantiene su composición propia.
+
 ### Adaptación responsive de operaciones
 
 El espacio autenticado ajusta su shell por ancho de pantalla: por debajo de 900 px
