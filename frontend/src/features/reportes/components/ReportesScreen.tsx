@@ -66,7 +66,7 @@ export default function ReportesScreen() {
             </div>
 
             {/* charts */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap:16 }}>
+            <div className="reports-charts-grid">
               <div className="card">
                 <h2 style={{ fontWeight:700, fontSize:15, marginBottom:14 }}>Ventas por día</h2>
                 {!rep?.porDia?.length
@@ -136,7 +136,7 @@ export default function ReportesScreen() {
             {fin && (
               <div className="card">
                 <h2 style={{ fontWeight:700, fontSize:15, marginBottom:14 }}>Resumen financiero</h2>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, textAlign:'center' }}>
+                <div className="reports-finance-grid">
                   {[
                     { label:'Ingresos', value:fmt(fin.ingresos), color:'var(--success)' },
                     { label:'Egresos',  value:fmt(fin.egresos),  color:'var(--error)'   },
