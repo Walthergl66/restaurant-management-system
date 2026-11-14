@@ -24,8 +24,7 @@ export default function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-greeting">
-        <div className="topbar-sign" aria-hidden="true"><span>EB</span></div>
-        <div className="topbar-title"><span>Estación Burger</span><p>{section}</p></div>
+        <div className="topbar-title"><span>Panel de gestión</span><p>{section}</p></div>
       </div>
       <div className="topbar-date"><strong>{getTurno()}</strong><span>{format(now, "EEEE, d 'de' MMMM", { locale: es })}</span></div>
       <details className="account-menu" onKeyDown={(event) => {
