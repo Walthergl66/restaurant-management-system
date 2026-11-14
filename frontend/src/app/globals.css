@@ -176,8 +176,10 @@ body {
 /* Navegación principal: grupos compactos para el trabajo de cada turno. */
 .sidebar { width: 260px; flex-shrink: 0; background: #151311; border-right: 1px solid #39312a; display: flex; flex-direction: column; padding: 0 12px 16px; height: 100dvh; position: sticky; top: 0; overflow-y: auto; }
 .sidebar-brand { display: flex; align-items: center; justify-content: center; min-height: 76px; margin: 0 -12px 14px; padding: 10px 16px; border-bottom: 1px solid #39312a; }
-.sidebar-ticket { background: linear-gradient(180deg, #e91e8c 0 5px, #f5a623 5px, #ffc24d 100%); color: #1c1712; padding: 12px 13px 15px; min-width: 190px; max-width: 100%; text-align: center; line-height: 1; font-size: 14px; font-weight: 900; letter-spacing: .01em; white-space: nowrap; clip-path: polygon(0 0,100% 0,100% 88%,94% 100%,88% 88%,82% 100%,76% 88%,70% 100%,64% 88%,58% 100%,52% 88%,46% 100%,40% 88%,34% 100%,28% 88%,22% 100%,16% 88%,10% 100%,4% 88%,0 100%); }
+.sidebar-ticket { background: linear-gradient(180deg, #e91e8c 0 5px, #f5a623 5px, #ffc24d 100%); color: #1c1712; padding: 12px 13px 15px; min-width: 190px; max-width: 100%; text-align: center; line-height: 1; font-size: 14px; font-weight: 900; letter-spacing: .01em; white-space: nowrap; clip-path: polygon(0 0,100% 0,100% 43%,96% 50%,100% 57%,100% 88%,94% 100%,88% 88%,82% 100%,76% 88%,70% 100%,64% 88%,58% 100%,52% 88%,46% 100%,40% 88%,34% 100%,28% 88%,22% 100%,16% 88%,10% 100%,4% 88%,0 100%,0 57%,4% 50%,0 43%); animation: ticket-enter 260ms cubic-bezier(.23,1,.32,1) both; }
 .sidebar-ticket-short { display: none; }
+@keyframes ticket-enter { from { opacity: 0; transform: translateY(-5px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .sidebar-ticket { animation: none; } }
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 14px; }
 .sidebar-group { display: flex; flex-direction: column; gap: 2px; }
 .sidebar-group-label { padding: 4px 12px; color: #aaa; font-size: 12px; font-weight: 600; }
