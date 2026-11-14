@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { ArrowRight, ReceiptText, Wallet, BarChart3, Star } from 'lucide-react'
+import { ArrowRight, ReceiptText, Wallet, BarChart3, Star, Coins, ShoppingBag, Ticket, CreditCard } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
 import { useReporte, useReporteSemana, usePedidos, useCaja } from '../hooks'
@@ -44,7 +44,7 @@ export default function VentasDashboard() {
         </div>
       </section>
       <section className={styles.metrics} aria-label="Ventas del día">
-        <div><span>Ventas de hoy</span><strong>{loadR ? '…' : fmt(reporte?.total)}</strong></div><div><span>Ventas realizadas</span><strong>{loadR ? '…' : reporte?.numeroVentas ?? 0}</strong></div><div><span>Ticket promedio</span><strong>{loadR ? '…' : fmt(ticketPromedio)}</strong></div><div><span>Métodos de pago</span><strong>{loadR ? '…' : reporte?.porMetodo?.length ?? 0}</strong></div>
+        <div><Coins aria-hidden="true"/><span>Ventas de hoy</span><strong>{loadR ? '…' : fmt(reporte?.total)}</strong></div><div><ShoppingBag aria-hidden="true"/><span>Ventas realizadas</span><strong>{loadR ? '…' : reporte?.numeroVentas ?? 0}</strong></div><div><Ticket aria-hidden="true"/><span>Ticket promedio</span><strong>{loadR ? '…' : fmt(ticketPromedio)}</strong></div><div><CreditCard aria-hidden="true"/><span>Métodos de pago</span><strong>{loadR ? '…' : reporte?.porMetodo?.length ?? 0}</strong></div>
       </section>
       <section className={styles.analytics} aria-label="Estadísticas">
         <div className={styles.panel}><div className={styles.panelHeader}><h2>Ventas de los últimos 7 días</h2></div>{loadSemana ? <p className={styles.empty}>Cargando…</p> : chartData.length === 0 ? <div className={styles.emptyState}><BarChart3 size={64}/><strong>Aún no hay ventas registradas</strong><span>Aquí se mostrará el comportamiento de ventas de los últimos 7 días.</span></div> : <ResponsiveContainer width="100%" height={200}><BarChart data={chartData} barSize={20} margin={{ top: 12, right: 4, bottom: 0, left: -20 }}><XAxis dataKey="fecha" tick={{ fill: '#655b52', fontSize: 11 }} axisLine={false} tickLine={false}/><YAxis tick={{ fill: '#655b52', fontSize: 11 }} axisLine={false} tickLine={false}/><Tooltip formatter={(v) => [fmt(Number(v)), 'Ventas']}/><Bar dataKey="monto" radius={[5,5,0,0]}>{chartData.map((d,i) => <Cell key={i} fill={d.peak ? '#e50069' : '#f5a000'}/>)}</Bar></BarChart></ResponsiveContainer>}</div>
