@@ -91,7 +91,9 @@ El encabezado del área autenticada abarca el ancho de la ventana e integra el l
 el título contextual del dashboard y el menú de cuenta. Debajo, la navegación lateral
 agrupa accesos por Operación, Administración y Control con iconos y etiquetas; no
 repite el logo y conserva el filtrado por permisos. El espacio de trabajo compacta
-su composición en pantallas pequeñas. En el dashboard, los
+su composición en pantallas pequeñas. En escritorio amplio, el encabezado limita el
+espacio de sus zonas y trunca texto largo para ayudar a evitar solapamientos entre el
+título y el menú de cuenta. En el dashboard, los
 pedidos recientes se presentan como tickets visuales y los bloques de operación y
 estadísticas usan iconografía para facilitar su lectura rápida.
 El menú de cuenta ofrece perfil, configuración informativa y cierre de sesión. En
