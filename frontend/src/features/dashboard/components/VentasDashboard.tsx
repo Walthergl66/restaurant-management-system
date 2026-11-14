@@ -32,7 +32,6 @@ export default function VentasDashboard() {
 
   return (
     <div className={styles.dashboard}>
-      <header className={styles.header}><h1>Kitchen pass</h1><span>Resumen operativo</span></header>
       <section className={styles.operationGrid} aria-label="Operación">
         <div className={styles.panel}>
           <div className={styles.panelHeader}><h2>Pedidos recientes</h2><Link href="/pedidos">Ver pedidos <ArrowRight size={17} /></Link></div>
