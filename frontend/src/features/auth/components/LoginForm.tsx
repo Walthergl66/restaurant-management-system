@@ -142,15 +142,15 @@ export default function LoginForm() {
 
           {/* username */}
           <div>
-            <label htmlFor="username" style={{ fontSize:11, fontWeight:700, color:'var(--muted)', letterSpacing:1, textTransform:'uppercase', display:'block', marginBottom:8 }}>
-              Email o usuario
+            <label htmlFor="username" style={{ fontSize:12, fontWeight:700, color:'var(--text)', letterSpacing:.5, display:'block', marginBottom:8 }}>
+              Correo o nombre de usuario
             </label>
             <input
               id="username"
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder="usuario"
+              placeholder="Tu correo o nombre de usuario"
               className="input"
               style={{ fontSize:14, padding:'13px 16px', borderColor: username ? 'var(--yellow)' : 'var(--border)' }}
               autoComplete="username"
@@ -179,8 +179,7 @@ export default function LoginForm() {
                 onClick={() => setShowPass(!showPass)}
                 aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 aria-pressed={showPass}
-                style={{ position:'absolute', right:14, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', display:'flex', alignItems:'center' }}
-                tabIndex={-1}
+                style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center', width:40, height:40, borderRadius:8 }}
               >
                 {showPass ? <EyeOff size={17}/> : <Eye size={17}/>}
               </button>
@@ -195,11 +194,12 @@ export default function LoginForm() {
           )}
 
           {/* forgot password */}
-          <div style={{ textAlign:'center', marginTop:4 }}>
+          <div style={{ textAlign:'right', marginTop:-12, marginBottom:-8 }}>
             <button
               type="button"
               onClick={() => toast('Contacta a un administrador para restablecer tu contraseña')}
-              style={{ background:'none', border:'none', cursor:'pointer', color:'var(--fuchsia)', fontSize:12, fontWeight:600, padding:'4px 8px' }}
+              className="login-recovery-link"
+              style={{ background:'none', border:'none', cursor:'pointer', color:'var(--fuchsia)', fontSize:13, fontWeight:700, minHeight:44, padding:'8px 4px' }}
             >
               ¿Olvidaste la contraseña?
             </button>
