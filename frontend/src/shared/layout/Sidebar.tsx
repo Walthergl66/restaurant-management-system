@@ -32,7 +32,8 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand" aria-label="Estación Burger">
-        <div className="sidebar-ticket"><span className="sidebar-ticket-name">Estación Burger</span><span className="sidebar-ticket-short" aria-hidden="true">EB</span></div>
+        <span className="sidebar-brand-emblem" aria-hidden="true">EB</span>
+        <span className="sidebar-brand-name">Estación Burger</span>
       </div>
       <nav className="sidebar-nav" aria-label="Navegación principal">
         {(['Operación', 'Administración', 'Control'] as const).map((group) => {
