@@ -27,7 +27,7 @@ export default function CocinaScreen() {
       </div>
 
       {/* kpis */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+      <div className="kitchen-kpis">
         {COLS.map(c => (
           <div key={c.estado} className="card" style={{ textAlign:'center' }}>
             <p style={{ fontSize:30, fontWeight:900, color:c.color }}>{comandas.filter(x => x.estado === c.estado).length}</p>
@@ -39,7 +39,7 @@ export default function CocinaScreen() {
       {isLoading
         ? <p style={{ color:'var(--dim)', textAlign:'center', padding:32 }}>Cargando…</p>
         : (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
+          <div className="kitchen-board">
             {COLS.map(col => {
               const items = comandas.filter(c => c.estado === col.estado)
               return (
