@@ -54,7 +54,7 @@ export default function MesasScreen() {
         <button className="btn-fuchsia" onClick={() => abrirFormulario(null)}><Plus size={15} /> Nueva mesa</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+      <div className="tables-kpis">
         {kpis.map(kpi => (
           <div key={kpi.label} className="card" style={{ textAlign: 'center', padding: '16px 12px' }}>
             <p style={{ fontSize: 32, fontWeight: 900, color: kpi.color }}>{kpi.count}</p>
