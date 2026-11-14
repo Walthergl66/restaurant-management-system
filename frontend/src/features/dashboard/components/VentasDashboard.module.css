@@ -1,14 +1,15 @@
 .dashboard { max-width: 1600px; margin: auto; display:flex; flex-direction:column; gap:20px; color:#181619; }
 .header { display:flex; align-items:center; gap:28px; color:#f9eee2; min-height:76px; }
 .header h1,.panelHeader h2 { font-family:'Brush Script MT','Segoe Script',cursive; font-style:italic; font-weight:700; line-height:1.05; }
-.header h1 { font-size:clamp(38px,4vw,64px); border-bottom:5px solid #f5a000; padding:0 12px 5px; }
+.header h1 { font-size:clamp(38px,4vw,64px); border-bottom:5px solid #f5a000; padding:0 12px 5px; border-radius:0 0 35% 5%; }
 .header span { border-left:1px solid #aaa; padding-left:28px; font-size:20px; font-weight:700; }
 .operationGrid,.analytics { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 .panel { background:#f8eee2; border-radius:16px; min-width:0; padding:20px 26px 30px; color:#171619; }
 .panelHeader { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-.panelHeader h2 { font-size:clamp(27px,2.6vw,42px); border-bottom:4px solid #f5a000; padding-bottom:5px; }
+.panelHeader h2 { position:relative; font-size:clamp(27px,2.6vw,42px); border-bottom:4px solid #f5a000; border-radius:0 0 35% 5%; padding:0 0 5px 20px; }
+.panelHeader h2::before { content:'✦'; position:absolute; left:-5px; top:-4px; color:#e50069; font-family:Arial,sans-serif; font-size:22px; font-style:normal; }
 .panelHeader a { color:#d90061; font-weight:700; text-decoration:underline; display:inline-flex; align-items:center; gap:4px; }
-.emptyState { min-height:210px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; text-align:center; }
+.emptyState { min-height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; text-align:center; }
 .emptyState svg { color:#95877d; margin-bottom:8px; }
 .emptyState strong { font-size:20px; }.emptyState span { color:#4a4240; max-width:340px; }
 .closed,.open { padding:3px 34px; border-radius:12px; background:#f8ced3; color:#d90061; }.open { background:#d9edcf; color:#286127; }
