@@ -29,7 +29,7 @@ export default function CocinaScreen() {
       {/* kpis */}
       <div className="kitchen-kpis">
         {COLS.map(c => (
-          <div key={c.estado} className="card" style={{ textAlign:'center' }}>
+          <div key={c.estado} className="card" data-state={c.estado} style={{ textAlign:'center' }}>
             <p style={{ fontSize:30, fontWeight:900, color:c.color }}>{comandas.filter(x => x.estado === c.estado).length}</p>
             <p style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>{c.label}</p>
           </div>
@@ -43,11 +43,11 @@ export default function CocinaScreen() {
             {COLS.map(col => {
               const items = comandas.filter(c => c.estado === col.estado)
               return (
-                <div key={col.estado} style={{ background:col.bg, border:`1px solid ${col.color}33`, borderRadius:16, padding:16, minHeight:200 }}>
+                <div key={col.estado} className="kitchen-column" data-state={col.estado} style={{ background:col.bg, border:`1px solid ${col.color}33`, borderRadius:16, padding:16, minHeight:200 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-                    <span style={{ width:10, height:10, borderRadius:'50%', background:col.color }}/>
+                    <span className="kitchen-column-dot" style={{ width:10, height:10, borderRadius:'50%', background:col.color }}/>
                     <h2 style={{ fontWeight:700, fontSize:14, color:col.color }}>{col.label}</h2>
-                    <span style={{ marginLeft:'auto', fontSize:11, fontWeight:700, background:`${col.color}22`, color:col.color, borderRadius:20, padding:'2px 8px' }}>{items.length}</span>
+                    <span className="kitchen-column-count" style={{ marginLeft:'auto', fontSize:11, fontWeight:700, background:`${col.color}22`, color:col.color, borderRadius:20, padding:'2px 8px' }}>{items.length}</span>
                   </div>
 
                   {items.length === 0
