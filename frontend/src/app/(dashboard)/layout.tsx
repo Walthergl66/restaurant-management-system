@@ -7,13 +7,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <Providers>
       <AuthGuard>
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
-          <Sidebar />
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-            <TopBar />
+        <div className="dashboard-app-shell">
+          <TopBar />
+          <div className="dashboard-workspace">
+            <Sidebar />
+            <div className="dashboard-page-column">
             <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
               {children}
             </main>
+          </div>
           </div>
         </div>
       </AuthGuard>
