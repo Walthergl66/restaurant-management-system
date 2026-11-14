@@ -1,18 +1,12 @@
 'use client'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
-import { getTurno } from '@/shared/lib/utils'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 
 export default function TopBar() {
   const { user, logout } = useAuthStore()
   const router = useRouter()
-  const pathname = usePathname()
-  const section = ({ dashboard: 'Resumen', pedidos: 'Pedidos', cocina: 'Cocina', mesas: 'Mesas', cuentas: 'Cuentas', caja: 'Caja', entregas: 'Entregas', productos: 'Productos', usuarios: 'Usuarios', reportes: 'Reportes', anulaciones: 'Anulaciones', auditoria: 'Auditoría' } as Record<string, string>)[pathname.split('/')[1]] || 'Panel'
-  const now = new Date()
   const name = user?.nombre || user?.username || 'Equipo'
 
   async function handleLogout() {
@@ -25,7 +19,6 @@ export default function TopBar() {
     <header className="topbar">
       <div className="topbar-greeting">
       </div>
-      <div className="topbar-date"><strong>{getTurno()}</strong><span>{format(now, "EEEE, d 'de' MMMM", { locale: es })}</span></div>
       <details className="account-menu" onKeyDown={(event) => {
         if (event.key === 'Escape') {
           event.currentTarget.open = false
@@ -33,8 +26,8 @@ export default function TopBar() {
         }
       }}>
         <summary className="account-trigger" aria-label="Menú de cuenta">
-          <span className="account-avatar" aria-hidden="true">{name.charAt(0).toUpperCase()}</span>
-          <span className="account-trigger-text"><strong>{name}</strong><small>{user?.rol || 'Usuario'}</small></span>
+          <span className="account-avatar" aria-hidden="true"><UserRound size={21} /></span>
+          <span className="account-trigger-text"><strong>{name}</strong></span>
           <ChevronDown size={16} aria-hidden="true" />
         </summary>
         <div className="account-panel">
