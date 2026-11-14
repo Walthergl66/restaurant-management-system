@@ -370,6 +370,22 @@ body {
 .category-order-announcement { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* ---- login page responsive ---- */
+.login-shell { max-width: 1120px !important; min-height: min(780px, calc(100dvh - 64px)) !important; border: 0 !important; }
+.login-brand-panel { flex-basis: 46% !important; }
+.login-form-panel { flex-basis: 54% !important; }
+.login-form-body { width: 100%; max-width: 640px; margin-inline: auto; }
+.login-mobile-title { display: block !important; }
+.login-form-panel :is(input, button):focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+@media (max-width: 680px) {
+  .login-shell { min-height: auto !important; max-width: 480px !important; border-radius: 20px !important; }
+  .login-brand-panel { display: none !important; }
+  .login-form-panel { flex-basis: 100% !important; background: #171412 !important; }
+  .login-form-body { padding: 28px 24px !important; }
+  .login-mobile-logo > div { width: 190px !important; }
+  .login-mobile-title { display: none !important; }
+}
+@media (max-width: 380px) { .login-form-body { padding: 24px 18px !important; } }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -441,7 +457,32 @@ body {
   .login-logo:hover { transform: none; }
 }
 
-/* ---- animacion de apertura tipo carta de menu ---- */
+/* Selected login concept: branded pass on the left, warm paper form on the right. */
+.login-shell { max-width: 1260px !important; min-height: min(820px, calc(100dvh - 72px)) !important; border: 0 !important; box-shadow: 0 28px 90px rgba(0,0,0,.32) !important; }
+.login-brand-panel { flex: 0 0 42% !important; background-position: 28% center !important; }
+.login-form-panel { flex: 0 0 58% !important; background: #f7f1e7 !important; color: #201b16 !important; }
+.login-form-body { width: 100%; max-width: 720px; margin-inline: auto; padding: 56px 64px !important; }
+.login-title { margin: 0 0 38px; color: #201b16; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(44px, 5vw, 76px); font-weight: 800; letter-spacing: -3px; line-height: .98; }
+.login-form-panel label { color: #29231e !important; font-size: 15px !important; letter-spacing: 0 !important; }
+.login-form-panel input.input { min-height: 64px; background: rgba(255,255,255,.72) !important; color: #201b16 !important; border: 2px solid #b7afa5 !important; border-radius: 12px !important; font-size: 17px !important; }
+.login-form-panel input.input::placeholder { color: #766e65 !important; }
+.login-form-panel input.input:focus { border-color: var(--yellow) !important; box-shadow: 0 0 0 2px rgba(245,166,35,.18); }
+.login-form-panel .login-recovery-link { color: #c91b64 !important; font-size: 15px !important; text-decoration: underline; text-underline-offset: 3px; }
+.login-form-panel .btn-yellow { min-height: 68px; border-radius: 12px !important; font-size: 20px !important; letter-spacing: 0 !important; text-transform: none; }
+.login-mobile-reveal-top { display: block !important; opacity: 1 !important; transform: none !important; }
+.login-mobile-reveal-top > div { overflow: visible !important; }
+.login-mobile-logo { display: none !important; }
+.login-form-panel :is(input, button):focus-visible { outline: 3px solid #d78300; outline-offset: 3px; }
+@media (max-width: 680px) {
+  .login-shell { min-height: auto !important; max-width: 480px !important; border-radius: 20px !important; }
+  .login-brand-panel { display: none !important; }
+  .login-form-panel { flex: 0 0 100% !important; }
+  .login-form-body { padding: 30px 26px !important; }
+  .login-title { font-size: 52px; margin-bottom: 28px; }
+  .login-mobile-logo { display: flex !important; }
+  .login-mobile-logo > div { width: 190px !important; }
+}
+@media (max-width: 380px) { .login-form-body { padding: 24px 18px !important; } .login-title { font-size: 44px; } }/* ---- animacion de apertura tipo carta de menu ---- */
 /* el panel del logo (portada) sale primero a pantalla completa y luego se abre
    hacia la izquierda mientras el formulario se despliega a su lado */
 @keyframes menu-cover {
@@ -568,5 +609,29 @@ body {
   }
 }
 /* Resumen: operación primero, con columnas adaptables. */
+.login-shell { max-width: none !important; min-height: 100dvh !important; border-radius: 0 !important; box-shadow: none !important; }
+.login-brand-panel { flex: 0 0 52% !important; animation: none !important; background: url('/login-brand-background.png') center / cover no-repeat !important; }
+.login-brand-lockup { display: block; transform: translateX(-8%); }
+.login-brand-lockup .login-logo { filter: none; }
+.login-brand-lockup .login-logo:hover { transform: none; filter: none; }
+.login-form-panel { flex: 1 1 55% !important; margin-left: -7%; clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%); animation: none !important; opacity: 1 !important; background: #f7ebdc !important; }
+.login-form-panel { position: relative; }
+.login-form-panel::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 18%; background: #f5a000; clip-path: polygon(66.7% 0, 85% 0, 18% 100%, 0 100%); pointer-events: none; }
+.login-form-body { max-width: 760px; padding: 60px 65px 60px 110px !important; }
+.login-title { font-family: 'Brush Script MT', 'Segoe Script', cursive; font-style: italic; font-size: clamp(50px, 6vw, 94px); letter-spacing: -3px; margin-bottom: 48px; }
+.login-form-panel label { font-size: 19px !important; }
+.login-field { position: relative; }
+.login-field-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #34302c; z-index: 1; width: 25px; height: 25px; pointer-events: none; }
+.login-form-panel input.input { padding-left: 60px !important; }
+.login-form-panel input.input:focus { border-color: #d90064 !important; }
+.login-form-panel button[aria-pressed] { color: #25221f !important; }
+.login-form-panel .btn-yellow { color: white !important; background: #f29500 !important; }
+@media (max-width: 680px) {
+  .login-brand-panel { display: none !important; }
+  .login-form-panel { margin-left: 0; clip-path: none; }
+  .login-form-panel::before { display: none; }
+  .login-form-body { padding: 32px 26px !important; }
+  .login-title { font-size: 52px; margin-bottom: 26px; }
+}
 .dashboard-columns { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; }
 @media (max-width: 950px) { .dashboard-columns { grid-template-columns: minmax(0, 1fr); } }
