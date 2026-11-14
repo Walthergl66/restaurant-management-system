@@ -1,12 +1,14 @@
 'use client'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/features/auth'
+import { usePathname, useRouter } from 'next/navigation'
+import { hasPermiso, useAuthStore } from '@/features/auth'
 import toast from 'react-hot-toast'
 
 export default function TopBar() {
   const { user, logout } = useAuthStore()
   const router = useRouter()
+  const pathname = usePathname()
+  const showDashboardTitle = pathname === '/dashboard' && hasPermiso(user, 'reportes:ver')
   const name = user?.nombre || user?.username || 'Equipo'
 
   async function handleLogout() {
@@ -18,6 +20,7 @@ export default function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-greeting">
+        {showDashboardTitle && <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>Resumen operativo</span></div>}
       </div>
       <details className="account-menu" onKeyDown={(event) => {
         if (event.key === 'Escape') {
