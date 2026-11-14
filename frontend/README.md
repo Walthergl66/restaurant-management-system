@@ -89,6 +89,10 @@ accesos por Operación, Administración y Control. Cada sección usa iconos con
 etiquetas y mantiene el filtrado por permisos del usuario. En el dashboard, los
 pedidos recientes se presentan como tickets visuales y los bloques de operación y
 estadísticas usan iconografía para facilitar su lectura rápida.
+El encabezado compartido deja el saludo/fecha fuera de la barra y concentra la
+cuenta en un menú desplegable con perfil, configuración informativa y cierre de
+sesión. El menú se puede abrir con teclado y Escape lo cierra devolviendo el foco
+al control que lo abre.
 
 ### Acceso web
 
