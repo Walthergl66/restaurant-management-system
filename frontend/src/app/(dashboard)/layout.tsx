@@ -12,10 +12,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="dashboard-workspace">
             <Sidebar />
             <div className="dashboard-page-column">
-            <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-              {children}
-            </main>
-          </div>
+              <main className="dashboard-main">{children}</main>
+            </div>
           </div>
         </div>
       </AuthGuard>
