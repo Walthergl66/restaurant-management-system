@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth'
 import { hasPermiso } from '@/shared/lib/permissions'
-import Logo from '@/shared/ui/Logo'
 
 const NAV: { href: string; label: string; icon: typeof LayoutDashboard; group: 'Operación' | 'Administración' | 'Control'; permisos?: string[] }[] = [
   { href: '/dashboard', group: 'Operación',   label: 'Resumen',    icon: LayoutDashboard },
@@ -32,9 +31,9 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        <Logo size={104} />
-        <div className="sidebar-brand-name"><strong>ESTACIÓN</strong><span>BURGER</span></div>
+      <div className="sidebar-brand" aria-label="Estación Burger">
+        <div className="sidebar-ticket"><span className="sidebar-ticket-name">Estación<br /><strong>Burger</strong></span><span className="sidebar-ticket-short" aria-hidden="true">EB</span></div>
+        <span className="sidebar-brand-caption">Panel de gestión</span>
       </div>
       <nav className="sidebar-nav" aria-label="Navegación principal">
         {(['Operación', 'Administración', 'Control'] as const).map((group) => {
