@@ -21,7 +21,7 @@ export default function MesasScreen() {
   const habilitadas = mesas.filter(mesa => mesa.activo).length
   const kpis = [
     { label: 'Total', count: mesas.length, color: 'var(--text)' },
-    { label: 'Habilitadas', count: habilitadas, color: '#22c55e' },
+    { label: 'Habilitadas', count: habilitadas, color: 'var(--success)' },
     { label: 'Deshabilitadas', count: mesas.length - habilitadas, color: 'var(--muted)' },
   ]
 
@@ -90,7 +90,7 @@ export default function MesasScreen() {
                   <p style={{ fontSize: 20, fontWeight: 900 }}>Mesa {mesa.numero}</p>
                   <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{mesa.ubicacion || 'Sin ubicación'}</p>
                 </div>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 20, padding: '4px 8px', fontSize: 11, fontWeight: 700, color: mesa.activo ? '#22c55e' : 'var(--muted)', background: mesa.activo ? 'rgba(34,197,94,.12)' : 'var(--surface-2)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 20, padding: '4px 8px', fontSize: 11, fontWeight: 700, color: mesa.activo ? 'var(--success)' : 'var(--muted)', background: mesa.activo ? 'rgba(34,197,94,.12)' : 'var(--surface-2)' }}>
                   <CheckCircle2 size={11} /> {mesa.activo ? 'Habilitada' : 'Deshabilitada'}
                 </span>
               </div>
@@ -101,7 +101,7 @@ export default function MesasScreen() {
 
               <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
                 <button className="btn-ghost" style={{ flex: 1, justifyContent: 'center', fontSize: 11, padding: '7px 8px' }} onClick={() => abrirFormulario(mesa)}><Pencil size={12} /> Editar</button>
-                <button className="btn-ghost" style={{ flex: 1, justifyContent: 'center', fontSize: 11, padding: '7px 8px', color: mesa.activo ? 'var(--error)' : '#22c55e' }} disabled={cambiarHabilitacion.isPending} onClick={() => alternarHabilitacion(mesa)}>
+                <button className="btn-ghost" style={{ flex: 1, justifyContent: 'center', fontSize: 11, padding: '7px 8px', color: mesa.activo ? 'var(--error)' : 'var(--success)' }} disabled={cambiarHabilitacion.isPending} onClick={() => alternarHabilitacion(mesa)}>
                   <Power size={12} /> {mesa.activo ? 'Deshabilitar' : 'Habilitar'}
                 </button>
               </div>
