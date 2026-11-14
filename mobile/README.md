@@ -54,9 +54,11 @@ Reglas:
 
 ## Conexión al backend
 
+Copia `mobile/.env.example` a `mobile/.env`. En Expo Go, la IP del servidor se detecta automáticamente, así que no hace falta definir la URL. Para builds standalone configura `EXPO_PUBLIC_API_URL` con una dirección accesible desde el teléfono. `EXPO_PUBLIC_MAPBOX_TOKEN` se usa para mapas; es un valor público que queda dentro de la app. No pongas secretos del backend en el móvil.
+
 La URL base se resuelve así (en orden):
 
-1. `EXPO_PUBLIC_API_URL` (variable de entorno, al bundlear)
+1. `EXPO_PUBLIC_API_URL` en `mobile/.env` (variable de entorno, al bundlear)
 2. Host del dev server de Expo (`hostUri`, en desarrollo) → la IP del PC
 3. `extra.apiUrl` de `app.json` (builds sin dev server)
 4. `http://localhost:8080/api/v1` (default)
@@ -69,8 +71,8 @@ siempre es alcanzable, y `API_BASE_URL` se arma a partir de ella sin
 configurar nada a mano.
 
 ```bash
-# Teléfono en la misma red (Expo Go): basta con escanear el QR,
-# la IP se toma sola. Override manual solo si el backend está en otra máquina/puerto:
+# Copia mobile/.env.example a mobile/.env; la IP se detecta automáticamente.
+# Teléfono en la misma red (Expo Go): basta con escanear el QR. Override manual solo si el backend está en otra máquina/puerto:
 EXPO_PUBLIC_API_URL=http://192.168.2.100:8080/api/v1 npx expo start
 
 # Emulador Android: Expo hace `adb reverse` solo del 8081 (bundle),
@@ -101,16 +103,18 @@ Dos formas de llegar a la app:
 > se depura con Expo Go; una development build requiere `eas build` o
 > `npx expo run:android` (Android SDK + JDK 17).
 
-Requisitos: backend arriba en `:8080` y PostgreSQL
-(`docker compose up -d postgres` desde la raíz del repo).
+Requisitos: backend arriba en `:8080` y PostgreSQL accesible. El servidor de base de datos es externo; en desarrollo puedes iniciar backend y web desde la raíz con `docker compose --env-file backend/.env --env-file frontend/.env up --build -d`.
 
 Si la app corre en el teléfono pero sigue sin conectar, revisa el
 firewall del PC: el puerto `8080/tcp` debe estar abierto en la zona
 del firewall donde está la interfaz por la que llega el teléfono
 (`firewall-cmd --zone=<zona> --list-all`).
 
-Builds standalone (APK/IPA): no hay dev server, así que hay que fijar
-la URL en build con `EXPO_PUBLIC_API_URL=...` o en `app.json`.
+Builds standalone (APK/IPA): no hay dev server; define `EXPO_PUBLIC_API_URL`
+en `mobile/.env` con una URL accesible desde el teléfono, o configura `extra.apiUrl`
+en `app.json`. El token Mapbox puede definirse como `EXPO_PUBLIC_MAPBOX_TOKEN`
+en el mismo archivo; es configuración pública incluida en el cliente. No pongas
+secretos del backend en el entorno móvil.
 
 
 ## Endpoints que consume

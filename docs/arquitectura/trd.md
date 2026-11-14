@@ -19,9 +19,9 @@ Este documento registra las tecnologías y requisitos técnicos observables en e
 - PostgreSQL externo accesible por TCP, con base creada y credenciales configuradas mediante `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
 - TLS PostgreSQL es requerido por defecto (`DB_SSLMODE=require`); ajustar solo conforme a la configuración del servidor.
 - Flyway ejecuta migraciones durante el inicio de API. La cuenta necesita permisos para aplicar cambios de esquema.
-- API: puerto interno 8080; web: 3000. La web envía `/api/*` al backend mediante rewrite de Next.js.
+- API: puerto interno 8080; web: puerto interno 3000 y publicación local por defecto en 7070 mediante Compose. La web envía `/api/*` al backend mediante rewrite de Next.js.
 - En Docker, `BACKEND_URL=http://backend:8080`; desde el navegador se usa el mismo origen web.
-- Secretos y valores específicos de despliegue se configuran por entorno; no versionar archivos `.env` con credenciales.
+- La configuración local se mantiene en `backend/.env`, `frontend/.env` y `mobile/.env`, a partir de sus plantillas. Compose carga explícitamente los archivos necesarios con `--env-file`; no hay `.env` compartido en la raíz. No versionar archivos `.env` con credenciales.
 
 ## Calidad y verificación
 

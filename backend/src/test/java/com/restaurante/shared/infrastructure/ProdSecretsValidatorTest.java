@@ -22,6 +22,7 @@ class ProdSecretsValidatorTest {
     private static final String[] COMPLETO = {
             "DB_USER", "restaurante",
             "DB_PASSWORD", "s3cr3t0",
+            "ADMIN_INITIAL_EMAIL", "admin@example.com",
             "ADMIN_INITIAL_PASSWORD", "ClaveFuerte123!",
             "JWT_SECRET", "x".repeat(64),
             "CORS_ALLOWED_ORIGINS", "https://app.example.com"
@@ -37,6 +38,7 @@ class ProdSecretsValidatorTest {
         String[] sinSecret = {
                 "DB_USER", "restaurante",
                 "DB_PASSWORD", "s3cr3t0",
+                "ADMIN_INITIAL_EMAIL", "admin@example.com",
                 "ADMIN_INITIAL_PASSWORD", "ClaveFuerte123!",
                 "CORS_ALLOWED_ORIGINS", "https://app.example.com"
         };
@@ -50,6 +52,7 @@ class ProdSecretsValidatorTest {
         IllegalStateException e = assertThrows(IllegalStateException.class,
                 con("DB_USER", "restaurante", "DB_PASSWORD", "",
                         "ADMIN_INITIAL_PASSWORD", "x", "JWT_SECRET", "y".repeat(64),
+                        "ADMIN_INITIAL_EMAIL", "admin@example.com",
                         "CORS_ALLOWED_ORIGINS", "https://app.example.com")::validar);
         assertTrue(e.getMessage().contains("DB_PASSWORD"));
     }
@@ -59,11 +62,19 @@ class ProdSecretsValidatorTest {
         String[] corto = {
                 "DB_USER", "restaurante",
                 "DB_PASSWORD", "s3cr3t0",
+                "ADMIN_INITIAL_EMAIL", "admin@example.com",
                 "ADMIN_INITIAL_PASSWORD", "ClaveFuerte123!",
                 "JWT_SECRET", "corta",
                 "CORS_ALLOWED_ORIGINS", "https://app.example.com"
         };
         IllegalStateException e = assertThrows(IllegalStateException.class, con(corto)::validar);
         assertTrue(e.getMessage().contains("JWT_SECRET"));
+    }
+
+    @Test
+    void correoAdministradorDebeSerValidoYCaberenEnNombreDeUsuario() {
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                con("ADMIN_INITIAL_EMAIL", "correo-invalido")::validar);
+        assertTrue(e.getMessage().contains("ADMIN_INITIAL_EMAIL"));
     }
 }

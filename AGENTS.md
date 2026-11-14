@@ -11,7 +11,7 @@ This repository is a monorepo. `backend/` contains the Java/Spring Boot modular 
 - `cd frontend && npm ci && npm run dev` installs and starts the web app.
 - `cd frontend && npm run lint && npm run build` checks and builds the web app.
 - `cd mobile && npm install && npx expo start` starts the mobile development server.
-- `docker compose up --build -d` starts the API and web containers; configure the external PostgreSQL connection in `.env` or `backend/.env` first.
+- `docker compose --env-file backend/.env --env-file frontend/.env up --build -d` starts the API and web containers; configure each component's environment from its `.env.example` first.
 
 ## Coding Style & Naming
 
@@ -27,7 +27,7 @@ Recent commits use concise, imperative subjects, often with conventional prefixe
 
 ## Security & Configuration
 
-Never commit real `.env` files, passwords, API keys, or JWT secrets. Use the checked-in `.env.example` templates. The database is external to Compose; Flyway applies migrations on backend startup, so use an appropriately scoped database account and verify connectivity before running the stack.
+Never commit real `.env` files, passwords, API keys, or JWT secrets. Use the component templates: `backend/.env.example`, `frontend/.env.example`, and `mobile/.env.example`. Compose interpolation is loaded explicitly with `--env-file`; its service environment comes from `backend/.env`. The database is external to Compose; Flyway applies migrations on backend startup, so use an appropriately scoped database account and verify connectivity before running the stack.
 
 ## Documentation Maintenance
 

@@ -31,6 +31,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("select count(u) > 0 from Usuario u where lower(u.username) = lower(:username)")
     boolean existsByUsername(@Param("username") String username);
 
+    @Query("select count(u) > 0 from Usuario u join u.rol r where r.codigo = :rolCodigo")
+    boolean existsByRolCodigo(@Param("rolCodigo") String rolCodigo);
+
     @Query("select u from Usuario u left join fetch u.rol where u.id = :id")
     Optional<Usuario> findByIdWithRol(@Param("id") Long id);
 

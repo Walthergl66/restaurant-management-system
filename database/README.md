@@ -25,16 +25,10 @@ DB_PASSWORD=restaurante
 DB_SSLMODE=require
 ```
 
-`docker compose up` inicia solo el backend y se conecta a esta instancia
-externa; no crea ni administra un servidor PostgreSQL. La base debe existir y
-el usuario necesita permisos para que Flyway aplique las migraciones al
-arrancar. La conexión requiere TLS por defecto (`DB_SSLMODE=require`); configura
-`disable` si el servidor no ofrece TLS. Si defines las mismas variables en
-`.env` de la raíz y `backend/.env`, el `.env` raíz prevalece en Compose. Al
-ejecutar el backend de forma nativa, `DB_HOST=localhost` sirve para una BD en
-la misma máquina.
+Compose inicia el backend (y en desarrollo también la web) y se conecta a esta instancia
+externa; no crea ni administra un servidor PostgreSQL. Usa `docker compose --env-file backend/.env --env-file frontend/.env up --build -d` para desarrollo. La base debe existir y el usuario necesita permisos para que Flyway aplique las migraciones al arrancar. La conexión requiere TLS por defecto (`DB_SSLMODE=require`); configura `disable` si el servidor no ofrece TLS. Backend y utilidades de base de datos comparten `backend/.env`; para Compose, pasa explícitamente archivos con `--env-file`. Al ejecutar el backend de forma nativa, `DB_HOST=localhost` sirve para una BD en la misma máquina.
 
-Los scripts de este directorio (`backup.sh` y `restore.sh`) detectan y cargan automáticamente las variables desde `backend/.env`.
+Los scripts de este directorio (`backup.sh` y `restore.sh`) cargan `backend/.env` automáticamente. Puedes indicar otra ruta mediante `ENV_FILE`.
 
 ### Cliente de PostgreSQL
 

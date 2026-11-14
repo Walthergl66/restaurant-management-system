@@ -75,6 +75,38 @@ frontend/
 \* `shared/layout/Sidebar` y `TopBar` leen la sesión desde `@/features/auth` (única
 excepción documentada de la dirección `shared → feature`).
 
+### Dashboard operativo
+
+El dashboard combina los pedidos recientes con el estado y apertura inicial de la
+caja del turno, métricas de ventas y métodos de pago, una gráfica de ventas de los
+últimos siete días y los productos más vendidos. Los pedidos enlazan a su detalle;
+los accesos de operación llevan a pedidos y caja. Los datos se obtienen mediante
+hooks de reportes, pedidos y caja y muestran estados de carga y vacío. La autorización
+por permisos que envuelve la pantalla se conserva.
+
+La navegación lateral compartida muestra el logo de Estación Burger y agrupa los
+accesos por Operación, Administración y Control. Cada sección usa iconos con
+etiquetas y mantiene el filtrado por permisos del usuario. En el dashboard, los
+pedidos recientes se presentan como tickets visuales y los bloques de operación y
+estadísticas usan iconografía para facilitar su lectura rápida.
+El encabezado compartido concentra la cuenta en un menú desplegable con perfil,
+configuración informativa y cierre de sesión. En `/dashboard`, el título “Kitchen
+pass” y “Resumen operativo” se muestran en esa barra únicamente para usuarios con
+el permiso `reportes:ver`; el panel conserva los controles de cuenta para todos los
+usuarios autenticados. El menú se puede abrir con teclado y Escape lo cierra
+devolviendo el foco al control que lo abre.
+
+### Acceso web
+
+La pantalla de acceso acepta correo o nombre de usuario y contraseña. En escritorio
+presenta una composición dividida: un fondo fotográfico del pase (`public/login-brand-background.png`)
+con el logo superpuesto como elemento independiente, junto a un formulario en tono crema con título manuscrito, campos claros y acción ámbar. En pantallas de hasta 680 px oculta la
+fotografía y muestra el formulario compacto con el logo; hasta 380 px reduce los
+márgenes. El acceso incluye control para mostrar u ocultar la contraseña, recuperación
+que indica contactar a un administrador y mensajes en línea para campos incompletos
+o errores de autenticación. Los campos y botones muestran foco de teclado; los controles
+de contraseña y recuperación tienen áreas táctiles amplias.
+
 ---
 
 ## 🚀 Puesta en Marcha
@@ -87,13 +119,13 @@ excepción documentada de la dirección `shared → feature`).
 
 ### 2. Configurar Variables de Entorno
 
-Copia el archivo de ejemplo a `.env.local`:
+Copia el archivo de ejemplo a `frontend/.env`:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-Contenido de `.env.local`:
+Contenido de `frontend/.env`:
 
 ```env
 # Dirección del backend Spring Boot
@@ -116,10 +148,17 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 
 ### Ejecutar con Docker Compose
 
-Desde la raíz del repositorio, `docker compose up --build -d` inicia también la
-web en `http://localhost:3000`. Si cambias el puerto publicado, define
-`FRONTEND_PORT` (por ejemplo, `FRONTEND_PORT=3001`). El proxy `/api/*` del
-frontend se conecta al servicio `backend` dentro de la red de Compose.
+Desde la raíz, carga de forma explícita las variables de los componentes:
+`docker compose --env-file backend/.env --env-file frontend/.env up --build -d`.
+La web queda en `http://localhost:7070`; cambia `FRONTEND_PORT` en
+`frontend/.env` si necesitas otro puerto. Para ejecución local, `BACKEND_URL`
+en `frontend/.env` define el destino del rewrite. En Compose el destino interno
+se configura como `http://backend:8080`. El proxy `/api/*` del frontend se
+conecta al servicio `backend` dentro de la red de Compose. El servicio usa la
+etapa `dev` de `frontend/Dockerfile`, monta `frontend/` dentro del contenedor y
+conserva `node_modules` y `.next` en volúmenes Docker. Los cambios de código se
+reflejan con la recarga de Next.js; al cambiar dependencias, ejecuta
+`docker compose exec frontend npm ci` y reinicia el servicio frontend.
 
 ---
 

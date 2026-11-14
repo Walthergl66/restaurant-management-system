@@ -1,8 +1,14 @@
-FROM node:24-alpine AS build
+FROM node:24-alpine AS dependencies
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm ci
+
+FROM dependencies AS dev
+ENV NODE_ENV=development
+EXPOSE 3000
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+
+FROM dependencies AS build
 
 COPY . .
 ARG BACKEND_URL=http://backend:8080

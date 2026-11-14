@@ -11,6 +11,7 @@ se niega a arrancar si faltan las obligatorias (placeholders sin default en
 |---|---|
 | `JWT_SECRET` | Secreto de firma HS256. Mínimo 32 caracteres (64+ recomendado). |
 | `ADMIN_INITIAL_PASSWORD` | Contraseña del primer usuario `admin`. Solo se consume si no existe ningún ADMIN; si falta, no se crea. |
+| `ADMIN_INITIAL_EMAIL` | Correo y nombre de acceso del primer usuario ADMIN; obligatorio en `prod`, máximo 50 caracteres. Solo se consume si aún no existe ADMIN. |
 | `DB_USER` | Usuario de PostgreSQL. |
 | `DB_PASSWORD` | Contraseña de PostgreSQL. |
 | `CORS_ALLOWED_ORIGINS` | Lista separada por comas de orígenes permitidos para navegador, p.ej. `https://app.midominio.com,https://admin.midominio.com`. No usar `*` ni localhost en producción. |
@@ -81,15 +82,24 @@ sin `BREVO_API_KEY` o `BREVO_REMITENTE_EMAIL` la aplicación no arranca.
   acepta `*`. El proxy debe reenviar las cabeceras de upgrade
   (`Upgrade`/`Connection`) y soportar `wss`.
 - La duración del access token la define `JWT_EXPIRATION_MS` en el despliegue
-  (default 1 hora). `docker-compose.yml` solo levanta PostgreSQL; el backend no
-  se ejecuta en Compose, de modo que los valores los inyecta el orquestador del
-  proxy (systemd/`EnvironmentFile`, K8s `Secrets`, etc.).
+  (default 1 hora). `docker-compose.yml` levanta backend y web para desarrollo. En producción,
+  `docker-compose.prod.yml` levanta el backend y recibe variables desde
+  `backend/.env`; configura el proxy TLS por separado. El archivo de entorno
+  local no debe versionarse.
 
 ## Arranque
 
 ```bash
+# Desde la raíz del repositorio, usando las variables del backend
+docker compose --env-file backend/.env -f docker-compose.prod.yml up --build -d
+
+# Alternativa: arranque nativo con variables inyectadas por el entorno
 SPRING_PROFILES_ACTIVE=prod java -jar restaurante-backend.jar
 ```
 
 Si falta una variable obligatoria, el arranque falla indicando cuál falta.
 La documentación OpenAPI/Swagger está desactivada en este perfil.
+El primer administrador inicia sesión con el correo de `ADMIN_INITIAL_EMAIL` y
+la contraseña de `ADMIN_INITIAL_PASSWORD`. Estas variables solo crean la cuenta
+si todavía no existe un usuario con rol ADMIN; no cambian las credenciales de
+una cuenta existente.

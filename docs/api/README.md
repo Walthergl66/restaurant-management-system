@@ -4,6 +4,8 @@ Base URL: `http://localhost:8080/api/v1` (prod) o `http://localhost:8080` (dev, 
 
 ## Autenticación
 
+- El nombre de acceso del administrador inicial es `ADMIN_INITIAL_EMAIL` (correo). En desarrollo, si no se define, conserva el valor `admin`.
+- En producción se requieren `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`. Solo crean la cuenta si todavía no existe ningún usuario con rol `ADMIN`; no modifican una cuenta ya creada.
 - `POST /api/v1/auth/login` → `{accessToken, refreshToken, usuario}` (JWT HS256 32+ chars, 24h)
 - `POST /api/v1/auth/refresh` → renueva `accessToken` con `refreshToken`
 - `POST /api/v1/auth/logout` → revoca `refreshToken`

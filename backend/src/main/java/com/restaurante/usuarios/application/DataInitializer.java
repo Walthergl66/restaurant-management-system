@@ -18,7 +18,8 @@ import org.springframework.stereotype.Component;
  * <p>Reglas:
  * <ul>
  *   <li>Si ya existe un usuario ADMIN no hace nada (idempotente).</li>
- *   <li>En el perfil {@code dev} usa {@code admin123} por defecto.</li>
+ *   <li>En el perfil {@code dev} usa {@code admin} como usuario por defecto y
+ *       {@code admin123} como contraseña por defecto.</li>
  *   <li>En cualquier entorno respeta la variable {@code ADMIN_INITIAL_PASSWORD}.</li>
  *   <li>Si no hay contraseña disponible no se crea nada (el operador la define).</li>
  * </ul>
@@ -32,21 +33,24 @@ public class DataInitializer implements ApplicationRunner {
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final String adminInitialEmail;
     private final String adminInitialPassword;
 
     public DataInitializer(UsuarioRepository usuarioRepository,
                            RolRepository rolRepository,
                            PasswordEncoder passwordEncoder,
+                           @Value("${app.inicial.admin-email:admin}") String adminInitialEmail,
                            @Value("${app.inicial.admin-password:}") String adminInitialPassword) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = passwordEncoder;
+        this.adminInitialEmail = adminInitialEmail;
         this.adminInitialPassword = adminInitialPassword;
     }
 
     @Override
     public void run(ApplicationArguments args) {
-        if (usuarioRepository.existsByUsername("admin")) {
+        if (usuarioRepository.existsByRolCodigo("ADMIN")) {
             return;
         }
         Rol rolAdmin = rolRepository.findByCodigo("ADMIN").orElse(null);
@@ -59,7 +63,7 @@ public class DataInitializer implements ApplicationRunner {
                     + "no se crea el admin");
             return;
         }
-        Usuario admin = new Usuario("admin", passwordEncoder.encode(adminInitialPassword),
+        Usuario admin = new Usuario(adminInitialEmail.trim().toLowerCase(), passwordEncoder.encode(adminInitialPassword),
                 "Administrador del sistema", rolAdmin);
         usuarioRepository.save(admin);
         log.info("Usuario inicial 'admin' creado con el rol ADMIN");

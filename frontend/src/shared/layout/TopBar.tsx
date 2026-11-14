@@ -1,40 +1,51 @@
 'use client'
-import { Bell } from 'lucide-react'
-import { useAuthStore } from '@/features/auth'
-import { getGreeting, getTurno } from '@/shared/lib/utils'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { hasPermiso, useAuthStore } from '@/features/auth'
+import toast from 'react-hot-toast'
 
 export default function TopBar() {
-  const { user } = useAuthStore()
-  const now = new Date()
+  const { user, logout } = useAuthStore()
+  const router = useRouter()
+  const pathname = usePathname()
+  const showDashboardTitle = pathname === '/dashboard' && hasPermiso(user, 'reportes:ver')
+  const name = user?.nombre || user?.username || 'Equipo'
+
+  async function handleLogout() {
+    await logout()
+    toast.success('Sesión cerrada')
+    router.push('/login')
+  }
 
   return (
-    <header style={{
-      borderBottom: '1px solid var(--border)',
-      padding: '16px 24px',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      background: 'var(--bg)', flexShrink: 0,
-    }}>
-      <div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)' }}>
-          {getGreeting()},{' '}
-          <span style={{ color: 'var(--yellow)' }}>{user?.username ?? 'equipo'}</span>
-        </h1>
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
-          {format(now, "EEEE, d 'de' MMMM", { locale: es })} · {getTurno()}
-        </p>
+    <header className="topbar">
+      <div className="topbar-greeting">
+        {showDashboardTitle && <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>Resumen operativo</span></div>}
       </div>
-      <button
-        style={{
-          width: 36, height: 36, borderRadius: '50%', background: 'var(--surface-2)',
-          border: '1px solid var(--border)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', cursor: 'pointer', position: 'relative',
-        }}
-        aria-label="Notificaciones"
-      >
-        <Bell size={17} color="var(--muted)" />
-      </button>
+      <details className="account-menu" onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.currentTarget.open = false
+          event.currentTarget.querySelector('summary')?.focus()
+        }
+      }}>
+        <summary className="account-trigger" aria-label="Menú de cuenta">
+          <span className="account-avatar" aria-hidden="true"><UserRound size={21} /></span>
+          <span className="account-trigger-text"><strong>{name}</strong></span>
+          <ChevronDown size={16} aria-hidden="true" />
+        </summary>
+        <div className="account-panel">
+          <div className="account-panel-heading"><strong>{name}</strong><span>{user?.username}</span></div>
+          <details className="account-section">
+            <summary><UserRound size={17} aria-hidden="true" /> Mi perfil</summary>
+            <div className="account-section-content"><span>Nombre: {name}</span><span>Usuario: {user?.username}</span><span>Rol: {user?.rol}</span></div>
+          </details>
+          <details className="account-section">
+            <summary><Settings size={17} aria-hidden="true" /> Configuración</summary>
+            <div className="account-section-content">Las opciones de configuración estarán disponibles próximamente.</div>
+          </details>
+          <button className="account-logout" onClick={handleLogout}><LogOut size={17} aria-hidden="true" /> Cerrar sesión</button>
+        </div>
+      </details>
     </header>
   )
 }

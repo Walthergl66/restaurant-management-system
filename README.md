@@ -11,7 +11,7 @@ Repositorio estructurado como **monorepo**: cada componente reside en su propio 
 ```
 .
 â”œâ”€â”€ backend/            # API REST (Java 25 LTS + Spring Boot 4.1 + PostgreSQL)
-â”‚   â”œâ”€â”€ .env.example    # Plantilla de variables para backend y base de datos
+â”‚   â”œâ”€â”€ .env.example    # Plantilla de variables del backend y base de datos
 â”‚   â”œâ”€â”€ Dockerfile      # Imagen Docker optimizada (Eclipse Temurin 25 JRE)
 â”‚   â”œâ”€â”€ pom.xml         # Dependencias Maven y plugins de compilaciÃ³n
 â”‚   â”œâ”€â”€ README.md       # DocumentaciÃ³n tÃ©cnica, endpoints y arquitectura modular
@@ -54,8 +54,11 @@ cp backend/.env.example backend/.env
 #### Frontend
 Copia la plantilla para la app web:
 ```bash
-cp frontend/.env.example frontend/.env.local
+cp frontend/.env.example frontend/.env
 ```
+
+#### App móvil
+Copia `mobile/.env.example` a `mobile/.env`. La detección de la IP de Expo permite desarrollo local sin configurar `EXPO_PUBLIC_API_URL`; configura esa variable para builds standalone y añade `EXPO_PUBLIC_MAPBOX_TOKEN` si se usan mapas.
 
 ---
 
@@ -66,14 +69,14 @@ Tienes dos opciones para ejecutar el backend:
 #### OpciÃ³n A: Con Docker (Recomendado)
 
 `docker compose` levanta el backend y la aplicaciÃ³n web. Configura primero la conexiÃ³n a la
-instancia PostgreSQL externa en `backend/.env` (o en `.env` de la raÃ­z):
+instancia PostgreSQL externa en `backend/.env`:
 
 ```bash
-docker compose up --build -d
+docker compose --env-file backend/.env --env-file frontend/.env up --build -d
 ```
 
 - API: `http://localhost:8080`.
-- Web: `http://localhost:3000` (puerto configurable con `FRONTEND_PORT`).
+- Web: `http://localhost:7070` (puerto configurable con `FRONTEND_PORT`).
 - Healthcheck: `http://localhost:8080/actuator/health`
 - DocumentaciÃ³n OpenAPI/Swagger: `http://localhost:8080/swagger-ui.html`
 
@@ -143,14 +146,14 @@ npx expo start
 **ConexiÃ³n con la API:** la URL base se resuelve en este orden
 (`mobile/src/config/environment.ts`):
 
-1. `EXPO_PUBLIC_API_URL` (variable de entorno al bundlear).
+1. `EXPO_PUBLIC_API_URL` en `mobile/.env` (variable de entorno al bundlear).
 2. En desarrollo, la IP del PC deducida del host del dev server de Expo.
 3. `extra.apiUrl` de `app.json` (builds sin dev server).
 4. Default: `http://localhost:8080/api/v1`.
 
 > En un telÃ©fono fÃ­sico `localhost` apunta al propio telÃ©fono: por eso el punto 2
 > deriva la IP de la mÃ¡quina de desarrollo. Para forzar otra URL:
-> `EXPO_PUBLIC_API_URL=http://192.168.1.50:8080/api/v1 npx expo start`
+> Copia `mobile/.env.example` a `mobile/.env` y define `EXPO_PUBLIC_API_URL=http://192.168.1.50:8080/api/v1`.
 
 ---
 
@@ -189,10 +192,10 @@ prueban el backend (JDK 25) y se lintea y compila el frontend (Node 22).
 
 ## ðŸš€ Despliegue en ProducciÃ³n
 
-Para entornos productivos, utiliza `docker-compose.prod.yml` que valida obligatoriamente variables seguras (`JWT_SECRET`, `ADMIN_INITIAL_PASSWORD`, `CORS_ALLOWED_ORIGINS` sin comodines):
+Para entornos productivos, utiliza `docker-compose.prod.yml` que valida obligatoriamente variables seguras (`JWT_SECRET`, `ADMIN_INITIAL_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `CORS_ALLOWED_ORIGINS` sin comodines):
 
 ```bash
-docker compose -f docker-compose.prod.yml up --build -d
+docker compose --env-file backend/.env -f docker-compose.prod.yml up --build -d
 ```
 
 Consulta mÃ¡s detalles en [docs/operacion/despliegue.md](docs/operacion/despliegue.md).
@@ -205,3 +208,7 @@ DocumentaciÃ³n complementaria:
 - [backend/README.md](backend/README.md) â€” detalle tÃ©cnico del API y arquitectura modular.
 - [frontend/README.md](frontend/README.md) â€” rutas y componentes de la web.
 - [mobile/README.md](mobile/README.md) â€” estructura de la app mÃ³vil.
+
+## Configuración de entorno
+
+Usa `backend/.env.example`, `frontend/.env.example` y `mobile/.env.example` como plantillas de cada componente. No hay archivos de entorno compartidos en la raíz. Para Compose carga explícitamente `backend/.env` y `frontend/.env` con `--env-file`; para producción basta `backend/.env`.
