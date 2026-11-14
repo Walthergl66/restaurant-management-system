@@ -97,6 +97,15 @@ para usuarios con `reportes:ver`; los controles de cuenta siguen disponibles par
 todos los usuarios autenticados. Escape cierra el menú y devuelve el foco al control
 que lo abre.
 
+### Adaptación responsive de operaciones
+
+El espacio autenticado ajusta su shell por ancho de pantalla: por debajo de 900 px
+la navegación lateral se compacta a iconos y el contenido usa márgenes fluidos.
+Las columnas de cocina, salón y reportes se apilan en vistas estrechas; los KPI de
+mesas y cocina se reorganizan, y los formularios del modal de nuevo pedido apilan
+sus campos en móvil. Las tablas conservan sus columnas y permiten desplazamiento
+horizontal dentro de su contenedor cuando el ancho disponible no basta.
+
 ### Acceso web
 
 La pantalla de acceso acepta correo o nombre de usuario y contraseña. En escritorio
