@@ -84,6 +84,12 @@ los accesos de operación llevan a pedidos y caja. Los datos se obtienen mediant
 hooks de reportes, pedidos y caja y muestran estados de carga y vacío. La autorización
 por permisos que envuelve la pantalla se conserva.
 
+La navegación lateral compartida muestra el logo de Estación Burger y agrupa los
+accesos por Operación, Administración y Control. Cada sección usa iconos con
+etiquetas y mantiene el filtrado por permisos del usuario. En el dashboard, los
+pedidos recientes se presentan como tickets visuales y los bloques de operación y
+estadísticas usan iconografía para facilitar su lectura rápida.
+
 ### Acceso web
 
 La pantalla de acceso acepta correo o nombre de usuario y contraseña. En escritorio
