@@ -84,17 +84,18 @@ los accesos de operación llevan a pedidos y caja. Los datos se obtienen mediant
 hooks de reportes, pedidos y caja y muestran estados de carga y vacío. La autorización
 por permisos que envuelve la pantalla se conserva.
 
-La navegación lateral compartida muestra el logo de Estación Burger y agrupa los
-accesos por Operación, Administración y Control. Cada sección usa iconos con
-etiquetas y mantiene el filtrado por permisos del usuario. En el dashboard, los
+El encabezado del área autenticada abarca el ancho de la ventana e integra el logo,
+el título contextual del dashboard y el menú de cuenta. Debajo, la navegación lateral
+agrupa accesos por Operación, Administración y Control con iconos y etiquetas; no
+repite el logo y conserva el filtrado por permisos. El espacio de trabajo compacta
+su composición en pantallas pequeñas. En el dashboard, los
 pedidos recientes se presentan como tickets visuales y los bloques de operación y
 estadísticas usan iconografía para facilitar su lectura rápida.
-El encabezado compartido concentra la cuenta en un menú desplegable con perfil,
-configuración informativa y cierre de sesión. En `/dashboard`, el título “Kitchen
-pass” y “Resumen operativo” se muestran en esa barra únicamente para usuarios con
-el permiso `reportes:ver`; el panel conserva los controles de cuenta para todos los
-usuarios autenticados. El menú se puede abrir con teclado y Escape lo cierra
-devolviendo el foco al control que lo abre.
+El menú de cuenta ofrece perfil, configuración informativa y cierre de sesión. En
+`/dashboard`, “Kitchen pass” y “Resumen operativo” aparecen en el encabezado solo
+para usuarios con `reportes:ver`; los controles de cuenta siguen disponibles para
+todos los usuarios autenticados. Escape cierra el menú y devuelve el foco al control
+que lo abre.
 
 ### Acceso web
 
