@@ -75,6 +75,15 @@ frontend/
 \* `shared/layout/Sidebar` y `TopBar` leen la sesión desde `@/features/auth` (única
 excepción documentada de la dirección `shared → feature`).
 
+### Dashboard operativo
+
+El dashboard combina los pedidos recientes con el estado y apertura inicial de la
+caja del turno, métricas de ventas y métodos de pago, una gráfica de ventas de los
+últimos siete días y los productos más vendidos. Los pedidos enlazan a su detalle;
+los accesos de operación llevan a pedidos y caja. Los datos se obtienen mediante
+hooks de reportes, pedidos y caja y muestran estados de carga y vacío. La autorización
+por permisos que envuelve la pantalla se conserva.
+
 ### Acceso web
 
 La pantalla de acceso acepta correo o nombre de usuario y contraseña. En escritorio
