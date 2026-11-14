@@ -802,3 +802,112 @@ body {
 }
 .dashboard-columns { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; }
 @media (max-width: 950px) { .dashboard-columns { grid-template-columns: minmax(0, 1fr); } }
+
+/* Identidad visual compartida por las pantallas autenticadas de administración. */
+.dashboard-app-shell {
+  --surface: #f8eee2;
+  --surface-2: #efe1d2;
+  --surface-3: #e5d2c1;
+  --border: #d4c1ae;
+  --text: #211d1b;
+  --muted: #6f625a;
+  --dim: #887a70;
+  --fuchsia: #c31562;
+  --fuchsia-dark: #9f104f;
+}
+
+.dashboard-app-shell .dashboard-main { color: var(--text); }
+.dashboard-app-shell .topbar { color: #f9eee2; }
+.dashboard-app-shell .topbar .account-trigger-text small { color: #d1c5bd; }
+.dashboard-app-shell .account-panel { color: var(--text); }
+.dashboard-app-shell .account-panel-heading span,
+.dashboard-app-shell .account-section-content { color: var(--muted); }
+
+.dashboard-app-shell .dashboard-main h1 {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0 8px 8px 0;
+  border-bottom: 3px solid var(--yellow);
+  color: #f9eee2;
+  font-family: 'Brush Script MT', 'Segoe Print', cursive;
+  font-size: clamp(30px, 2.45vw, 42px) !important;
+  font-style: italic;
+  font-weight: 600 !important;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+
+.dashboard-app-shell .page-header p { color: #cbbdb3; }
+.dashboard-app-shell .dashboard-main .card,
+.dashboard-app-shell .product-admin-card {
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+}
+.dashboard-app-shell .dashboard-main .card h2 {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.dashboard-app-shell .kitchen-column {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+}
+.dashboard-app-shell .kitchen-column[data-state="PENDIENTE"] { --column-accent: #805000; --column-tint: rgba(245, 166, 35, .17); }
+.dashboard-app-shell .kitchen-column[data-state="EN_PREPARACION"] { --column-accent: #a31155; --column-tint: rgba(195, 21, 98, .13); }
+.dashboard-app-shell .kitchen-column[data-state="LISTO"] { --column-accent: #176338; --column-tint: rgba(34, 197, 94, .15); }
+.dashboard-app-shell .kitchen-kpis .card[data-state="PENDIENTE"] > p:first-child { color: #805000 !important; }
+.dashboard-app-shell .kitchen-kpis .card[data-state="EN_PREPARACION"] > p:first-child { color: #a31155 !important; }
+.dashboard-app-shell .kitchen-kpis .card[data-state="LISTO"] > p:first-child { color: #176338 !important; }
+.dashboard-app-shell .kitchen-column h2 { color: var(--column-accent) !important; }
+.dashboard-app-shell .kitchen-column-dot { background: var(--column-accent) !important; }
+.dashboard-app-shell .kitchen-column-count { color: var(--column-accent) !important; background: var(--column-tint) !important; }
+.dashboard-app-shell .dashboard-main .tbl tbody tr:hover { background: rgba(44, 30, 18, .045); }
+.dashboard-app-shell .dashboard-main :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--yellow-dark);
+  outline-offset: 2px;
+}
+.dashboard-app-shell .dashboard-main :is(p, strong, span, td, small)[style*="var(--yellow)"] { color: #704100 !important; }
+.dashboard-app-shell .dashboard-main :is(p, strong, span, td, small)[style*="var(--success)"] { color: #176338 !important; }
+.dashboard-app-shell .dashboard-main :is(p, strong, span, td, small)[style*="var(--error)"] { color: #a52525 !important; }
+.dashboard-app-shell .dashboard-main button[style*="var(--success)"] { color: #176338 !important; }
+
+.dashboard-app-shell .product-stats strong,
+.dashboard-app-shell .panel-heading strong { color: #965000; }
+.dashboard-app-shell .form-chip { color: #875000; }
+.dashboard-app-shell .notice-warning {
+  border-color: #dfc581;
+  background: #fbf2dd;
+  color: #79500f;
+}
+.dashboard-app-shell .state-card {
+  border-style: solid;
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+.dashboard-app-shell .state-card.error {
+  border-color: rgba(165, 37, 37, .28);
+  background: #fbe8e7;
+  color: #a52525;
+}
+.dashboard-app-shell .status-pill.active { color: #176338; }
+.dashboard-app-shell .status-pill.inactive { color: #a52525; }
+.dashboard-app-shell .badge-nuevo,
+.dashboard-app-shell .badge-solicitada { color: #a31155; background: rgba(195, 21, 98, .13); }
+.dashboard-app-shell .badge-confirmado { color: #805000; background: rgba(245, 166, 35, .18); }
+.dashboard-app-shell .badge-preparacion { color: #91470b; background: rgba(251, 146, 60, .18); }
+.dashboard-app-shell .badge-listo,
+.dashboard-app-shell .badge-entregado,
+.dashboard-app-shell .badge-abierta,
+.dashboard-app-shell .badge-aprobada { color: #176338; background: rgba(34, 197, 94, .15); }
+.dashboard-app-shell .badge-cancelado,
+.dashboard-app-shell .badge-cerrada,
+.dashboard-app-shell .badge-rechazada { color: #a52525; background: rgba(239, 68, 68, .14); }
+
+@media (max-width: 680px) {
+  .dashboard-app-shell .dashboard-main h1 { font-size: clamp(28px, 7vw, 34px) !important; }
+  .dashboard-app-shell .dashboard-main .card { border-radius: 14px; }
+}
