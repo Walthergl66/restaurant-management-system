@@ -2,7 +2,7 @@
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
-import { getGreeting, getTurno } from '@/shared/lib/utils'
+import { getTurno } from '@/shared/lib/utils'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -24,10 +24,10 @@ export default function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar-greeting">
-        <div className="topbar-route"><span className="topbar-route-mark" aria-hidden="true" /> Estación Burger <span aria-hidden="true">/</span> <strong>{section}</strong></div>
-        <p className="topbar-welcome">{getGreeting()}, <strong>{name}</strong></p>
+        <div className="topbar-sign" aria-hidden="true"><span>EB</span></div>
+        <div className="topbar-title"><span>Estación Burger</span><p>{section}</p></div>
       </div>
-      <div className="topbar-date"><span>{format(now, "EEEE, d 'de' MMMM", { locale: es })}</span><strong>{getTurno()}</strong></div>
+      <div className="topbar-date"><strong>{getTurno()}</strong><span>{format(now, "EEEE, d 'de' MMMM", { locale: es })}</span></div>
       <details className="account-menu" onKeyDown={(event) => {
         if (event.key === 'Escape') {
           event.currentTarget.open = false
