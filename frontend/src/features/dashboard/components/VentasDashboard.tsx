@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { ArrowRight, Sandwich, Wallet, BarChart3, Star, Coins, ShoppingBag, Ticket, CreditCard } from 'lucide-react'
+import { ArrowRight, Sandwich, Store, BarChart3, Star, Coins, ShoppingBag, Ticket, CreditCard } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
 import { useReporte, useReporteSemana, usePedidos, useCaja } from '../hooks'
@@ -40,7 +40,7 @@ export default function VentasDashboard() {
         </div>
         <div className={styles.panel}>
           <div className={styles.panelHeader}><h2>Caja del turno</h2><Link href="/caja">Gestionar caja <ArrowRight size={17}/></Link></div>
-          <div className={styles.emptyState}><Wallet size={64}/>{loadCaja ? <strong>Consultando…</strong> : caja ? <><strong className={styles.open}>Abierta</strong><span>Apertura inicial {fmt(caja.aperturaInicial)}</span></> : <><strong className={styles.closed}>Sin abrir</strong><span>La caja del turno aún no ha sido abierta.</span></>}</div>
+          <div className={styles.emptyState}><Store size={76} aria-hidden="true"/>{loadCaja ? <strong>Consultando…</strong> : caja ? <><strong className={styles.open}>Abierta</strong><span>Apertura inicial {fmt(caja.aperturaInicial)}</span></> : <><strong className={styles.closed}>Sin abrir</strong><span>La caja del turno aún no ha sido abierta.</span></>}</div>
         </div>
       </section>
       <section className={styles.metrics} aria-label="Ventas del día">
