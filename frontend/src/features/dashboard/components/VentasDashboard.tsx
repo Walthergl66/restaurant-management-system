@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { ArrowRight, ReceiptText, Wallet, BarChart3, Star, Coins, ShoppingBag, Ticket, CreditCard } from 'lucide-react'
+import { ArrowRight, Sandwich, Wallet, BarChart3, Star, Coins, ShoppingBag, Ticket, CreditCard } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
 import { useReporte, useReporteSemana, usePedidos, useCaja } from '../hooks'
@@ -36,7 +36,7 @@ export default function VentasDashboard() {
       <section className={styles.operationGrid} aria-label="Operación">
         <div className={styles.panel}>
           <div className={styles.panelHeader}><h2>Pedidos recientes</h2><Link href="/pedidos">Ver pedidos <ArrowRight size={17} /></Link></div>
-          {loadP ? <p className={styles.empty}>Cargando pedidos…</p> : pedidos.length === 0 ? <div className={styles.emptyState}><ReceiptText size={64}/><strong>Aún no hay pedidos recientes</strong><span>Los nuevos pedidos aparecerán aquí.</span></div> : <div className={styles.tickets}>{pedidos.map(p => <Link className={styles.ticket} href={`/pedidos/${encodeURIComponent(p.codigo)}`} key={p.codigo}><strong>#{p.codigo}</strong><span>{ESTADO_PEDIDO[p.estado]?.label ?? p.estado}</span><span>{p.mesaId != null ? `Mesa ${p.mesaId}` : 'Sin mesa'} · {p.lineas?.slice(0,2).map(l => `${l.cantidad} × ${l.nombreProducto}`).join(' · ') || 'Sin productos'}</span><b>{fmt(p.total)}</b></Link>)}</div>}
+          {loadP ? <p className={styles.empty}>Cargando pedidos…</p> : pedidos.length === 0 ? <div className={styles.emptyState}><Sandwich size={76}/><strong>Aún no hay pedidos recientes</strong><span>Los nuevos pedidos aparecerán aquí.</span></div> : <div className={styles.tickets}>{pedidos.map(p => <Link className={styles.ticket} href={`/pedidos/${encodeURIComponent(p.codigo)}`} key={p.codigo}><strong>#{p.codigo}</strong><span>{ESTADO_PEDIDO[p.estado]?.label ?? p.estado}</span><span>{p.mesaId != null ? `Mesa ${p.mesaId}` : 'Sin mesa'} · {p.lineas?.slice(0,2).map(l => `${l.cantidad} × ${l.nombreProducto}`).join(' · ') || 'Sin productos'}</span><b>{fmt(p.total)}</b></Link>)}</div>}
         </div>
         <div className={styles.panel}>
           <div className={styles.panelHeader}><h2>Caja del turno</h2><Link href="/caja">Gestionar caja <ArrowRight size={17}/></Link></div>
