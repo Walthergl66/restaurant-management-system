@@ -1,7 +1,9 @@
 .dashboard { max-width: 1600px; margin: auto; display:flex; flex-direction:column; gap:20px; color:#181619; }
-.header { display:flex; align-items:center; gap:28px; color:#f9eee2; min-height:76px; }
+.header { display:flex; align-items:center; gap:42px; color:#f9eee2; min-height:88px; }
 .header h1,.panelHeader h2 { font-family:'Brush Script MT','Segoe Script',cursive; font-style:italic; font-weight:700; line-height:1.05; }
-.header h1 { font-size:clamp(38px,4vw,64px); border-bottom:5px solid #f5a000; padding:0 12px 5px; border-radius:0 0 35% 5%; }
+.header h1 { position:relative; font-family:'Brush Script MT','Freestyle Script','Segoe Print',cursive; font-size:clamp(46px,5vw,78px); font-weight:700; line-height:1; letter-spacing:-.035em; border:0; padding:0 35px 14px 0; }
+.header h1::after { content:''; position:absolute; left:12%; bottom:2px; width:72%; height:7px; border-radius:100%; background:#ffa500; transform:rotate(-4deg); }
+.header h1::before { content:''; position:absolute; right:0; top:0; width:32px; height:34px; background:linear-gradient(-55deg,transparent 40%,#ffa500 41% 58%,transparent 59%) 0 0/18px 17px no-repeat,linear-gradient(-20deg,transparent 40%,#ffa500 41% 58%,transparent 59%) 10px 11px/21px 10px no-repeat,linear-gradient(15deg,transparent 40%,#ffa500 41% 58%,transparent 59%) 11px 24px/21px 9px no-repeat; }
 .header span { border-left:1px solid #aaa; padding-left:28px; font-size:20px; font-weight:700; }
 .operationGrid,.analytics { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 .panel { background:#f8eee2; border-radius:16px; min-width:0; padding:20px 26px 30px; color:#171619; }
@@ -21,4 +23,4 @@
 .products { margin-top:20px; }.products div { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #dbcfc2; }.products strong { flex:1; }.empty { padding:28px; color:#655b52; }
 .dashboard a:focus-visible { outline:3px solid #e50069; outline-offset:3px; }
 @media(max-width:950px) { .operationGrid,.analytics { grid-template-columns:1fr; }.metrics { grid-template-columns:repeat(2,1fr); gap:15px 0; }.metrics div:nth-child(3) { border-left:0; } }
-@media(max-width:600px) { .header { align-items:flex-start; flex-direction:column; gap:8px; }.header span { border:0; padding:0; font-size:16px; }.panel { padding:18px; }.metrics div { padding:0 14px; }.metrics strong { font-size:22px; } }
+@media(max-width:600px) { .header { align-items:flex-start; flex-direction:column; gap:8px; }.header h1 { font-size:clamp(42px,10vw,60px); }.header span { border:0; padding:0; font-size:16px; }.panel { padding:18px; }.metrics div { padding:0 14px; }.metrics strong { font-size:22px; } }
