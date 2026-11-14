@@ -17,5 +17,5 @@
 .tickets { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:10px; margin-top:20px; }.ticket { display:flex; flex-direction:column; gap:6px; padding:12px; background:white; color:#242022; border:1px solid #d9c9b9; border-radius:8px; text-decoration:none; }.ticket span { font-size:13px; }.ticket b { color:#bd0055; }
 .products { margin-top:20px; }.products div { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #dbcfc2; }.products strong { flex:1; }.empty { padding:28px; color:#655b52; }
 .dashboard a:focus-visible { outline:3px solid #e50069; outline-offset:3px; }
-@media(max-width:950px) { .operationGrid,.analytics { grid-template-columns:1fr; }.metrics { grid-template-columns:repeat(2,1fr); gap:15px 0; }.metrics div:nth-child(3) { border-left:0; } }
+@media(max-width:1150px) { .operationGrid,.analytics { grid-template-columns:minmax(0,1fr); }.metrics { grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px 0; }.metrics div:nth-child(3) { border-left:0; } }
 @media(max-width:600px) { .panel { padding:18px; }.metrics div { padding:0 14px; }.metrics strong { font-size:22px; } }
