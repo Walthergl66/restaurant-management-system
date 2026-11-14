@@ -174,7 +174,7 @@ body {
 .badge-rechazada  { background: rgba(239,68,68,.18);  color: #ef4444; }
 
 /* Navegación principal: grupos compactos para el trabajo de cada turno. */
-.sidebar { width: 212px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 12px; height: 100dvh; position: sticky; top: 0; overflow-y: auto; }
+.sidebar { width: 260px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 12px; height: 100dvh; position: sticky; top: 0; overflow-y: auto; }
 .sidebar-brand { display: flex; align-items: center; flex-direction: column; padding: 8px 4px 16px; }
 .sidebar-brand-name { display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: .15em; color: var(--yellow); }
 .sidebar-brand-name span { color: var(--fuchsia); }
