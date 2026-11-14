@@ -83,6 +83,9 @@ caja del turno, métricas de ventas y métodos de pago, una gráfica de ventas d
 los accesos de operación llevan a pedidos y caja. Los datos se obtienen mediante
 hooks de reportes, pedidos y caja y muestran estados de carga y vacío. La autorización
 por permisos que envuelve la pantalla se conserva.
+En anchos de hasta 1150 px, las tarjetas operativas y analíticas pasan a una columna
+y las métricas se organizan en dos columnas para mantener espacio legible junto a la
+navegación lateral.
 
 El encabezado del área autenticada abarca el ancho de la ventana e integra el logo,
 el título contextual del dashboard y el menú de cuenta. Debajo, la navegación lateral
