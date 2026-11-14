@@ -96,6 +96,10 @@ espacio de sus zonas y trunca texto largo para ayudar a evitar solapamientos ent
 título y el menú de cuenta. En el dashboard, los
 pedidos recientes se presentan como tickets visuales y los bloques de operación y
 estadísticas usan iconografía para facilitar su lectura rápida.
+La altura del encabezado usa límites fluidos: en escritorio amplio varía entre 138 y
+250 px según el ancho; entre 901 y 1300 px mide 122 px, en tablet de 681 a 900 px
+mide 112 px y en móvil conserva 82 px. Así deja más espacio vertical al contenido
+en pantallas grandes y medianas.
 El menú de cuenta ofrece perfil, configuración informativa y cierre de sesión. En
 `/dashboard`, “Kitchen pass” y “Resumen operativo” aparecen en el encabezado solo
 para usuarios con `reportes:ver`; los controles de cuenta siguen disponibles para
