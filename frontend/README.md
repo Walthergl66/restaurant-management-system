@@ -77,13 +77,14 @@ excepción documentada de la dirección `shared → feature`).
 
 ### Acceso web
 
-La pantalla de acceso acepta correo o nombre de usuario y contraseña. En pantallas
-anchas muestra el logo y el formulario en dos paneles; hasta 680 px prioriza el
-formulario y reduce el logo y los márgenes, con un ajuste adicional hasta 380 px.
-El acceso incluye control para mostrar u ocultar la contraseña, recuperación que
-indica contactar a un administrador, y mensajes en línea para campos incompletos
-o errores de autenticación. Los campos y botones muestran un indicador de foco de
-teclado; los controles de contraseña y recuperación tienen áreas táctiles amplias.
+La pantalla de acceso acepta correo o nombre de usuario y contraseña. En escritorio
+presenta una composición dividida: un fondo fotográfico del pase (`public/login-brand-background.png`)
+con el logo superpuesto como elemento independiente, junto a un formulario en tono crema con título manuscrito, campos claros y acción ámbar. En pantallas de hasta 680 px oculta la
+fotografía y muestra el formulario compacto con el logo; hasta 380 px reduce los
+márgenes. El acceso incluye control para mostrar u ocultar la contraseña, recuperación
+que indica contactar a un administrador y mensajes en línea para campos incompletos
+o errores de autenticación. Los campos y botones muestran foco de teclado; los controles
+de contraseña y recuperación tienen áreas táctiles amplias.
 
 ---
 
