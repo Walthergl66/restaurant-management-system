@@ -84,7 +84,7 @@ export default function PedidosScreen() {
           : filtered.length === 0
             ? <p style={{ padding:32, textAlign:'center', color:'var(--dim)' }}>Sin pedidos</p>
             : (
-              <table className="tbl">
+              <div className="table-scroll"><table className="tbl">
                 <thead>
                   <tr>
                     {['Código','Mesa','Ítems','Total','Estado','Creado'].map(h => <th key={h}>{h}</th>)}
@@ -102,7 +102,7 @@ export default function PedidosScreen() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )
         }
       </div>
