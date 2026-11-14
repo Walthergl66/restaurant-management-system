@@ -176,15 +176,14 @@ body {
 /* Navegación principal: grupos compactos para el trabajo de cada turno. */
 .sidebar { width: 260px; flex-shrink: 0; background: #151311; border-right: 1px solid #39312a; display: flex; flex-direction: column; padding: 0 12px 16px; height: 100dvh; position: sticky; top: 0; overflow-y: auto; }
 .sidebar-brand { display: flex; align-items: center; justify-content: center; min-height: 76px; margin: 0 -12px 14px; padding: 10px 16px; border-bottom: 1px solid #39312a; }
-.sidebar-ticket { position: relative; overflow: hidden; border-radius: 9px; background: linear-gradient(180deg, #e91e8c 0 5px, #f5a623 5px, #ffc24d 100%); color: #1c1712; padding: 12px 13px 15px; min-width: 190px; max-width: 100%; text-align: center; line-height: 1; font-size: 14px; font-weight: 900; letter-spacing: .01em; white-space: nowrap; animation: ticket-ad-glow 2.8s ease-in-out infinite; }
-.sidebar-ticket::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle 7px at 0 50%, #151311 98%, transparent 100%), radial-gradient(circle 7px at 100% 50%, #151311 98%, transparent 100%); }
-.sidebar-ticket::after { content: ''; position: absolute; top: 8px; right: 34px; bottom: 11px; border-right: 1px dashed rgba(28, 23, 18, .5); pointer-events: none; }
-.sidebar-ticket-short { display: none; }
-@keyframes ticket-ad-glow {
-  0%, 100% { filter: drop-shadow(0 0 2px rgba(233, 30, 140, .16)); }
-  50% { filter: drop-shadow(0 0 8px rgba(233, 30, 140, .48)) drop-shadow(0 0 14px rgba(245, 166, 35, .2)); }
+.sidebar-brand-emblem { position: relative; display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border: 2px solid #f5a623; border-radius: 50%; background: #211b15; box-shadow: inset 0 0 0 3px #151311, inset 0 0 0 4px rgba(245, 166, 35, .45); color: #ffc24d; font-size: 12px; font-weight: 900; letter-spacing: -.06em; }
+.sidebar-brand-emblem::after { content: ''; position: absolute; top: 4px; right: 3px; width: 5px; height: 5px; border: 1px solid #151311; border-radius: 50%; background: #e91e8c; animation: beacon-pulse 2.8s ease-in-out infinite; }
+.sidebar-brand-name { color: #fff5e8; font-size: 13px; font-weight: 900; letter-spacing: .045em; text-transform: uppercase; white-space: nowrap; }
+@keyframes beacon-pulse {
+  0%, 100% { opacity: .8; box-shadow: 0 0 2px rgba(233, 30, 140, .28); }
+  50% { opacity: 1; box-shadow: 0 0 8px rgba(233, 30, 140, .72); }
 }
-@media (prefers-reduced-motion: reduce) { .sidebar-ticket { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sidebar-brand-emblem::after { animation: none; } }
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 14px; }
 .sidebar-group { display: flex; flex-direction: column; gap: 2px; }
 .sidebar-group-label { padding: 4px 12px; color: #aaa; font-size: 12px; font-weight: 600; }
@@ -194,10 +193,7 @@ body {
 @media (max-width: 680px) {
   .sidebar { width: 64px; padding: 0 6px 12px; }
   .sidebar-brand { min-height: 68px; justify-content: center; margin: 0 -6px 12px; padding: 8px 6px; }
-  .sidebar-ticket { min-width: 0; padding: 10px 8px 12px; font-size: 13px; }
-  .sidebar-ticket::after { display: none; }
-  .sidebar-ticket-name, .sidebar-group-label, .sidebar-item-label, .sidebar-user { display: none; }
-  .sidebar-ticket-short { display: inline; font-weight: 900; }
+  .sidebar-brand-name, .sidebar-group-label, .sidebar-item-label, .sidebar-user { display: none; }
   .sidebar .nav-item { justify-content: center; padding: 10px; }
   .sidebar-nav { gap: 12px; }
 }
