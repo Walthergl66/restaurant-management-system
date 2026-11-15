@@ -109,12 +109,13 @@ encabezado y los controles de cuenta están disponibles en todas las rutas auten
 Escape cierra el menú y devuelve el foco al control que lo abre.
 
 La navegación lateral adapta su presentación al ancho disponible. Por encima de
-900 px, el control del encabezado permite alternar entre la barra completa y una
-columna de iconos de 76 px. Entre 681 y 900 px se muestra directamente la columna
-compacta. Hasta 680 px la barra queda fuera del área visible y el botón de menú del
-encabezado abre un panel superpuesto con las etiquetas; se cierra al elegir una ruta,
-tocar el fondo oscurecido o pulsar Escape. El panel móvil aparece debajo del
-encabezado y permite desplazarse por todas las secciones.
+900 px inicia plegada como una columna de iconos de 76 px y vuelve a plegarse
+automáticamente al elegir una sección; el control del encabezado permite expandirla
+cuando se necesitan las etiquetas. Entre 681 y 900 px se muestra directamente la
+columna compacta. Hasta 680 px la barra queda fuera del área visible y el botón de
+menú del encabezado abre un panel superpuesto con las etiquetas; se cierra al elegir
+una ruta, tocar el fondo oscurecido o pulsar Escape. El panel móvil aparece debajo
+del encabezado y permite desplazarse por todas las secciones.
 
 ### Identidad visual del área autenticada
 
