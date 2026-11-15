@@ -2,14 +2,31 @@
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { hasPermiso, useAuthStore } from '@/features/auth'
+import { useAuthStore } from '@/features/auth'
 import toast from 'react-hot-toast'
+
+const HEADER_SUBTITLES: Record<string, string> = {
+  '/dashboard': 'Resumen operativo',
+  '/pedidos': 'Pedidos',
+  '/cocina': 'Cocina',
+  '/mesas': 'Mesas',
+  '/cuentas': 'Cuentas',
+  '/caja': 'Caja del turno',
+  '/entregas': 'Entregas',
+  '/productos': 'Catálogo',
+  '/usuarios': 'Usuarios y roles',
+  '/reportes': 'Reportes',
+  '/anulaciones': 'Anulaciones',
+  '/auditoria': 'Auditoría',
+}
 
 export default function TopBar() {
   const { user, logout } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
-  const showDashboardTitle = pathname === '/dashboard' && hasPermiso(user, 'reportes:ver')
+  const headerSubtitle = pathname.startsWith('/pedidos/')
+    ? 'Detalle del pedido'
+    : HEADER_SUBTITLES[pathname] ?? 'Administración'
   const name = user?.nombre || user?.username || 'Equipo'
 
   async function handleLogout() {
@@ -24,7 +41,7 @@ export default function TopBar() {
         <Image src="/login-logo-propuesta.png" alt="Estación Burger" width={270} height={220} priority />
       </div>
       <div className="topbar-greeting">
-        {showDashboardTitle && <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>Resumen operativo</span></div>}
+        <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>{headerSubtitle}</span></div>
       </div>
       <details className="account-menu" onKeyDown={(event) => {
         if (event.key === 'Escape') {
