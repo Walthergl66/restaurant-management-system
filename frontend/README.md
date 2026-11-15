@@ -108,6 +108,14 @@ El menú de cuenta ofrece perfil, configuración informativa y cierre de sesión
 encabezado y los controles de cuenta están disponibles en todas las rutas autenticadas;
 Escape cierra el menú y devuelve el foco al control que lo abre.
 
+La navegación lateral adapta su presentación al ancho disponible. Por encima de
+900 px, el control del encabezado permite alternar entre la barra completa y una
+columna de iconos de 76 px. Entre 681 y 900 px se muestra directamente la columna
+compacta. Hasta 680 px la barra queda fuera del área visible y el botón de menú del
+encabezado abre un panel superpuesto con las etiquetas; se cierra al elegir una ruta,
+tocar el fondo oscurecido o pulsar Escape. El panel móvil aparece debajo del
+encabezado y permite desplazarse por todas las secciones.
+
 ### Identidad visual del área autenticada
 
 Las rutas protegidas comparten el shell carbón con navegación ámbar y acentos
@@ -120,8 +128,9 @@ acentos por estado dentro de paneles crema. El login mantiene su composición pr
 
 ### Adaptación responsive de operaciones
 
-El espacio autenticado ajusta su shell por ancho de pantalla: por debajo de 900 px
-la navegación lateral se compacta a iconos y el contenido usa márgenes fluidos.
+El espacio autenticado ajusta su shell por ancho de pantalla: entre 681 y 900 px
+la navegación lateral se compacta a iconos, y hasta 680 px se convierte en un panel
+desplegable desde el encabezado. El contenido usa márgenes fluidos.
 Las columnas de cocina, salón y reportes se apilan en vistas estrechas; los KPI de
 mesas y cocina se reorganizan, y los formularios del modal de nuevo pedido apilan
 sus campos en móvil. Las tablas conservan sus columnas y permiten desplazamiento
