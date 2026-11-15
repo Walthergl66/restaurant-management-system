@@ -593,8 +593,11 @@ Elegí implementar los contratos con **Java `record` (DTO)** + **Jakarta Bean Va
 
 **¿Cómo verifiqué que la solución funciona en mi proyecto?**
 - Compilé el backend con `./mvnw compile -DskipTests` → `BUILD SUCCESS` (354 archivos fuente, incluidos los 3 nuevos DTOs).
-- Documenté los 5 casos de prueba mínimos obligatorios (P1: JSON válido → 201; P2: campo obligatorio faltante → 400 con `fieldErrors`; P3: tipo incorrecto → error controlado sin persistir; más casos de idempotencia y consulta).
-- Las pruebas de integración con Testcontainers requieren Docker, que no estaba disponible en este entorno, pero el código de validación y los DTOs están listos para ejecutarse una vez levantado el backend.
+- Ejecuté pruebas de integración con Testcontainers + PostgreSQL 16.15 (Docker Desktop v28.0.4):
+  - `ClientesIntegrationTest`: 6 tests, 0 fallos, 0 errores ✅
+  - `ClientesValidacionIntegrationTest`: 4 tests, 0 fallos, 0 errores ✅
+  - Total: 10 tests, `BUILD SUCCESS` ✅
+- Las pruebas de validación cubren específicamente los contratos JSON: rechazo de lista vacía de ítems, cantidad cero/ausente, línea nula o sin producto, y que un pedido válido sigue creándose correctamente.
 
 ---
 
