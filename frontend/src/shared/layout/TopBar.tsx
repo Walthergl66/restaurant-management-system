@@ -1,5 +1,5 @@
 'use client'
-import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Settings, UserRound, X } from 'lucide-react'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
@@ -20,7 +20,14 @@ const HEADER_SUBTITLES: Record<string, string> = {
   '/auditoria': 'Auditoría',
 }
 
-export default function TopBar() {
+type TopBarProps = {
+  sidebarCollapsed: boolean
+  mobileMenuOpen: boolean
+  onToggleSidebar: () => void
+  onToggleMobileMenu: () => void
+}
+
+export default function TopBar({ sidebarCollapsed, mobileMenuOpen, onToggleSidebar, onToggleMobileMenu }: TopBarProps) {
   const { user, logout } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
@@ -40,6 +47,26 @@ export default function TopBar() {
       <div className="topbar-brand" aria-label="Estación Burger">
         <Image src="/login-logo-propuesta.png" alt="Estación Burger" width={270} height={220} priority />
       </div>
+      <button
+        className="sidebar-toggle sidebar-toggle-desktop"
+        type="button"
+        aria-label={sidebarCollapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
+        aria-controls="primary-sidebar"
+        aria-expanded={!sidebarCollapsed}
+        onClick={onToggleSidebar}
+      >
+        {sidebarCollapsed ? <PanelLeftOpen size={19} aria-hidden="true" /> : <PanelLeftClose size={19} aria-hidden="true" />}
+      </button>
+      <button
+        className="sidebar-toggle sidebar-toggle-mobile"
+        type="button"
+        aria-label={mobileMenuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
+        aria-controls="primary-sidebar"
+        aria-expanded={mobileMenuOpen}
+        onClick={onToggleMobileMenu}
+      >
+        {mobileMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+      </button>
       <div className="topbar-greeting">
         <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>{headerSubtitle}</span></div>
       </div>
