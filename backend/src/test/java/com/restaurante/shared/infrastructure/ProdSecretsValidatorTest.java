@@ -74,7 +74,12 @@ class ProdSecretsValidatorTest {
     @Test
     void correoAdministradorDebeSerValidoYCaberenEnNombreDeUsuario() {
         IllegalStateException e = assertThrows(IllegalStateException.class,
-                con("ADMIN_INITIAL_EMAIL", "correo-invalido")::validar);
+                con("DB_USER", "restaurante",
+                        "DB_PASSWORD", "s3cr3t0",
+                        "ADMIN_INITIAL_EMAIL", "correo-invalido",
+                        "ADMIN_INITIAL_PASSWORD", "ClaveFuerte123!",
+                        "JWT_SECRET", "x".repeat(64),
+                        "CORS_ALLOWED_ORIGINS", "https://app.example.com")::validar);
         assertTrue(e.getMessage().contains("ADMIN_INITIAL_EMAIL"));
     }
 }

@@ -83,18 +83,61 @@ caja del turno, métricas de ventas y métodos de pago, una gráfica de ventas d
 los accesos de operación llevan a pedidos y caja. Los datos se obtienen mediante
 hooks de reportes, pedidos y caja y muestran estados de carga y vacío. La autorización
 por permisos que envuelve la pantalla se conserva.
+En anchos de hasta 1150 px, las tarjetas operativas y analíticas pasan a una columna
+y las métricas se organizan en dos columnas para mantener espacio legible junto a la
+navegación lateral.
 
-La navegación lateral compartida muestra el logo de Estación Burger y agrupa los
-accesos por Operación, Administración y Control. Cada sección usa iconos con
-etiquetas y mantiene el filtrado por permisos del usuario. En el dashboard, los
+El encabezado del área autenticada abarca el ancho de la ventana e integra el logo,
+la marca tipográfica “Kitchen pass”, el contexto de la ruta activa y el menú de cuenta.
+El subtítulo muestra “Resumen operativo” en `/dashboard`, “Detalle del pedido” en
+`/pedidos/[codigo]` y el nombre de la sección en las demás rutas autenticadas. Debajo,
+la navegación lateral
+agrupa accesos por Operación, Administración y Control con iconos y etiquetas; no
+repite el logo y conserva el filtrado por permisos. El espacio de trabajo compacta
+su composición en pantallas pequeñas. En escritorio amplio, el encabezado limita el
+espacio de sus zonas y trunca texto largo para ayudar a evitar solapamientos entre el
+título y el menú de cuenta. En el dashboard, los
 pedidos recientes se presentan como tickets visuales y los bloques de operación y
 estadísticas usan iconografía para facilitar su lectura rápida.
-El encabezado compartido concentra la cuenta en un menú desplegable con perfil,
-configuración informativa y cierre de sesión. En `/dashboard`, el título “Kitchen
-pass” y “Resumen operativo” se muestran en esa barra únicamente para usuarios con
-el permiso `reportes:ver`; el panel conserva los controles de cuenta para todos los
-usuarios autenticados. El menú se puede abrir con teclado y Escape lo cierra
-devolviendo el foco al control que lo abre.
+La altura del encabezado usa límites fluidos: en escritorio amplio varía entre 104 y
+128 px según el ancho; entre 901 y 1300 px mide 104 px, en tablet de 681 a 900 px
+mide 88 px y en móvil conserva 82 px. El título y los controles de cuenta reducen su
+escala para mantener el encabezado compacto; el logo usa casi toda la altura
+disponible para permanecer reconocible.
+El menú de cuenta ofrece perfil, configuración informativa y cierre de sesión. El
+encabezado y los controles de cuenta están disponibles en todas las rutas autenticadas;
+Escape cierra el menú y devuelve el foco al control que lo abre.
+
+La navegación lateral adapta su presentación al ancho disponible. Por encima de
+900 px inicia plegada como una columna de iconos de 76 px. Al acercar el cursor o
+llevar el foco de teclado sobre la barra, se expande; al alejar el cursor o mover el
+foco fuera, vuelve a plegarse. El control del encabezado también permite alternar
+su estado. Entre 681 y 900 px se muestra directamente la columna compacta. Hasta
+680 px la barra queda fuera del área visible y el botón de menú del encabezado abre
+un panel superpuesto con las etiquetas; se cierra al elegir una ruta, tocar el fondo
+oscurecido o pulsar Escape. El panel móvil aparece debajo del encabezado y permite
+desplazarse por todas las secciones.
+
+### Identidad visual del área autenticada
+
+Las rutas protegidas comparten el shell carbón con navegación ámbar y acentos
+magenta. Las superficies de trabajo, tarjetas, formularios y tablas usan una paleta
+crema con texto oscuro; los títulos principales llevan tipografía manuscrita y
+subrayado ámbar. Los estados mantienen colores semánticos con tonos legibles sobre
+crema, y los avisos y estados vacíos siguen el mismo tratamiento de superficie.
+La cocina conserva su distinción entre pendientes, en preparación y listos mediante
+acentos por estado dentro de paneles crema. El login mantiene su composición propia.
+
+### Adaptación responsive de operaciones
+
+El espacio autenticado ajusta su shell por ancho de pantalla: por encima de 900 px
+la barra lateral se expande al pasar el cursor o el foco y se repliega al salir; entre
+681 y 900 px se compacta a iconos, y hasta 680 px se convierte en un panel
+desplegable desde el encabezado. El contenido usa márgenes fluidos.
+Las columnas de cocina, salón y reportes se apilan en vistas estrechas; los KPI de
+mesas y cocina se reorganizan, y los formularios del modal de nuevo pedido apilan
+sus campos en móvil. Las tablas conservan sus columnas y permiten desplazamiento
+horizontal dentro de su contenedor cuando el ancho disponible no basta.
 
 ### Acceso web
 

@@ -49,7 +49,7 @@ export default function SalonDashboard() {
         <KpiCard label="Por cobrar"     value={loadC ? '...' : fmt(porCobrar)} icon={<Receipt size={17}/>} color="var(--yellow)" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16 }}>
+      <div className="salon-overview-grid">
 
         {/* pedidos activos */}
         <div className="card">

@@ -74,7 +74,7 @@ export default function NuevoPedidoModal({ onClose }: { onClose: () => void }) {
 
         <QueryBoundary queries={[mesasQuery, productosQuery]} label="las mesas y los productos del pedido">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="new-order-fields">
             <div>
               <label style={labelStyle} htmlFor="nuevo-pedido-mesa">MESA</label>
               <select id="nuevo-pedido-mesa" className="input" value={mesaId} onChange={e => setMesaId(e.target.value)} disabled={cargandoMesas || crear.isPending}>

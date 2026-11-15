@@ -34,9 +34,9 @@ export default function CocinaDashboard() {
       </div>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
+      <div className="kitchen-kpis">
         {COLS.map(c => (
-          <div key={c.estado} className="card" style={{ textAlign: 'center' }}>
+          <div key={c.estado} className="card" data-state={c.estado} style={{ textAlign: 'center' }}>
             <p style={{ fontSize: 30, fontWeight: 900, color: c.color }}>
               {isLoading ? '...' : comandas.filter(x => x.estado === c.estado).length}
             </p>

@@ -1,6 +1,5 @@
 'use client'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ShoppingBag, Package, Table2, DollarSign,
@@ -24,17 +23,36 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; group: '
   { href: '/auditoria', group: 'Control',   label: 'Auditoría',  icon: ClipboardList,permisos: ['auditoria:ver'] },
 ]
 
-export default function Sidebar() {
+type SidebarProps = {
+  onNavigate?: () => void
+  onExpand?: () => void
+  onCollapse?: () => void
+}
+
+export default function Sidebar({ onNavigate, onExpand, onCollapse }: SidebarProps) {
   const pathname = usePathname()
   const { user } = useAuthStore()
 
   const nav = NAV.filter((item) => !item.permisos || hasPermiso(user, ...item.permisos))
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-brand" aria-label="Estación Burger">
-        <Image className="sidebar-logo" src="/login-logo-propuesta.png" alt="Estación Burger" width={220} height={200} priority />
-      </div>
+    <aside
+      className="sidebar"
+      id="primary-sidebar"
+      aria-label="Navegación principal"
+      onPointerEnter={event => {
+        if (event.pointerType === 'mouse' && window.matchMedia('(min-width: 901px)').matches) onExpand?.()
+      }}
+      onPointerLeave={event => {
+        if (event.pointerType === 'mouse' && window.matchMedia('(min-width: 901px)').matches) onCollapse?.()
+      }}
+      onFocusCapture={() => {
+        if (window.matchMedia('(min-width: 901px)').matches) onExpand?.()
+      }}
+      onBlurCapture={event => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null) && window.matchMedia('(min-width: 901px)').matches) onCollapse?.()
+      }}
+    >
       <nav className="sidebar-nav" aria-label="Navegación principal">
         {(['Operación', 'Administración', 'Control'] as const).map((group) => {
           const items = nav.filter((item) => item.group === group)
@@ -43,7 +61,7 @@ export default function Sidebar() {
             <p className="sidebar-group-label">{group}</p>
             {items.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(`${href}/`))
-              return <Link key={href} href={href} className={`nav-item${active ? ' active' : ''}`} aria-current={active ? 'page' : undefined} aria-label={label} title={label}>
+              return <Link key={href} href={href} className={`nav-item${active ? ' active' : ''}`} aria-current={active ? 'page' : undefined} aria-label={label} title={label} onClick={onNavigate}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                 <span className="sidebar-item-label">{label}</span>
               </Link>

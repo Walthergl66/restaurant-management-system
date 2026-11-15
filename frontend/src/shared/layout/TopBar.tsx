@@ -1,14 +1,39 @@
 'use client'
-import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Settings, UserRound, X } from 'lucide-react'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { hasPermiso, useAuthStore } from '@/features/auth'
+import { useAuthStore } from '@/features/auth'
 import toast from 'react-hot-toast'
 
-export default function TopBar() {
+const HEADER_SUBTITLES: Record<string, string> = {
+  '/dashboard': 'Resumen operativo',
+  '/pedidos': 'Pedidos',
+  '/cocina': 'Cocina',
+  '/mesas': 'Mesas',
+  '/cuentas': 'Cuentas',
+  '/caja': 'Caja del turno',
+  '/entregas': 'Entregas',
+  '/productos': 'Catálogo',
+  '/usuarios': 'Usuarios y roles',
+  '/reportes': 'Reportes',
+  '/anulaciones': 'Anulaciones',
+  '/auditoria': 'Auditoría',
+}
+
+type TopBarProps = {
+  sidebarCollapsed: boolean
+  mobileMenuOpen: boolean
+  onToggleSidebar: () => void
+  onToggleMobileMenu: () => void
+}
+
+export default function TopBar({ sidebarCollapsed, mobileMenuOpen, onToggleSidebar, onToggleMobileMenu }: TopBarProps) {
   const { user, logout } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
-  const showDashboardTitle = pathname === '/dashboard' && hasPermiso(user, 'reportes:ver')
+  const headerSubtitle = pathname.startsWith('/pedidos/')
+    ? 'Detalle del pedido'
+    : HEADER_SUBTITLES[pathname] ?? 'Administración'
   const name = user?.nombre || user?.username || 'Equipo'
 
   async function handleLogout() {
@@ -19,8 +44,31 @@ export default function TopBar() {
 
   return (
     <header className="topbar">
+      <div className="topbar-brand" aria-label="Estación Burger">
+        <Image src="/login-logo-propuesta.png" alt="Estación Burger" width={270} height={220} priority />
+      </div>
+      <button
+        className="sidebar-toggle sidebar-toggle-desktop"
+        type="button"
+        aria-label={sidebarCollapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
+        aria-controls="primary-sidebar"
+        aria-expanded={!sidebarCollapsed}
+        onClick={onToggleSidebar}
+      >
+        {sidebarCollapsed ? <PanelLeftOpen size={19} aria-hidden="true" /> : <PanelLeftClose size={19} aria-hidden="true" />}
+      </button>
+      <button
+        className="sidebar-toggle sidebar-toggle-mobile"
+        type="button"
+        aria-label={mobileMenuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
+        aria-controls="primary-sidebar"
+        aria-expanded={mobileMenuOpen}
+        onClick={onToggleMobileMenu}
+      >
+        {mobileMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+      </button>
       <div className="topbar-greeting">
-        {showDashboardTitle && <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>Resumen operativo</span></div>}
+        <div className="topbar-dashboard-title"><h1>Kitchen pass</h1><span>{headerSubtitle}</span></div>
       </div>
       <details className="account-menu" onKeyDown={(event) => {
         if (event.key === 'Escape') {
@@ -30,7 +78,7 @@ export default function TopBar() {
       }}>
         <summary className="account-trigger" aria-label="Menú de cuenta">
           <span className="account-avatar" aria-hidden="true"><UserRound size={21} /></span>
-          <span className="account-trigger-text"><strong>{name}</strong></span>
+          <span className="account-trigger-text"><strong>{name}</strong><small>{user?.rol || 'Equipo'}</small></span>
           <ChevronDown size={16} aria-hidden="true" />
         </summary>
         <div className="account-panel">
