@@ -88,7 +88,10 @@ y las métricas se organizan en dos columnas para mantener espacio legible junto
 navegación lateral.
 
 El encabezado del área autenticada abarca el ancho de la ventana e integra el logo,
-el título contextual del dashboard y el menú de cuenta. Debajo, la navegación lateral
+la marca tipográfica “Kitchen pass”, el contexto de la ruta activa y el menú de cuenta.
+El subtítulo muestra “Resumen operativo” en `/dashboard`, “Detalle del pedido” en
+`/pedidos/[codigo]` y el nombre de la sección en las demás rutas autenticadas. Debajo,
+la navegación lateral
 agrupa accesos por Operación, Administración y Control con iconos y etiquetas; no
 repite el logo y conserva el filtrado por permisos. El espacio de trabajo compacta
 su composición en pantallas pequeñas. En escritorio amplio, el encabezado limita el
@@ -101,11 +104,9 @@ La altura del encabezado usa límites fluidos: en escritorio amplio varía entre
 mide 88 px y en móvil conserva 82 px. El título y los controles de cuenta reducen su
 escala para mantener el encabezado compacto; el logo usa casi toda la altura
 disponible para permanecer reconocible.
-El menú de cuenta ofrece perfil, configuración informativa y cierre de sesión. En
-`/dashboard`, “Kitchen pass” y “Resumen operativo” aparecen en el encabezado solo
-para usuarios con `reportes:ver`; los controles de cuenta siguen disponibles para
-todos los usuarios autenticados. Escape cierra el menú y devuelve el foco al control
-que lo abre.
+El menú de cuenta ofrece perfil, configuración informativa y cierre de sesión. El
+encabezado y los controles de cuenta están disponibles en todas las rutas autenticadas;
+Escape cierra el menú y devuelve el foco al control que lo abre.
 
 ### Identidad visual del área autenticada
 
