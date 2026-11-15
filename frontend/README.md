@@ -109,13 +109,14 @@ encabezado y los controles de cuenta están disponibles en todas las rutas auten
 Escape cierra el menú y devuelve el foco al control que lo abre.
 
 La navegación lateral adapta su presentación al ancho disponible. Por encima de
-900 px inicia plegada como una columna de iconos de 76 px y vuelve a plegarse
-automáticamente al elegir una sección; el control del encabezado permite expandirla
-cuando se necesitan las etiquetas. Entre 681 y 900 px se muestra directamente la
-columna compacta. Hasta 680 px la barra queda fuera del área visible y el botón de
-menú del encabezado abre un panel superpuesto con las etiquetas; se cierra al elegir
-una ruta, tocar el fondo oscurecido o pulsar Escape. El panel móvil aparece debajo
-del encabezado y permite desplazarse por todas las secciones.
+900 px inicia plegada como una columna de iconos de 76 px. Al acercar el cursor o
+llevar el foco de teclado sobre la barra, se expande; al alejar el cursor o mover el
+foco fuera, vuelve a plegarse. El control del encabezado también permite alternar
+su estado. Entre 681 y 900 px se muestra directamente la columna compacta. Hasta
+680 px la barra queda fuera del área visible y el botón de menú del encabezado abre
+un panel superpuesto con las etiquetas; se cierra al elegir una ruta, tocar el fondo
+oscurecido o pulsar Escape. El panel móvil aparece debajo del encabezado y permite
+desplazarse por todas las secciones.
 
 ### Identidad visual del área autenticada
 
@@ -129,8 +130,9 @@ acentos por estado dentro de paneles crema. El login mantiene su composición pr
 
 ### Adaptación responsive de operaciones
 
-El espacio autenticado ajusta su shell por ancho de pantalla: entre 681 y 900 px
-la navegación lateral se compacta a iconos, y hasta 680 px se convierte en un panel
+El espacio autenticado ajusta su shell por ancho de pantalla: por encima de 900 px
+la barra lateral se expande al pasar el cursor o el foco y se repliega al salir; entre
+681 y 900 px se compacta a iconos, y hasta 680 px se convierte en un panel
 desplegable desde el encabezado. El contenido usa márgenes fluidos.
 Las columnas de cocina, salón y reportes se apilan en vistas estrechas; los KPI de
 mesas y cocina se reorganizan, y los formularios del modal de nuevo pedido apilan
