@@ -23,14 +23,14 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; group: '
   { href: '/auditoria', group: 'Control',   label: 'Auditoría',  icon: ClipboardList,permisos: ['auditoria:ver'] },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const { user } = useAuthStore()
 
   const nav = NAV.filter((item) => !item.permisos || hasPermiso(user, ...item.permisos))
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" id="primary-sidebar" aria-label="Navegación principal">
       <nav className="sidebar-nav" aria-label="Navegación principal">
         {(['Operación', 'Administración', 'Control'] as const).map((group) => {
           const items = nav.filter((item) => item.group === group)
@@ -39,7 +39,7 @@ export default function Sidebar() {
             <p className="sidebar-group-label">{group}</p>
             {items.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(`${href}/`))
-              return <Link key={href} href={href} className={`nav-item${active ? ' active' : ''}`} aria-current={active ? 'page' : undefined} aria-label={label} title={label}>
+              return <Link key={href} href={href} className={`nav-item${active ? ' active' : ''}`} aria-current={active ? 'page' : undefined} aria-label={label} title={label} onClick={onNavigate}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                 <span className="sidebar-item-label">{label}</span>
               </Link>
