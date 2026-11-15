@@ -8,10 +8,14 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
+  const handleNavigation = useCallback(() => {
+    setSidebarCollapsed(true)
+    closeMobileMenu()
+  }, [closeMobileMenu])
 
   useEffect(() => {
     if (!mobileMenuOpen) return
@@ -36,7 +40,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
           />
           {mobileMenuOpen && <button className="sidebar-backdrop" type="button" aria-label="Cerrar menú de navegación" onClick={closeMobileMenu} />}
           <div className="dashboard-workspace">
-            <Sidebar onNavigate={closeMobileMenu} />
+            <Sidebar onNavigate={handleNavigation} />
             <div className="dashboard-page-column">
               <main className="dashboard-main">{children}</main>
             </div>
