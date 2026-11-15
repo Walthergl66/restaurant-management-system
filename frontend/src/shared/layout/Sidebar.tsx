@@ -23,14 +23,36 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; group: '
   { href: '/auditoria', group: 'Control',   label: 'Auditoría',  icon: ClipboardList,permisos: ['auditoria:ver'] },
 ]
 
-export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+type SidebarProps = {
+  onNavigate?: () => void
+  onExpand?: () => void
+  onCollapse?: () => void
+}
+
+export default function Sidebar({ onNavigate, onExpand, onCollapse }: SidebarProps) {
   const pathname = usePathname()
   const { user } = useAuthStore()
 
   const nav = NAV.filter((item) => !item.permisos || hasPermiso(user, ...item.permisos))
 
   return (
-    <aside className="sidebar" id="primary-sidebar" aria-label="Navegación principal">
+    <aside
+      className="sidebar"
+      id="primary-sidebar"
+      aria-label="Navegación principal"
+      onPointerEnter={event => {
+        if (event.pointerType === 'mouse' && window.matchMedia('(min-width: 901px)').matches) onExpand?.()
+      }}
+      onPointerLeave={event => {
+        if (event.pointerType === 'mouse' && window.matchMedia('(min-width: 901px)').matches) onCollapse?.()
+      }}
+      onFocusCapture={() => {
+        if (window.matchMedia('(min-width: 901px)').matches) onExpand?.()
+      }}
+      onBlurCapture={event => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null) && window.matchMedia('(min-width: 901px)').matches) onCollapse?.()
+      }}
+    >
       <nav className="sidebar-nav" aria-label="Navegación principal">
         {(['Operación', 'Administración', 'Control'] as const).map((group) => {
           const items = nav.filter((item) => item.group === group)
