@@ -31,7 +31,7 @@ interface SelectorUbicacionProps {
 const CENTRO_INICIAL: Coordenada = { latitude: -0.9580285, longitude: -80.6384797 };
 
 export function SelectorUbicacion({ valor, onCambio, onDescripcion }: SelectorUbicacionProps) {
-  const webViewRef = useRef<WebView>(null);
+  const webViewRef = useRef<WebView<{}>>(null);
   const { estado: estadoGps, error: errorGps, solicitar } = useUbicacionActual();
   const [texto, setTexto] = useState('');
   const [candidatos, setCandidatos] = useState<CandidatoDireccion[]>([]);
@@ -229,7 +229,7 @@ export function SelectorUbicacion({ valor, onCambio, onDescripcion }: SelectorUb
       {errorBusqueda && <Text style={styles.aviso}>{errorBusqueda}</Text>}
 
       <View style={styles.mapaContenedor}>
-        <WebView
+        <WebView<{}>
           ref={webViewRef}
           source={{ html }}
           style={styles.mapa}
