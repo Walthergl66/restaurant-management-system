@@ -22,7 +22,6 @@ export default function TabsLayout() {
 
   return (
     <Tabs
-      initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -46,7 +45,7 @@ export default function TabsLayout() {
         options={{
           title: 'Menú',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="restaurant" size={size} color={color} />
+            <Ionicons name="restaurant" size={size} color={String(color ?? colors.neonOrange)} />
           ),
         }}
       />
@@ -56,7 +55,7 @@ export default function TabsLayout() {
           title: 'Carrito',
           tabBarIcon: ({ color, size }) => (
             <View>
-              <Ionicons name="bag" size={size} color={color} />
+              <Ionicons name="bag" size={size} color={String(color ?? colors.neonOrange)} />
               <TabBarBadge count={totalItems} />
             </View>
           ),
@@ -67,7 +66,7 @@ export default function TabsLayout() {
         options={{
           title: 'Pedidos',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt" size={size} color={color} />
+            <Ionicons name="receipt" size={size} color={String(color ?? colors.neonOrange)} />
           ),
         }}
       />
@@ -76,7 +75,7 @@ export default function TabsLayout() {
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="person" size={size} color={String(color ?? colors.neonOrange)} />
           ),
         }}
       />
