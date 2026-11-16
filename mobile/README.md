@@ -54,6 +54,16 @@ Reglas:
 
 ## Conexión al backend
 
+### Acceso móvil
+
+El login presenta el logo sobre el fondo del mostrador y un formulario crema
+con un borde inclinado ámbar y un título manuscrito, en continuidad con la web.
+Permite ingresar con
+correo o usuario y contraseña, mostrar la contraseña, recuperar el acceso y
+crear una cuenta. El logo y el formulario aparecen con una animación breve;
+si el dispositivo solicita reducir movimiento, se muestran sin animación.
+Durante el ingreso, el botón muestra un indicador de carga.
+
 Copia `mobile/.env.example` a `mobile/.env`. En Expo Go, la IP del servidor se detecta automáticamente, así que no hace falta definir la URL. Para builds standalone configura `EXPO_PUBLIC_API_URL` con una dirección accesible desde el teléfono. `EXPO_PUBLIC_MAPBOX_TOKEN` se usa para mapas; es un valor público que queda dentro de la app. No pongas secretos del backend en el móvil.
 
 La URL base se resuelve así (en orden):
