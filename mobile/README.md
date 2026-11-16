@@ -1,6 +1,6 @@
 # Estación Burger — App móvil
 
-App de cliente (Expo SDK 57 + React Native + Expo Router) del
+App de cliente (Expo SDK 58 + React Native + Expo Router) del
 sistema de gestión de restaurante. Consume la API REST del
 backend (`/api/v1`) **sin modificarlo**: el backend es el
 contrato, la app se adapta a él.
@@ -139,9 +139,21 @@ Notas de contrato:
 ## Comandos
 
 ```bash
-npx expo start        # servidor de desarrollo
+npm install           # instala las dependencias fijadas en package-lock.json
+npx expo start --clear # limpia la caché y abre el servidor de desarrollo
 npx tsc --noEmit      # typecheck
 ```
+
+Expo Go debe ser compatible con el SDK del proyecto. Si aparece el mensaje
+"Project is incompatible with this version of Expo Go", actualiza Expo Go
+desde la tienda y vuelve a iniciar el servidor con `npx expo start --clear`.
+Este proyecto usa SDK 58. Para alinear dependencias al SDK declarado, ejecuta
+`npx expo install --fix` y luego `npx expo-doctor`.
+
+Para generar un build nativo Android, reemplaza el valor de ejemplo de
+`android.config.googleMaps.apiKey` en `app.json` por una clave restringida por
+nombre de paquete y SHA-1, suministrada fuera del repositorio. El campo de API
+key no se necesita para abrir el proyecto en Expo Go.
 
 ## Pendientes
 
