@@ -28,7 +28,7 @@ export default function MapaRuta({
   origen,
   colorRuta = '#F5A623',
 }: MapaRutaProps) {
-  const webViewRef = useRef<WebView>(null);
+  const webViewRef = useRef<WebView<{}>>(null);
   const [loaded, setLoaded] = useState(false);
 
   const route = useMemo(() => decodePolyline(geometria), [geometria]);
@@ -212,7 +212,7 @@ export default function MapaRuta({
 
   return (
     <View style={styles.contenedor}>
-      <WebView
+      <WebView<{}>
         ref={webViewRef}
         source={{ html }}
         style={styles.mapa}
