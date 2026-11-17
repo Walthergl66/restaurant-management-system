@@ -60,8 +60,11 @@ El login presenta el logo sobre el fondo del mostrador y un formulario crema
 con un borde inclinado ámbar y un título manuscrito, en continuidad con la web.
 Permite ingresar con
 correo o usuario y contraseña, mostrar la contraseña, recuperar el acceso y
-crear una cuenta. El logo y el formulario aparecen con una animación breve;
-si el dispositivo solicita reducir movimiento, se muestran sin animación.
+crear una cuenta. La entrada inicia a oscuras, enciende el logo de neón y hace
+parpadear dos veces el foco sobre el mostrador antes de revelar el formulario;
+el foco queda encendido y el formulario aparece con la paleta crema y ámbar.
+Si el dispositivo solicita reducir movimiento, se muestra la pantalla final
+sin animación.
 Durante el ingreso, el botón muestra un indicador de carga.
 
 Copia `mobile/.env.example` a `mobile/.env`. En Expo Go, la IP del servidor se detecta automáticamente, así que no hace falta definir la URL. Para builds standalone configura `EXPO_PUBLIC_API_URL` con una dirección accesible desde el teléfono. `EXPO_PUBLIC_MAPBOX_TOKEN` se usa para mapas; es un valor público que queda dentro de la app. No pongas secretos del backend en el móvil.
