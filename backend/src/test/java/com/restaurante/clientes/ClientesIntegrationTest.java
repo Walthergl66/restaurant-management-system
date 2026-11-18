@@ -34,6 +34,92 @@ class ClientesIntegrationTest extends AbstractIntegracionApi {
     }
 
     @Test
+    void contratoPublicoDelPedidoEnTodasLasRespuestas() throws Exception {
+        long productoId = crearProducto("Contrato-" + System.nanoTime(), "14.50");
+        long extraId = crearExtra("Contrato-extra-" + System.nanoTime(), "2.00");
+        String codigo = "CONTRATO-" + System.nanoTime();
+        String clave = "idem-" + System.nanoTime();
+        String cuerpo = """
+                {"codigo":"%s","metodoPago":"EFECTIVO","metodoEntrega":"RETIRAR",
+                 "idempotencyKey":"%s","items":[{"productoId":%d,"cantidad":2,"extraIds":[%d]}]}
+                """.formatted(codigo, clave, productoId, extraId);
+
+        MvcResult creado = mockMvc.perform(post("/api/v1/clientes/pedidos")
+                        .header("Authorization", "Bearer " + clienteToken)
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isOk()).andReturn();
+        verificarContrato(objectMapper.readTree(creado.getResponse().getContentAsString()), codigo, productoId, extraId);
+
+        MvcResult carrito = mockMvc.perform(get("/api/v1/clientes/carrito")
+                        .header("Authorization", "Bearer " + clienteToken))
+                .andExpect(status().isOk()).andReturn();
+        JsonNode borradores = objectMapper.readTree(carrito.getResponse().getContentAsString()).path("borradores");
+        JsonNode borrador = null;
+        for (JsonNode pedido : borradores) {
+            if (codigo.equals(pedido.path("codigo").asText())) borrador = pedido;
+        }
+        assertNotNull(borrador);
+        verificarContrato(borrador, codigo, productoId, extraId);
+
+        MvcResult confirmado = mockMvc.perform(post("/api/v1/clientes/pedidos/" + codigo + "/confirmar")
+                        .header("Authorization", "Bearer " + clienteToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"idempotencyKey":"%s"}
+                                """.formatted(clave)))
+                .andExpect(status().isOk()).andReturn();
+        verificarContrato(objectMapper.readTree(confirmado.getResponse().getContentAsString()), codigo, productoId, extraId);
+
+        MvcResult consulta = mockMvc.perform(get("/api/v1/clientes/pedidos/" + codigo)
+                        .header("Authorization", "Bearer " + clienteToken))
+                .andExpect(status().isOk()).andReturn();
+        verificarContrato(objectMapper.readTree(consulta.getResponse().getContentAsString()), codigo, productoId, extraId);
+
+        MvcResult historial = mockMvc.perform(get("/api/v1/clientes/historial")
+                        .header("Authorization", "Bearer " + clienteToken))
+                .andExpect(status().isOk()).andReturn();
+        JsonNode pagina = objectMapper.readTree(historial.getResponse().getContentAsString());
+        assertTrue(pagina.path("totalElements").isNumber());
+        JsonNode encontrado = null;
+        for (JsonNode pedido : pagina.path("content")) {
+            if (codigo.equals(pedido.path("codigo").asText())) encontrado = pedido;
+        }
+        assertNotNull(encontrado);
+        verificarContrato(encontrado, codigo, productoId, extraId);
+
+        for (String[] transicion : new String[][] {{"en-preparacion", cocinaToken}, {"listo", meseroToken}}) {
+            MvcResult resultado = mockMvc.perform(post("/api/v1/clientes/pedidos/" + codigo + "/" + transicion[0])
+                            .header("Authorization", "Bearer " + transicion[1]))
+                    .andExpect(status().isOk()).andReturn();
+            verificarContrato(objectMapper.readTree(resultado.getResponse().getContentAsString()), codigo, productoId, extraId);
+        }
+    }
+
+    private void verificarContrato(JsonNode pedido, String codigo, long productoId, long extraId) {
+        assertEquals(codigo, pedido.path("codigo").asText());
+        for (String campo : new String[] {"estado", "metodoPago", "metodoEntrega", "creadoAt", "actualizadoAt"}) {
+            assertTrue(pedido.path(campo).isTextual(), campo);
+        }
+        for (String campo : new String[] {"subtotal", "costoEntrega", "total", "version"}) {
+            assertTrue(pedido.path(campo).isNumber(), campo);
+        }
+        for (String campo : new String[] {"clienteId", "direccionId", "idempotencyKey"}) {
+            assertFalse(pedido.has(campo), campo);
+        }
+        assertEquals(0, new BigDecimal("33.00").compareTo(pedido.path("subtotal").decimalValue()));
+        assertEquals(0, new BigDecimal("33.00").compareTo(pedido.path("total").decimalValue()));
+        assertEquals(1, pedido.path("lineas").size());
+        JsonNode linea = pedido.path("lineas").get(0);
+        assertEquals(productoId, linea.path("productoId").asLong());
+        assertEquals(2, linea.path("cantidad").asInt());
+        assertEquals(0, new BigDecimal("14.50").compareTo(linea.path("precio").decimalValue()));
+        assertEquals(0, new BigDecimal("33.00").compareTo(linea.path("subtotal").decimalValue()));
+        assertEquals(1, linea.path("extras").size());
+        assertEquals(extraId, linea.path("extras").get(0).path("extraId").asLong());
+        assertEquals(0, new BigDecimal("2.00").compareTo(linea.path("extras").get(0).path("precio").decimalValue()));
+    }
+
+    @Test
     void carritoVacioAlInicioYCrearPedidoCongelaPrecio() throws Exception {
         long productoId = crearProducto("ProductoCli-" + System.nanoTime(), "14.50");
         long extraId = crearExtra("ExtraCli-" + System.nanoTime(), "2.00");
