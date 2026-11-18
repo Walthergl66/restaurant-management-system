@@ -30,7 +30,7 @@ import { useAuth } from '@/features/auth';
 
 export default function MenuScreen() {
   const [fontsLoaded] = useFonts({
-    KaushanScript: require('../../assets/KaushanScript-Regular.ttf'),
+    KaushanScript: require('../../../assets/KaushanScript-Regular.ttf'),
   });
   const router = useRouter();
   const insets = useSafeAreaInsets();
