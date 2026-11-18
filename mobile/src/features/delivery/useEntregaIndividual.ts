@@ -133,22 +133,17 @@ export function useEntregaIndividual(
       const estadoActual = existente ?? recorridoDeAsignacion(datos, asignacionId);
       const esFinalizado =
         estadoActual?.estado === 'FINALIZADO' || estadoActual?.estado === 'CANCELADO';
-      if (esFinalizado) {
-        try {
-          const calculada = await deliveryService.rutaIndividual(asignacionId);
-          if (activo) setRuta(calculada);
-        } catch (e) {
-          if (!activo) return;
-          if (e instanceof ApiError && e.status === 503) setRutaNoDisponible(true);
-          else setRutaError(mensajeError(e, 'No se pudo cargar la ruta'));
-        } finally {
-          if (activo) setRutaCargando(false);
-        }
-        return;
-      }
-      if (activo) {
-        setRuta(null);
-        setRutaCargando(false);
+      // Siempre se carga la ruta individual para que el mapa se visualice,
+      // incluso antes de iniciar el reparto (antes solo se cargaba al finalizar).
+      try {
+        const calculada = await deliveryService.rutaIndividual(asignacionId);
+        if (activo) setRuta(calculada);
+      } catch (e) {
+        if (!activo) return;
+        if (e instanceof ApiError && e.status === 503) setRutaNoDisponible(true);
+        else setRutaError(mensajeError(e, 'No se pudo cargar la ruta'));
+      } finally {
+        if (activo) setRutaCargando(false);
       }
     })();
     return () => {

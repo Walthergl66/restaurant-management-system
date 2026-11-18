@@ -11,7 +11,7 @@ Este documento registra las tecnologías y requisitos técnicos observables en e
 | API | Java 25, Spring Boot 4.1, Maven | `backend/pom.xml`, `backend/Dockerfile` |
 | Persistencia | PostgreSQL, Spring Data JPA, Hibernate, Flyway | `backend/pom.xml`, `application.yml` |
 | Web | Next.js 16, React 19, TypeScript, Tailwind CSS 4 | `frontend/package.json` |
-| Móvil | Expo / React Native | `mobile/package.json` |
+| Móvil | Expo SDK 58, React Native 0.88, Expo Router | `mobile/package.json` |
 | Infraestructura local | Docker Compose; API y web en contenedores, PostgreSQL externo | `docker-compose.yml` |
 
 ## Requisitos de ejecución

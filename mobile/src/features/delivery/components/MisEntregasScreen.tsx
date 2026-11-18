@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/features/auth';
 import { colors } from '@/theme/colors';
@@ -29,23 +31,56 @@ export default function MisEntregasScreen() {
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const { datos, loading, refreshing, error, noHabilitado, refrescar } = useMisEntregas();
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
+  const [fontsLoaded] = useFonts({
+    KaushanScript: require('../../../../assets/KaushanScript-Regular.ttf'),
+  });
+
+  const handleLogout = async () => {
+    if (cerrandoSesion) return;
+    setCerrandoSesion(true);
+    try {
+      await logout();
+    } finally {
+      // Limpia el historial protegido y vuelve al Login.
+      router.replace('/login');
+      setCerrandoSesion(false);
+    }
+  };
 
   const asignaciones = useMemo(() => datos?.asignaciones ?? [], [datos]);
   const recorridos = useMemo(() => datos?.recorridos ?? [], [datos]);
 
   const header = (
-    <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-      <View>
-        <Text style={styles.title}>Mis entregas</Text>
-        <Text style={styles.subtitle}>Tus pedidos asignados y recorridos.</Text>
+    <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+      <View style={styles.headerLeft}>
+        <Image
+          source={require('../../../../public/Estacion-Burger-Logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="Estación Burger"
+        />
+        <View style={styles.headerTitles}>
+          <Text style={[styles.title, fontsLoaded && styles.titleFont]}>Mis entregas</Text>
+          <Text style={styles.subtitle}>Pedidos asignados y recorridos</Text>
+        </View>
       </View>
       <TouchableOpacity
-        onPress={() => void logout()}
+        onPress={() => void handleLogout()}
+        disabled={cerrandoSesion}
         accessibilityRole="button"
         accessibilityLabel="Cerrar sesión"
         hitSlop={10}
+        style={styles.logoutButton}
       >
-        <Ionicons name="log-out-outline" size={25} color={colors.neonPink} />
+        {cerrandoSesion ? (
+          <ActivityIndicator color={colors.neonPink} size="small" />
+        ) : (
+          <>
+            <Ionicons name="log-out-outline" size={18} color={colors.neonPink} />
+            <Text style={styles.logoutText}>Salir</Text>
+          </>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -176,14 +211,23 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder,
+    backgroundColor: colors.background,
   },
-  title: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
-  subtitle: { color: colors.textMuted, marginTop: 4 },
-  content: { paddingHorizontal: 20, gap: 12 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
+  logo: { width: 38, height: 38 },
+  headerTitles: { flex: 1, minWidth: 0 },
+  title: { fontSize: 22, fontWeight: '800', color: colors.textPrimary },
+  titleFont: { fontFamily: 'KaushanScript' },
+  subtitle: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+  logoutButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 8 },
+  logoutText: { color: colors.neonPink, fontWeight: '700', fontSize: 12 },
+  content: { paddingHorizontal: 16, gap: 14, paddingTop: 12 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   section: { gap: 12, marginTop: 10 },
   sectionLabel: {
@@ -201,8 +245,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  recorridoTipo: { color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
-  recorridoMeta: { color: colors.textMuted, fontSize: 12 },
+  recorridoTipo: { color: colors.textOnSurface, fontWeight: '800', fontSize: 15 },
+  recorridoMeta: { color: colors.textSecondary, fontSize: 12 },
   multiBoton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -214,7 +258,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.neonOrange,
   },
-  multiBotonText: { flex: 1, color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
+  multiBotonText: { flex: 1, color: colors.textOnSurface, fontWeight: '800', fontSize: 15 },
   stateBox: {
     alignItems: 'center',
     gap: 8,
@@ -224,7 +268,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
-  stateTitle: { color: colors.textPrimary, fontWeight: '800', fontSize: 15, textAlign: 'center' },
+  stateTitle: { color: colors.textOnSurface, fontWeight: '800', fontSize: 15, textAlign: 'center' },
   stateText: { color: colors.textMuted, fontSize: 13, textAlign: 'center' },
   errorBox: {
     padding: 16,

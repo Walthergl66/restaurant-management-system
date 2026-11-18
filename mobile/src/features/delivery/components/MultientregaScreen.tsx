@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
   itemMarcado: { borderColor: colors.neonOrange },
   itemTextos: { flex: 1 },
-  itemCodigo: { color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
+  itemCodigo: { color: colors.textOnSurface, fontWeight: '800', fontSize: 15 },
   itemDireccion: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
   ayuda: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
   toggleFila: { flexDirection: 'row', gap: 10 },
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
-  totalValor: { color: colors.textPrimary, fontWeight: '800', fontSize: 18 },
+  totalValor: { color: colors.textOnSurface, fontWeight: '800', fontSize: 18 },
   totalLabel: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   parada: {
     flexDirection: 'row',
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
-  stateTitle: { color: colors.textPrimary, fontWeight: '800', fontSize: 15, textAlign: 'center' },
+  stateTitle: { color: colors.textOnSurface, fontWeight: '800', fontSize: 15, textAlign: 'center' },
   stateText: { color: colors.textMuted, fontSize: 13, textAlign: 'center' },
   errorBox: {
     padding: 16,

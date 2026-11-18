@@ -17,7 +17,8 @@ import React, {
 import { authService } from './api';
 import { authStorage } from '@/shared/storage/authStorage';
 import { apiClient } from '@/shared/api/apiClient';
-import type { RegistroRequest, UsuarioInfo } from './types';
+import { ApiError } from '@/shared/api/apiError';
+import type { RegistroRequest, StoredAuth, UsuarioInfo } from './types';
 
 interface AuthContextType {
   usuario: UsuarioInfo | null;
@@ -39,21 +40,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     apiClient.setOnSessionExpired(() => {
+      // Sesión expirada en caliente: limpiar almacenamiento y estado.
+      void authStorage.clear();
+      apiClient.setAccessToken(null);
       setUsuario(null);
     });
     void restoreSession();
   }, []);
 
-  /** Restaura la sesión guardada al arrancar la app. */
+  /** Restaura la sesión guardada al arrancar la app, validándola contra el backend. */
   const restoreSession = async () => {
     try {
       const stored = await authStorage.load();
-      if (stored) {
-        apiClient.setAccessToken(stored.accessToken);
-        setUsuario(stored.usuario);
+      if (!stored) return;
+
+      apiClient.setAccessToken(stored.accessToken);
+      try {
+        // Valida el access token (y refresca internamente si hace falta).
+        const me = await authService.getMe();
+        setUsuario(me);
+        await authStorage.save({
+          accessToken: stored.accessToken,
+          refreshToken: stored.refreshToken,
+          usuario: me,
+        });
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 401) {
+          // Token inválido/caducado y refresh falló: sesión no válida.
+          await authStorage.clear();
+          apiClient.setAccessToken(null);
+          setUsuario(null);
+        } else {
+          // Error de red u otro: conservar la sesión para uso offline.
+          setUsuario(stored.usuario);
+        }
       }
     } catch {
       // Sesión corrupta: arrancar sin sesión
+      await authStorage.clear().catch(() => {});
+      apiClient.setAccessToken(null);
+      setUsuario(null);
     } finally {
       setLoading(false);
     }
@@ -97,12 +123,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    const stored = await authStorage.load();
-    if (stored) {
-      await authService.logout(stored.refreshToken);
+    let stored: StoredAuth | null = null;
+    try {
+      stored = await authStorage.load();
+      if (stored?.refreshToken) {
+        await authService.logout(stored.refreshToken);
+      }
+    } catch {
+      // El backend puede no estar disponible: se limpia la sesión local igualmente.
+    } finally {
+      await authStorage.clear();
+      apiClient.setAccessToken(null);
+      setUsuario(null);
     }
-    await authStorage.clear();
-    setUsuario(null);
   }, []);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {

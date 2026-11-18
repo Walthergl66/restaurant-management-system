@@ -1,6 +1,6 @@
 # Estación Burger — App móvil
 
-App de cliente (Expo SDK 57 + React Native + Expo Router) del
+App de cliente (Expo SDK 58 + React Native + Expo Router) del
 sistema de gestión de restaurante. Consume la API REST del
 backend (`/api/v1`) **sin modificarlo**: el backend es el
 contrato, la app se adapta a él.
@@ -53,6 +53,19 @@ Reglas:
   checkout.
 
 ## Conexión al backend
+
+### Acceso móvil
+
+El login presenta el logo sobre el fondo del mostrador y un formulario crema
+con un borde inclinado ámbar y un título manuscrito, en continuidad con la web.
+Permite ingresar con
+correo o usuario y contraseña, mostrar la contraseña, recuperar el acceso y
+crear una cuenta. La entrada inicia a oscuras, enciende el logo de neón y hace
+parpadear dos veces el foco sobre el mostrador antes de revelar el formulario;
+el foco queda encendido y el formulario aparece con la paleta crema y ámbar.
+Si el dispositivo solicita reducir movimiento, se muestra la pantalla final
+sin animación.
+Durante el ingreso, el botón muestra un indicador de carga.
 
 Copia `mobile/.env.example` a `mobile/.env`. En Expo Go, la IP del servidor se detecta automáticamente, así que no hace falta definir la URL. Para builds standalone configura `EXPO_PUBLIC_API_URL` con una dirección accesible desde el teléfono. `EXPO_PUBLIC_MAPBOX_TOKEN` se usa para mapas; es un valor público que queda dentro de la app. No pongas secretos del backend en el móvil.
 
@@ -139,9 +152,21 @@ Notas de contrato:
 ## Comandos
 
 ```bash
-npx expo start        # servidor de desarrollo
+npm install           # instala las dependencias fijadas en package-lock.json
+npx expo start --clear # limpia la caché y abre el servidor de desarrollo
 npx tsc --noEmit      # typecheck
 ```
+
+Expo Go debe ser compatible con el SDK del proyecto. Si aparece el mensaje
+"Project is incompatible with this version of Expo Go", actualiza Expo Go
+desde la tienda y vuelve a iniciar el servidor con `npx expo start --clear`.
+Este proyecto usa SDK 58. Para alinear dependencias al SDK declarado, ejecuta
+`npx expo install --fix` y luego `npx expo-doctor`.
+
+Para generar un build nativo Android, reemplaza el valor de ejemplo de
+`android.config.googleMaps.apiKey` en `app.json` por una clave restringida por
+nombre de paquete y SHA-1, suministrada fuera del repositorio. El campo de API
+key no se necesita para abrir el proyecto en Expo Go.
 
 ## Pendientes
 

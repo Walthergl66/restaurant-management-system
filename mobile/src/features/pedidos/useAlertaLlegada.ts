@@ -6,10 +6,8 @@
  * no está confirmado por el cliente. Anti-duplicado: recuerda el último
  * faseLogistica visto por pedido y solo alerta en la TRANSICIÓN.
  *
- * Sonido: Expo SDK 57 no ofrece reproducción de audio sin añadir una
- * dependencia nativa (expo-av/expo-audio). Para no romper Expo Go del
- * cliente ni introducir dependencias, esta fase degrada a vibración +
- * alerta visual garantizadas (sin promesa de sonido).
+ * Sonido: esta alerta se limita a vibración + aviso visual para evitar
+ * añadir una dependencia de audio que el flujo no necesita.
  */
 
 import { useCallback, useRef } from 'react';

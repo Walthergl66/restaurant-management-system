@@ -7,11 +7,6 @@
     "icon": "./public/brand-icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0A0A0A",
-    "splash": {
-      "image": "./public/Estacion-Burger-Logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0A0A0A"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.estacionburger.app"
@@ -29,7 +24,6 @@
       ],
       "config": {
         "googleMaps": {
-          "//": "react-native-maps en Android usa Google Maps. Coloca aqui la API key real de Google Maps (restringida por package name + SHA-1) antes de generar el development/production build. NO la subas al repo; usa una variable de entorno o EAS secret.",
           "apiKey": "REEMPLAZAR_CON_GOOGLE_MAPS_ANDROID_API_KEY"
         }
       }
@@ -43,6 +37,15 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./public/Estacion-Burger-Logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0A0A0A"
+        }
+      ],
       [
         "expo-location",
         {

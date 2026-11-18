@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   acciones: { flexDirection: 'row', gap: 10 },
   ayuda: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
   itemTextos: { flex: 1 },
-  itemCodigo: { color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
+  itemCodigo: { color: colors.textOnSurface, fontWeight: '800', fontSize: 15 },
   itemDireccion: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
   parada: {
     padding: 14,

@@ -322,8 +322,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, gap: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   muted: { color: colors.textMuted, textAlign: 'center' },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  codigo: { color: colors.textPrimary, fontSize: 22, fontWeight: '900' },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
+  codigo: { color: colors.textPrimary, fontSize: 20, fontWeight: '900', flexShrink: 1 },
   mapLoading: {
     height: 160,
     borderRadius: 16,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   metric: { flex: 1, alignItems: 'center', gap: 4 },
   metricDivider: { width: 1, height: 40, backgroundColor: colors.surfaceBorder },
-  metricValue: { color: colors.textPrimary, fontSize: 18, fontWeight: '900' },
+  metricValue: { color: colors.textOnSurface, fontSize: 18, fontWeight: '900' },
   metricLabel: { color: colors.textMuted, fontSize: 11 },
   card: {
     padding: 16,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   },
   dato: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   datoLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
-  datoValor: { color: colors.textPrimary, fontSize: 15, marginTop: 2 },
+  datoValor: { color: colors.textOnSurface, fontSize: 15, marginTop: 2 },
   errorBox: {
     padding: 14,
     borderRadius: 12,

@@ -6,28 +6,29 @@
 export const colors = {
   // Fondo
   background: '#0A0A0A',
-  surface: '#1A1A1A',
-  surfaceLight: '#2A2A2A',
-  surfaceBorder: '#333333',
+  surface: '#F8EEE2',
+  surfaceLight: '#EFE1D2',
+  surfaceBorder: '#D4C1AE',
 
-  // Acentos neón
-  neonOrange: '#FF8C00',
-  neonOrangeGlow: '#FFA500',
-  neonPink: '#FF10F0',
-  neonPinkGlow: '#FF69B4',
+  // Acentos corporativos (web)
+  neonOrange: '#F5A623',
+  neonOrangeGlow: '#FFB84D',
+  neonPink: '#C31562',
+  neonPinkGlow: '#E91E8C',
 
   // Texto
-  textPrimary: '#FFFFFF',
-  textSecondary: '#B0B0B0',
-  textMuted: '#666666',
+  textPrimary: '#F5EEE2',
+  textOnSurface: '#211D1B',
+  textSecondary: '#6F625A',
+  textMuted: '#887A70',
 
   // Estados
-  success: '#00FF88',
-  warning: '#FFAA00',
-  error: '#FF3355',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  error: '#EF4444',
 
   // Transparencias
   overlay: 'rgba(0, 0, 0, 0.7)',
-  neonOrangeAlpha: 'rgba(255, 140, 0, 0.15)',
-  neonPinkAlpha: 'rgba(255, 16, 240, 0.15)',
+  neonOrangeAlpha: 'rgba(245, 166, 35, 0.15)',
+  neonPinkAlpha: 'rgba(195, 21, 98, 0.15)',
 } as const;

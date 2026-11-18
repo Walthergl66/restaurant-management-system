@@ -49,13 +49,15 @@ export function Input({
           <Ionicons
             name={icon}
             size={20}
-            color={colors.textMuted}
+            color={colors.textSecondary}
             style={styles.icon}
           />
         )}
         <TextInput
           style={[styles.input, compact && styles.inputCompact, style]}
           placeholderTextColor={colors.textMuted}
+          selectionColor={colors.neonOrange}
+          cursorColor={colors.neonOrange}
           onFocus={onFocus}
           onBlur={onBlur}
           secureTextEntry={isPassword && !showPassword}
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 16,
     paddingVertical: 16,
   },

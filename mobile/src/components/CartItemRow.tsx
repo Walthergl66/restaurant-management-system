@@ -73,7 +73,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
               }
               style={styles.qtyButton}
             >
-              <Ionicons name="remove" size={16} color={colors.textPrimary} />
+              <Ionicons name="remove" size={16} color={colors.textOnSurface} />
             </TouchableOpacity>
             <Text style={styles.quantity}>{item.cantidad}</Text>
             <TouchableOpacity
@@ -82,7 +82,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
               }
               style={styles.qtyButton}
             >
-              <Ionicons name="add" size={16} color={colors.textPrimary} />
+              <Ionicons name="add" size={16} color={colors.textOnSurface} />
             </TouchableOpacity>
           </View>
           <Text style={styles.totalPrice}>${totalPrice.toFixed(2)}</Text>
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   name: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 15,
     fontWeight: '700',
     flex: 1,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quantity: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 15,
     fontWeight: '700',
     minWidth: 28,
