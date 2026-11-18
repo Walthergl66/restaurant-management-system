@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   codigo: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 17,
     fontWeight: '800',
   },

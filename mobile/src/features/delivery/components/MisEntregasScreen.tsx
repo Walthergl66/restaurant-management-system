@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  recorridoTipo: { color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
-  recorridoMeta: { color: colors.textMuted, fontSize: 12 },
+  recorridoTipo: { color: colors.textOnSurface, fontWeight: '800', fontSize: 15 },
+  recorridoMeta: { color: colors.textSecondary, fontSize: 12 },
   multiBoton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.neonOrange,
   },
-  multiBotonText: { flex: 1, color: colors.textPrimary, fontWeight: '800', fontSize: 15 },
+  multiBotonText: { flex: 1, color: colors.textOnSurface, fontWeight: '800', fontSize: 15 },
   stateBox: {
     alignItems: 'center',
     gap: 8,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
-  stateTitle: { color: colors.textPrimary, fontWeight: '800', fontSize: 15, textAlign: 'center' },
+  stateTitle: { color: colors.textOnSurface, fontWeight: '800', fontSize: 15, textAlign: 'center' },
   stateText: { color: colors.textMuted, fontSize: 13, textAlign: 'center' },
   errorBox: {
     padding: 16,

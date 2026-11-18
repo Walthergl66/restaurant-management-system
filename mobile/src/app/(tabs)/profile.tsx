@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   userName: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 20,
     fontWeight: '800',
     marginBottom: 4,
@@ -443,12 +443,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   rowLabel: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 15,
     fontWeight: '500',
   },
   rowValue: {
-    color: colors.textMuted,
+    color: colors.textSecondary,
     fontSize: 14,
     maxWidth: '55%',
     textAlign: 'right',

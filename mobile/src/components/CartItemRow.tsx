@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   name: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 15,
     fontWeight: '700',
     flex: 1,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quantity: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 15,
     fontWeight: '700',
     minWidth: 28,

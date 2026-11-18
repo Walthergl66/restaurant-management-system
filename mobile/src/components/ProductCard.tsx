@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   name: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 4,

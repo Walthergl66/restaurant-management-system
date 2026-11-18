@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  codigo: { color: colors.textPrimary, fontSize: 15, fontWeight: '900', flexShrink: 1 },
+  codigo: { color: colors.textOnSurface, fontSize: 15, fontWeight: '900', flexShrink: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   direccion: { color: colors.textSecondary, fontSize: 13, flex: 1, lineHeight: 18 },
   cliente: { color: colors.textMuted, fontSize: 12 },
