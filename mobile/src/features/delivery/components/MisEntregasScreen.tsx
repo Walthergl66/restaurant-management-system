@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -29,6 +29,19 @@ export default function MisEntregasScreen() {
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const { datos, loading, refreshing, error, noHabilitado, refrescar } = useMisEntregas();
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
+
+  const handleLogout = async () => {
+    if (cerrandoSesion) return;
+    setCerrandoSesion(true);
+    try {
+      await logout();
+    } finally {
+      // Limpia el historial protegido y vuelve al Login.
+      router.replace('/login');
+      setCerrandoSesion(false);
+    }
+  };
 
   const asignaciones = useMemo(() => datos?.asignaciones ?? [], [datos]);
   const recorridos = useMemo(() => datos?.recorridos ?? [], [datos]);
@@ -40,12 +53,21 @@ export default function MisEntregasScreen() {
         <Text style={styles.subtitle}>Tus pedidos asignados y recorridos.</Text>
       </View>
       <TouchableOpacity
-        onPress={() => void logout()}
+        onPress={() => void handleLogout()}
+        disabled={cerrandoSesion}
         accessibilityRole="button"
         accessibilityLabel="Cerrar sesión"
         hitSlop={10}
+        style={styles.logoutButton}
       >
-        <Ionicons name="log-out-outline" size={25} color={colors.neonPink} />
+        {cerrandoSesion ? (
+          <ActivityIndicator color={colors.neonPink} size="small" />
+        ) : (
+          <>
+            <Ionicons name="log-out-outline" size={20} color={colors.neonPink} />
+            <Text style={styles.logoutText}>Cerrar sesión</Text>
+          </>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -174,6 +196,8 @@ export default function MisEntregasScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  logoutButton: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  logoutText: { color: colors.neonPink, fontWeight: '700', fontSize: 13 },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',

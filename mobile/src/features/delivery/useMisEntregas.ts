@@ -42,10 +42,18 @@ export function useMisEntregas(): EstadoMisEntregas {
       setDatos(respuesta);
     } catch (e) {
       if (!mountedRef.current) return;
-      if (e instanceof ApiError && e.status === 403) {
-        setNoHabilitado(true);
+      if (e instanceof ApiError) {
+        if (e.status === 401) {
+          setError('Tu sesión ha expirado. Inicia sesión nuevamente.');
+        } else if (e.status === 403) {
+          setNoHabilitado(true);
+        } else if (e.status === 0) {
+          setError('Sin conexión. Verifica que el backend esté activo y la URL sea correcta.');
+        } else {
+          setError(e.message || 'Error inesperado del servidor.');
+        }
       } else {
-        setError(e instanceof Error ? e.message : 'No se pudieron cargar tus entregas');
+        setError('Error inesperado del servidor.');
       }
     } finally {
       if (mountedRef.current) {

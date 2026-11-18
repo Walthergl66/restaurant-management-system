@@ -25,11 +25,20 @@ export const authStorage = {
       ([, value]) => value
     );
 
-    if (!accessToken || !usuarioJson) return null;
+    // Sesión incompleta o corrupta: no se confía en datos parciales.
+    if (!accessToken || !refreshToken || !usuarioJson) return null;
 
     try {
       const usuario = JSON.parse(usuarioJson) as StoredAuth['usuario'];
-      return { accessToken, refreshToken: refreshToken ?? '', usuario };
+      if (
+        !usuario ||
+        typeof usuario.id !== 'number' ||
+        typeof usuario.username !== 'string' ||
+        !Array.isArray(usuario.permisos)
+      ) {
+        return null;
+      }
+      return { accessToken, refreshToken, usuario };
     } catch {
       return null;
     }
