@@ -89,7 +89,7 @@ export default function DireccionesScreen() {
     >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={24} color={colors.textOnSurface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Direcciones</Text>
         <TouchableOpacity
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   formTitle: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 16,
     fontWeight: '800',
     marginBottom: 16,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardEtiqueta: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 15,
     fontWeight: '700',
   },

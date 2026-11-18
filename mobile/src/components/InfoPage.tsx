@@ -41,7 +41,7 @@ export function InfoPage({ title, subtitulo, secciones }: InfoPageProps) {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={24} color={colors.textOnSurface} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, fontsLoaded && styles.headerTitleFont]}>
           {title}

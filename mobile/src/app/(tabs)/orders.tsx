@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   bannerText: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
