@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import { colors } from '@/theme/colors';
 import { menuService } from '@/features/menu';
 import type { MenuDto, ProductoMenu } from '@/features/menu';
@@ -28,6 +29,9 @@ import { useCart } from '@/features/carrito';
 import { useAuth } from '@/features/auth';
 
 export default function MenuScreen() {
+  const [fontsLoaded] = useFonts({
+    KaushanScript: require('../../assets/KaushanScript-Regular.ttf'),
+  });
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { totalItems } = useCart();
@@ -208,7 +212,7 @@ export default function MenuScreen() {
 
             {/* Section Title */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Más Populares</Text>
+              <Text style={[styles.sectionTitle, fontsLoaded && { fontFamily: 'KaushanScript' }]}>Más Populares</Text>
               <TouchableOpacity onPress={() => setSelectedCategory(null)}>
                 <Text style={styles.seeAll}>Ver Todo</Text>
               </TouchableOpacity>

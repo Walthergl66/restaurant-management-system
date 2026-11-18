@@ -202,6 +202,7 @@ export default function CheckoutScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
         >
           {/* Resumen */}
           <View style={styles.section}>
@@ -397,7 +398,7 @@ function Opcion({
       <Ionicons
         name={icon}
         size={20}
-        color={seleccionado ? colors.background : colors.neonOrange}
+        color={seleccionado ? colors.background : colors.textOnSurface}
       />
       <Text
         style={[
@@ -468,7 +469,7 @@ const styles = StyleSheet.create({
     borderColor: colors.neonOrange,
   },
   opcionText: {
-    color: colors.textPrimary,
+    color: colors.textOnSurface,
     fontSize: 13,
     fontWeight: '700',
   },
