@@ -103,11 +103,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   gradient: {
     flex: 1,
@@ -115,6 +117,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     height: 120,
+    backgroundColor: colors.surfaceLight,
   },
   imageGradient: {
     flex: 1,
@@ -124,7 +127,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-    opacity: 0.85,
   },
   imagePlaceholder: {
     flex: 1,
@@ -188,12 +190,6 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.neonPink,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 10,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 16, 240, 0.3)',
+    elevation: 2,
   },
 });

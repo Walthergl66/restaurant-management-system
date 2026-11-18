@@ -127,72 +127,42 @@ export default function MenuScreen() {
             {/* Destacado del menú (datos reales) con imagen y overlay */}
             {productoDestacado && (
               <View style={styles.promoCard}>
-                {/* Imagen de fondo */}
                 <Image
                   source={{
                     uri:
                       productoDestacado.imagenUrl ??
                       'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600',
                   }}
-                  style={styles.promoBgImage}
+                  style={styles.promoImage}
                   resizeMode="cover"
                 />
-                {/* Overlay degradado para legibilidad */}
-                <LinearGradient
-                  colors={['rgba(10,10,10,0.6)', 'rgba(10,10,10,0.45)', 'rgba(26,10,18,0.65)']}
-                  start={[0, 0]}
-                  end={[1, 1]}
-                  style={styles.promoOverlay}
-                />
-                {/* Borde neón */}
-                <LinearGradient
-                  colors={['rgba(255,16,240,0.15)', 'rgba(255,140,0,0.08)']}
-                  start={[0, 0]}
-                  end={[1, 1]}
-                  style={styles.promoBorder}
-                />
-
                 <View style={styles.promoContent}>
-                  <LinearGradient
-                    colors={[colors.neonPink, colors.neonPinkGlow]}
-                    start={[0, 0]}
-                    end={[1, 1]}
-                    style={styles.promoBadge}
-                  >
+                  <View style={styles.promoBadge}>
                     <Text style={styles.promoBadgeText}>
                       {(categoriaDestacada ?? 'Destacado').toUpperCase()}
                     </Text>
-                  </LinearGradient>
-                  <View style={styles.promoTextContainer}>
-                    <Text style={styles.promoTitle} numberOfLines={1}>
-                      {productoDestacado.nombre}
-                    </Text>
-                    {productoDestacado.descripcion ? (
-                      <Text style={styles.promoDesc} numberOfLines={1}>
-                        {productoDestacado.descripcion}
-                      </Text>
-                    ) : null}
-                    <View style={styles.promoPricing}>
-                      <Text style={styles.promoPrice}>
-                        ${productoDestacado.precio.toFixed(2)}
-                      </Text>
-                    </View>
                   </View>
-                  <TouchableOpacity
-                    style={styles.promoButton}
-                    onPress={() =>
-                      router.push(`/product/${productoDestacado.id}`)
-                    }
-                  >
-                    <LinearGradient
-                      colors={[colors.neonOrange, colors.neonOrangeGlow]}
-                      start={[0, 0]}
-                      end={[1, 0]}
-                      style={styles.promoButtonGradient}
+                  <Text style={styles.promoTitle} numberOfLines={2}>
+                    {productoDestacado.nombre}
+                  </Text>
+                  {productoDestacado.descripcion ? (
+                    <Text style={styles.promoDesc} numberOfLines={2}>
+                      {productoDestacado.descripcion}
+                    </Text>
+                  ) : null}
+                  <View style={styles.promoFooter}>
+                    <Text style={styles.promoPrice}>
+                      ${productoDestacado.precio.toFixed(2)}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.promoButton}
+                      onPress={() =>
+                        router.push(`/product/${productoDestacado.id}`)
+                      }
                     >
                       <Text style={styles.promoButtonText}>Pedir</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}
@@ -206,20 +176,14 @@ export default function MenuScreen() {
                   selectedCategory === null && styles.pillActive,
                 ]}
               >
-                {selectedCategory === null ? (
-                  <LinearGradient
-                    colors={[colors.neonOrange, colors.neonOrangeGlow]}
-                    start={[0, 0]}
-                    end={[1, 1]}
-                    style={styles.pillGradient}
-                  >
-                    <Text style={[styles.pillText, styles.pillTextActive]}>
-                      Todos
-                    </Text>
-                  </LinearGradient>
-                ) : (
-                  <Text style={styles.pillText}>Todos</Text>
-                )}
+                <Text
+                  style={[
+                    styles.pillText,
+                    selectedCategory === null && styles.pillTextActive,
+                  ]}
+                >
+                  Todos
+                </Text>
               </TouchableOpacity>
               {categorias.map(cat => (
                 <TouchableOpacity
@@ -230,20 +194,14 @@ export default function MenuScreen() {
                     selectedCategory === cat.id && styles.pillActive,
                   ]}
                 >
-                  {selectedCategory === cat.id ? (
-                    <LinearGradient
-                      colors={[colors.neonOrange, colors.neonOrangeGlow]}
-                      start={[0, 0]}
-                      end={[1, 1]}
-                      style={styles.pillGradient}
-                    >
-                      <Text style={[styles.pillText, styles.pillTextActive]}>
-                        {cat.nombre}
-                      </Text>
-                    </LinearGradient>
-                  ) : (
-                    <Text style={styles.pillText}>{cat.nombre}</Text>
-                  )}
+                  <Text
+                    style={[
+                      styles.pillText,
+                      selectedCategory === cat.id && styles.pillTextActive,
+                    ]}
+                  >
+                    {cat.nombre}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -301,119 +259,71 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   promoCard: {
-    borderRadius: 20,
+    borderRadius: 18,
     marginBottom: 20,
     overflow: 'hidden',
-    height: 180,
-    shadowColor: colors.neonPink,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  promoBgImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-  },
-  promoOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  promoBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 20,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.neonPink,
+    borderColor: colors.surfaceBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  promoImage: {
+    width: '100%',
+    height: 170,
   },
   promoContent: {
-    flex: 1,
-    padding: 16,
-    justifyContent: 'space-between',
+    padding: 14,
+    gap: 6,
   },
   promoBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.neonPinkAlpha,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    alignSelf: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   promoBadgeText: {
-    color: colors.background,
+    color: colors.neonPink,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  promoTextContainer: {
-    flex: 1,
-  },
   promoTitle: {
-    color: colors.textPrimary,
-    fontSize: 20,
+    color: colors.textOnSurface,
+    fontSize: 18,
     fontWeight: '800',
-    marginBottom: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   promoDesc: {
-    color: '#E0E0E0',
-    fontSize: 12,
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  promoPricing: {
+  promoFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
   promoPrice: {
     color: colors.neonOrange,
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-  promoOriginal: {
-    color: '#CCCCCC',
-    fontSize: 14,
-    textDecorationLine: 'line-through',
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   promoButton: {
+    backgroundColor: colors.neonOrange,
     borderRadius: 12,
-    overflow: 'hidden',
-    alignSelf: 'flex-start',
-  },
-  promoButtonGradient: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
+    paddingHorizontal: 18,
   },
   promoButtonText: {
     color: colors.background,
     fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.5,
   },
   pillsContainer: {
     flexDirection: 'row',
@@ -422,33 +332,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   pill: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 25,
-    backgroundColor: colors.surface,
+    minHeight: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceLight,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-    overflow: 'hidden',
-  },
-  pillActive: {
-    backgroundColor: 'transparent',
-    borderColor: colors.neonOrange,
-    shadowColor: colors.neonOrange,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  pillGradient: {
-    marginHorizontal: -18,
-    marginVertical: -10,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  pillActive: {
+    backgroundColor: colors.neonOrange,
+    borderColor: colors.neonOrange,
+    shadowColor: colors.neonOrange,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   pillText: {
-    color: colors.textSecondary,
+    color: colors.textOnSurface,
     fontSize: 13,
     fontWeight: '600',
   },
