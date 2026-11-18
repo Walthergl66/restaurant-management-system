@@ -221,7 +221,7 @@ export default function MapaRuta({
         originWhitelist={['*']}
         mixedContentMode="always"
         scrollEnabled={false}
-        nestedScrollEnabled={false}
+        nestedScrollEnabled
         overScrollMode="never"
         onLoadEnd={() => setLoaded(true)}
       />

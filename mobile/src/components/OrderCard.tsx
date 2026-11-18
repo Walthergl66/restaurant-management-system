@@ -40,8 +40,10 @@ export function OrderCard({ pedido, onPress }: OrderCardProps) {
       style={styles.container}
     >
       <View style={styles.header}>
-        <View>
-          <Text style={styles.codigo}>#{pedido.codigo}</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.codigo} numberOfLines={2}>
+            #{pedido.codigo}
+          </Text>
           <Text style={styles.fecha}>
             {pedido.creadoAt
               ? new Date(pedido.creadoAt).toLocaleDateString('es-ES', {
@@ -96,11 +98,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: 8,
+  },
+  headerLeft: {
+    flex: 1,
+    minWidth: 0,
   },
   codigo: {
     color: colors.textOnSurface,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
+    flexShrink: 1,
   },
   fecha: {
     color: colors.textMuted,

@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import { colors } from '@/theme/colors';
 
 export interface InfoSeccion {
@@ -32,6 +33,9 @@ interface InfoPageProps {
 export function InfoPage({ title, subtitulo, secciones }: InfoPageProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [fontsLoaded] = useFonts({
+    KaushanScript: require('../../assets/KaushanScript-Regular.ttf'),
+  });
 
   return (
     <View style={styles.container}>
@@ -39,7 +43,9 @@ export function InfoPage({ title, subtitulo, secciones }: InfoPageProps) {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{title}</Text>
+        <Text style={[styles.headerTitle, fontsLoaded && styles.headerTitleFont]}>
+          {title}
+        </Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -88,24 +94,33 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: colors.textPrimary,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
   },
+  headerTitleFont: {
+    fontFamily: 'KaushanScript',
+  },
   content: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
+    gap: 12,
   },
   subtitulo: {
     color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   seccion: {
-    marginBottom: 24,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    marginBottom: 4,
   },
   seccionTitulo: {
-    color: colors.neonOrange,
+    color: colors.textOnSurface,
     fontSize: 16,
     fontWeight: '800',
     marginBottom: 8,

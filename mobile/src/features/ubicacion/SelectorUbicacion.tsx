@@ -238,7 +238,7 @@ export function SelectorUbicacion({ valor, onCambio, onDescripcion }: SelectorUb
           originWhitelist={['*']}
           mixedContentMode="always"
           scrollEnabled={false}
-          nestedScrollEnabled={false}
+          nestedScrollEnabled
           overScrollMode="never"
           onMessage={onMessage}
         />
