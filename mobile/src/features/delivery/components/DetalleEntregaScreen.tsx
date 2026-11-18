@@ -322,8 +322,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, gap: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   muted: { color: colors.textMuted, textAlign: 'center' },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  codigo: { color: colors.textPrimary, fontSize: 22, fontWeight: '900' },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
+  codigo: { color: colors.textPrimary, fontSize: 20, fontWeight: '900', flexShrink: 1 },
   mapLoading: {
     height: 160,
     borderRadius: 16,
