@@ -12,6 +12,7 @@ DocumentaciÃ³n basada en la implementaciÃ³n del monorepo de gestiÃ³n de re
 - [MÃ³dulos y responsabilidades](modulos/README.md)
 - [Funciones por mÃ³dulo](arquitectura/modulos-y-funciones.md)
 - [API](api/README.md)
+- [Patrón de traducción de pedidos](api/patrones-traduccion-pedidos.md)
 - [Despliegue](operacion/despliegue.md)
 - [Pruebas de carga](operacion/pruebas-carga.md)
 - [Decisiones de escalado](arquitectura/decisiones/escalado.md)
@@ -23,3 +24,8 @@ DocumentaciÃ³n basada en la implementaciÃ³n del monorepo de gestiÃ³n de re
 - [AplicaciÃ³n mÃ³vil](../mobile/README.md)
 - [Base de datos y respaldos](../database/README.md)
 
+
+## Entregas sobre archivos multimedia
+
+- [Informe de implementación del administrador de archivos multimedia](entregas/Informe_Administrador_Archivos_Multimedia.docx)
+- [Guía de conexión del proyecto a la VM de archivos](operacion/Guia_Conexion_Proyecto_VM_Archivos.docx)

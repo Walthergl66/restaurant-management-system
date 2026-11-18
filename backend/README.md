@@ -125,6 +125,30 @@ base de datos.
 | `BREVO_TIMEOUT` | `5s` | Timeout de conexiÃ³n y de la peticiÃ³n |
 | `SPRING_PROFILES_ACTIVE` | *(sin default)* | Perfil activo (`dev` o `prod`). La app no fija perfil por defecto: sin esta variable arranca con la configuraciÃ³n base. |
 
+### Carga multimedia del catálogo
+
+`POST /api/v1/productos/{id}/imagen` recibe `multipart/form-data` en el campo
+`archivo` y admite imágenes o videos de hasta 50 MB. Requiere el permiso
+`catalogo:gestionar`. El backend carga el archivo al servidor WebDAV y guarda la
+URL pública en `producto.imagenUrl`. Los espacios y caracteres especiales del
+nombre original se codifican en las rutas de carga y lectura; las separaciones
+de ruta del nombre enviado por el cliente no crean subdirectorios.
+
+Configura estas variables solo en `backend/.env`:
+
+| Variable | Uso |
+| --- | --- |
+| `APP_MEDIA_UPLOAD_URL` | URL WebDAV de escritura |
+| `APP_MEDIA_PUBLIC_URL` | Base de la URL pública del archivo |
+| `APP_MEDIA_USUARIO` | Usuario Basic Auth del servidor WebDAV |
+| `APP_MEDIA_CLAVE` | Clave Basic Auth del servidor WebDAV |
+| `ARCHIVOS_LECTURA_URL` | Base pública de lectura para imágenes guardadas por el SFTP anterior |
+
+El endpoint histórico `GET/HEAD /api/v1/archivos/{id}/contenido` sigue
+resolviendo imágenes vinculadas antes del cambio a WebDAV. El backend redirige
+solo archivos con estado `VINCULADO` al servidor público anterior. La carga
+nueva acepta hasta 50 MB por archivo.
+
 ### Correo transaccional (Brevo)
 
 La verificaciÃ³n de correo y la recuperaciÃ³n de contraseÃ±a envÃ­an el cÃ³digo por

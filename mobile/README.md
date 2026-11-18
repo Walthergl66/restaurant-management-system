@@ -119,6 +119,12 @@ secretos del backend en el entorno móvil.
 
 ## Endpoints que consume
 
+Las respuestas SPI y DTO web de pedidos pueden convertirse al modelo de
+presentación común mediante `features/pedidos/normalizarPedido.ts`. El adaptador
+normaliza nombres, mayúsculas, moneda y fechas, y rechaza datos inconsistentes.
+Su tabla de mapeo y casos de prueba están documentados en
+[`docs/api/patrones-traduccion-pedidos.md`](../docs/api/patrones-traduccion-pedidos.md).
+
 | Pantalla | Endpoint | Auth |
 | --- | --- | --- |
 | Menú / detalle | `GET /api/v1/menu` | público |

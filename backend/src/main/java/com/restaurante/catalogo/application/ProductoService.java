@@ -8,6 +8,7 @@ import com.restaurante.catalogo.domain.Categoria;
 import com.restaurante.catalogo.domain.Extra;
 import com.restaurante.catalogo.domain.Producto;
 import com.restaurante.catalogo.domain.TextoCatalogo;
+import com.restaurante.catalogo.infrastructure.AlmacenadorArchivos;
 import com.restaurante.catalogo.infrastructure.AreaRepository;
 import com.restaurante.catalogo.infrastructure.CategoriaRepository;
 import com.restaurante.catalogo.infrastructure.ExtraRepository;
@@ -39,15 +40,18 @@ public class ProductoService implements Catalogo {
     private final CategoriaRepository categoriaRepository;
     private final AreaRepository areaRepository;
     private final ExtraRepository extraRepository;
+    private final AlmacenadorArchivos almacenadorArchivos;
 
     public ProductoService(ProductoRepository productoRepository,
                            CategoriaRepository categoriaRepository,
                            AreaRepository areaRepository,
-                           ExtraRepository extraRepository) {
+                           ExtraRepository extraRepository,
+                           AlmacenadorArchivos almacenadorArchivos) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.areaRepository = areaRepository;
         this.extraRepository = extraRepository;
+        this.almacenadorArchivos = almacenadorArchivos;
     }
 
     public ProductoResponse crear(ProductoRequest request) {
@@ -87,6 +91,17 @@ public class ProductoService implements Catalogo {
             producto.desactivar();
         }
         return ProductoResponse.from(producto);
+    }
+
+    /**
+     * Sube la imagen o video de un producto al servidor de archivos y guarda
+     * la URL pública en {@code producto.imagenUrl}.
+     */
+    public ProductoResponse subirImagen(Long id, org.springframework.web.multipart.MultipartFile archivo) {
+        Producto producto = cargar(id);
+        String url = almacenadorArchivos.guardar(archivo, "productos");
+        producto.cambiarImagenUrl(url);
+        return ProductoResponse.from(productoRepository.save(producto));
     }
 
     private void validarNombreDisponible(String nombre, Long id) {
