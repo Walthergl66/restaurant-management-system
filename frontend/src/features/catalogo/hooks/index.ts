@@ -6,7 +6,7 @@ import { errMsg } from '@/shared/lib/utils'
 import {
   listarProductos, listarCategorias, listarAreas, listarExtras,
   guardarOrdenCategorias, cambiarHabilitacionCatalogo,
-  crearProducto, actualizarProducto, crearCategoria, actualizarCategoria,
+  crearProducto, actualizarProducto, subirImagenProducto, crearCategoria, actualizarCategoria,
   crearArea, actualizarArea, crearExtra, actualizarExtra,
 } from '../api'
 import type {
@@ -66,10 +66,10 @@ export function useOrdenCategorias() {
   })
 }
 
-function useGuardarCatalogo<TPayload>(
+function useGuardarCatalogo<TPayload, TResultado>(
   recurso: CatalogoRecurso,
-  crear: (body: TPayload) => Promise<unknown>,
-  actualizar: (id: number, body: TPayload) => Promise<unknown>,
+  crear: (body: TPayload) => Promise<TResultado>,
+  actualizar: (id: number, body: TPayload) => Promise<TResultado>,
   onSaved?: () => void,
 ) {
   return useMutation({
@@ -85,10 +85,21 @@ function useGuardarCatalogo<TPayload>(
 }
 
 export const useGuardarProducto = (onSaved?: () => void) =>
-  useGuardarCatalogo<ProductoPayload>('productos', crearProducto, actualizarProducto, onSaved)
+  useGuardarCatalogo<ProductoPayload, Producto>('productos', crearProducto, actualizarProducto, onSaved)
+export const useSubirImagenProducto = () =>
+  useMutation({
+    mutationFn: ({ id, archivo }: { id: number; archivo: File }) =>
+      subirImagenProducto(id, archivo),
+    // La URL pública vive en el producto, así que hay que refrescar el
+    // listado para que la tarjeta muestre la imagen recién subida.
+    onSuccess: async () => {
+      await invalidarCatalogo('productos')
+    },
+    onError: (e: unknown) => toast.error(errMsg(e, 'No se pudo subir la imagen')),
+  })
 export const useGuardarCategoria = (onSaved?: () => void) =>
-  useGuardarCatalogo<CategoriaPayload>('categorias', crearCategoria, actualizarCategoria, onSaved)
+  useGuardarCatalogo<CategoriaPayload, Categoria>('categorias', crearCategoria, actualizarCategoria, onSaved)
 export const useGuardarArea = (onSaved?: () => void) =>
-  useGuardarCatalogo<AreaPayload>('areas', crearArea, actualizarArea, onSaved)
+  useGuardarCatalogo<AreaPayload, Area>('areas', crearArea, actualizarArea, onSaved)
 export const useGuardarExtra = (onSaved?: () => void) =>
-  useGuardarCatalogo<ExtraPayload>('extras', crearExtra, actualizarExtra, onSaved)
+  useGuardarCatalogo<ExtraPayload, Extra>('extras', crearExtra, actualizarExtra, onSaved)

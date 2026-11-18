@@ -1,7 +1,8 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { Check, ImageIcon, Plus, Trash2, X } from 'lucide-react'
-import { useGuardarProducto } from '../hooks'
+import { useGuardarProducto, useSubirImagenProducto } from '../hooks'
+import { FileInput } from './FileInput'
 import { normalizarTextoCatalogo } from '../normalizacion'
 import type { Area, Categoria, Extra, Producto, ProductoPayload } from '../types'
 
@@ -13,6 +14,7 @@ export default function ProductoModal({ categorias, areas, extras, editing, onCl
   const categoriasActivas = categorias.filter(c => c.activo || c.id === editing?.categoriaId)
   const areasActivas = areas.filter(a => a.activo || a.id === editing?.areaId)
   const extrasActivos = extras.filter(e => e.activo || editing?.extras.some(x => x.id === e.id))
+
   const [nombre, setNombre] = useState(editing?.nombre ?? '')
   const [descripcion, setDescripcion] = useState(editing?.descripcion ?? '')
   const [imagenUrl, setImagenUrl] = useState(editing?.imagenUrl ?? '')
@@ -22,10 +24,23 @@ export default function ProductoModal({ categorias, areas, extras, editing, onCl
   const [extraIds, setExtraIds] = useState<number[]>((editing?.extras ?? []).map(e => e.id))
   const [ingredientes, setIngredientes] = useState<string[]>(editing?.ingredientes ?? [])
   const [nuevoIngrediente, setNuevoIngrediente] = useState('')
-  const [errors, setErrors] = useState<Errors>({})
+
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null)
+  const [urlPrevia, setUrlPrevia] = useState<string | null>(null)
   const [imageFailed, setImageFailed] = useState(false)
-  const mutation = useGuardarProducto(onClose)
-  const previewUrl = useMemo(() => imagenUrl.trim(), [imagenUrl])
+  const [subiendoImagen, setSubiendoImagen] = useState(false)
+
+  const [errors, setErrors] = useState<Errors>({})
+  // No pasamos `onClose` aquí: el modal debe cerrarse solo cuando termine
+  // también la subida del archivo, no al crear el producto.
+  const mutation = useGuardarProducto()
+  const subirImagenMutation = useSubirImagenProducto()
+
+  const previewUrl = useMemo(() => {
+    if (urlPrevia) return urlPrevia
+    if (imagenUrl.trim()) return imagenUrl.trim()
+    return null
+  }, [urlPrevia, imagenUrl])
 
   const addIngrediente = () => {
     const value = normalizarTextoCatalogo(nuevoIngrediente)
@@ -33,45 +48,118 @@ export default function ProductoModal({ categorias, areas, extras, editing, onCl
     setNuevoIngrediente('')
   }
 
-  const guardar = () => {
+  const onArchivoCambia = (file: File | null) => {
+    setArchivoSeleccionado(file)
+    if (file) {
+      setUrlPrevia(URL.createObjectURL(file))
+      setImageFailed(false)
+    } else {
+      if (urlPrevia) URL.revokeObjectURL(urlPrevia)
+      setUrlPrevia(null)
+    }
+  }
+
+  const eliminarArchivo = () => {
+    setArchivoSeleccionado(null)
+    if (urlPrevia) URL.revokeObjectURL(urlPrevia)
+    setUrlPrevia(null)
+    setImageFailed(false)
+    setImagenUrl('')
+  }
+
+  const guardar = async () => {
     const nextErrors: Errors = {}
     if (!nombre.trim()) nextErrors.nombre = 'El nombre es obligatorio.'
     const parsedPrice = Number(precio)
     if (precio === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) nextErrors.precio = 'Ingresa un precio válido.'
     if (!categoriaId) nextErrors.categoriaId = 'Selecciona una categoría.'
     if (!areaId) nextErrors.areaId = 'Selecciona un área de preparación.'
-    if (imagenUrl && !/^https?:\/\//i.test(imagenUrl)) nextErrors.imagenUrl = 'Usa una URL que comience con http:// o https://.'
+
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
-    const body: ProductoPayload = {
-      nombre: normalizarTextoCatalogo(nombre), descripcion: normalizarTextoCatalogo(descripcion, 'descripcion') || null, imagenUrl: imagenUrl.trim() || null,
-      precio: parsedPrice, categoriaId, areaId, extraIds, ingredientes,
+
+    try {
+      const body: ProductoPayload = {
+        nombre: normalizarTextoCatalogo(nombre),
+        descripcion: normalizarTextoCatalogo(descripcion, 'descripcion') || null,
+        imagenUrl: imagenUrl.trim() || null,
+        precio: parsedPrice,
+        categoriaId,
+        areaId,
+        extraIds,
+        ingredientes,
+      }
+
+      let productoGuardado: Producto
+
+      // Primero guardamos los datos del producto (alta o edición).
+      productoGuardado = editing?.id
+        ? await mutation.mutateAsync({ id: editing.id, body })
+        : await mutation.mutateAsync({ id: undefined, body })
+
+      // Después subimos el archivo, si corresponde, y recién entonces cerramos.
+      if (archivoSeleccionado && productoGuardado.id) {
+        setSubiendoImagen(true)
+        try {
+          productoGuardado = await subirImagenMutation.mutateAsync({
+            id: productoGuardado.id,
+            archivo: archivoSeleccionado,
+          })
+        } finally {
+          setSubiendoImagen(false)
+        }
+      }
+
+      onClose()
+    } catch {
+      setSubiendoImagen(false)
     }
-    mutation.mutate({ id: editing?.id, body })
   }
 
   return <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="producto-title"><div className="admin-modal admin-modal-lg">
     <div className="modal-header"><div><h2 id="producto-title">{editing ? 'Editar producto' : 'Nuevo producto'}</h2><p>Información que verá el cliente en el menú.</p></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X size={18}/></button></div>
     <div className="product-form-grid">
       <div className="form-stack">
-        <Field label="Nombre" error={errors.nombre}><input value={nombre} maxLength={120} onChange={e => setNombre(e.target.value)} onBlur={() => setNombre(normalizarTextoCatalogo(nombre))} className="input" autoFocus/></Field>
-        <Field label="Descripción"><textarea value={descripcion} maxLength={500} onChange={e => setDescripcion(e.target.value)} onBlur={() => setDescripcion(normalizarTextoCatalogo(descripcion, 'descripcion'))} className="input" rows={3}/></Field>
+        <Field label="Nombre" error={errors.nombre}><input value={nombre} maxLength={120} onChange={e => setNombre(e.target.value)} onBlur={() => setNombre(normalizarTextoCatalogo(nombre))} className="input" autoFocus disabled={subiendoImagen}/></Field>
+        <Field label="Descripción"><textarea value={descripcion} maxLength={500} onChange={e => setDescripcion(e.target.value)} onBlur={() => setDescripcion(normalizarTextoCatalogo(descripcion, 'descripcion'))} className="input" rows={3} disabled={subiendoImagen}/></Field>
         <div className="form-grid-2">
-          <Field label="Precio" error={errors.precio}><input type="number" min="0" step="0.01" value={precio} onChange={e => setPrecio(e.target.value)} className="input"/></Field>
-          <Field label="Categoría" error={errors.categoriaId}><select value={categoriaId} onChange={e => setCategoriaId(Number(e.target.value))} className="input"><option value={0}>Seleccionar…</option>{categoriasActivas.map(c => <option key={c.id} value={c.id}>{c.nombre}{!c.activo ? ' (inactiva)' : ''}</option>)}</select></Field>
+          <Field label="Precio" error={errors.precio}><input type="number" min="0" step="0.01" value={precio} onChange={e => setPrecio(e.target.value)} className="input" disabled={subiendoImagen}/></Field>
+          <Field label="Categoría" error={errors.categoriaId}><select value={categoriaId} onChange={e => setCategoriaId(Number(e.target.value))} className="input" disabled={subiendoImagen}><option value={0}>Seleccionar…</option>{categoriasActivas.map(c => <option key={c.id} value={c.id}>{c.nombre}{!c.activo ? ' (inactiva)' : ''}</option>)}</select></Field>
         </div>
-        <Field label="Área de preparación" error={errors.areaId}><select value={areaId} onChange={e => setAreaId(Number(e.target.value))} className="input"><option value={0}>Seleccionar…</option>{areasActivas.map(a => <option key={a.id} value={a.id}>{a.nombre}{!a.activo ? ' (inactiva)' : ''}</option>)}</select></Field>
+        <Field label="Área de preparación" error={errors.areaId}><select value={areaId} onChange={e => setAreaId(Number(e.target.value))} className="input" disabled={subiendoImagen}><option value={0}>Seleccionar…</option>{areasActivas.map(a => <option key={a.id} value={a.id}>{a.nombre}{!a.activo ? ' (inactiva)' : ''}</option>)}</select></Field>
         <Field label="Extras permitidos"><div className="check-grid">{extrasActivos.length ? extrasActivos.map(extra => <label key={extra.id} className="check-option"><input type="checkbox" checked={extraIds.includes(extra.id)} onChange={() => setExtraIds(ids => ids.includes(extra.id) ? ids.filter(id => id !== extra.id) : [...ids, extra.id])}/><span>{extra.nombre}</span><small>${Number(extra.precio).toFixed(2)}</small></label>) : <p className="field-hint">No hay extras disponibles.</p>}</div></Field>
-        <Field label="Ingredientes removibles"><div className="inline-control"><input className="input" value={nuevoIngrediente} placeholder="Ej. cebolla" onChange={e => setNuevoIngrediente(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addIngrediente() } }}/><button className="btn-ghost" type="button" onClick={addIngrediente}><Plus size={14}/>Agregar</button></div><div className="chip-list">{ingredientes.map(item => <span className="form-chip" key={item}>{item}<button type="button" onClick={() => setIngredientes(ingredientes.filter(i => i !== item))} aria-label={`Quitar ${item}`}><X size={12}/></button></span>)}</div></Field>
+        <Field label="Ingredientes removibles"><div className="inline-control"><input className="input" value={nuevoIngrediente} placeholder="Ej. cebolla" onChange={e => setNuevoIngrediente(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addIngrediente() } }} disabled={subiendoImagen}/><button className="btn-ghost" type="button" onClick={addIngrediente} disabled={subiendoImagen}><Plus size={14}/>Agregar</button></div><div className="chip-list">{ingredientes.map(item => <span className="form-chip" key={item}>{item}<button type="button" onClick={() => setIngredientes(ingredientes.filter(i => i !== item))} aria-label={`Quitar ${item}`}><X size={12}/></button></span>)}</div></Field>
       </div>
       <div className="image-panel">
-        <Field label="Imagen del producto" error={errors.imagenUrl}><input className="input" value={imagenUrl} maxLength={300} placeholder="https://servidor/imagen.webp" onChange={e => { setImagenUrl(e.target.value); setImageFailed(false) }}/><p className="field-hint">Por ahora ingresa una URL. El cargador se conectará al futuro servidor de archivos.</p></Field>
-        <div className="image-preview">{previewUrl && !imageFailed ? <img // eslint-disable-line @next/next/no-img-element -- URL externa dinámica del gestor de archivos
-          src={previewUrl} alt="Vista previa del producto" onError={() => setImageFailed(true)}/> : <><ImageIcon size={36}/><span>{imageFailed ? 'No se pudo cargar la imagen' : 'Vista previa'}</span></>}</div>
-        {previewUrl && <button className="btn-ghost danger-text" type="button" onClick={() => { setImagenUrl(''); setImageFailed(false) }}><Trash2 size={14}/>Quitar imagen</button>}
+        <Field label="Imagen del producto">
+          <FileInput
+            accept="image/*,video/*"
+            disabled={subiendoImagen}
+            maxSizeMB={50}
+            onChange={onArchivoCambia}
+            value={archivoSeleccionado}
+          />
+          <p className="field-hint">Se sube al servidor de archivos al guardar el producto.</p>
+        </Field>
+
+        <div className="image-preview">
+          {previewUrl && !imageFailed ? (
+            <img src={previewUrl} alt="Vista previa del producto" onError={() => setImageFailed(true)} className="preview-image"/>
+          ) : (
+            <div className="preview-placeholder"><ImageIcon size={36}/><span>{imageFailed ? 'No se pudo cargar la imagen' : 'Vista previa'}</span></div>
+          )}
+        </div>
+
+        {(previewUrl || imagenUrl) && (
+          <button className="btn-ghost danger-text" type="button" onClick={eliminarArchivo}><Trash2 size={14}/>Quitar imagen</button>
+        )}
+
+        {subiendoImagen && (
+          <div className="subiendo mt-2 flex items-center gap-2 text-sm text-primary"><span className="animate-pulse">●</span> Subiendo archivo al servidor de archivos…</div>
+        )}
       </div>
     </div>
-    <div className="modal-actions"><button className="btn-yellow" onClick={guardar} disabled={mutation.isPending}><Check size={14}/>{mutation.isPending ? 'Guardando…' : 'Guardar producto'}</button><button className="btn-ghost" onClick={onClose}>Cancelar</button></div>
+    <div className="modal-actions"><button className="btn-yellow" onClick={guardar} disabled={mutation.isPending || subiendoImagen}><Check size={14}/>{mutation.isPending || subiendoImagen ? 'Guardando…' : 'Guardar producto'}</button><button className="btn-ghost" onClick={onClose} disabled={subiendoImagen}>Cancelar</button></div>
   </div></div>
 }
 

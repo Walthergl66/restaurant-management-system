@@ -220,3 +220,9 @@ El frontend utiliza la directiva `rewrites` en `next.config.ts`:
 
 - Todas las peticiones al path `/api/*` son redirigidas automáticamente a `${BACKEND_URL}/api/*`.
 - Esto evita problemas de CORS durante el desarrollo y unifica los endpoints bajo el mismo dominio de origen en el navegador.
+
+En el catálogo, la imagen o video seleccionado se envía como `multipart/form-data`
+a `POST /api/v1/productos/{id}/imagen` después de guardar el producto. El
+servidor WebDAV y sus credenciales se configuran únicamente en `backend/.env`;
+las imágenes SFTP existentes se resuelven mediante su ruta histórica de lectura.
+Consulta el contrato en [`docs/api/README.md`](../docs/api/README.md).

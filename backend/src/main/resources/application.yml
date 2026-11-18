@@ -10,6 +10,10 @@ spring:
     import: optional:file:.env[.properties],optional:file:backend/.env[.properties]
   application:
     name: restaurant-management-system
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 51MB
   # NO se fija spring.profiles.active aquí a propósito: con un perfil por
   # defecto la app arrancaba en 'dev' (secreto y ajustes laxos) en cualquier
   # despliegue que no lo eligiera explícitamente. El perfil se elige solo por
@@ -121,3 +125,15 @@ app:
     # la edita el administrador desde el panel (ConfigRestauranteService). Sin
     # coordenadas configuradas, los endpoints que calculan ruta responden 503
     # (fail-closed, no se inventa un origen).
+  media:
+    # Servidor de archivos propio (VM Ubuntu con nginx + WebDAV).
+    # Sin configurar nada, el campo de imagen en el frontend solo acepta
+    # URLs de texto (modo legacy).
+    upload-url: ${APP_MEDIA_UPLOAD_URL:}
+    public-url: ${APP_MEDIA_PUBLIC_URL:}
+    usuario: ${APP_MEDIA_USUARIO:}
+    clave: ${APP_MEDIA_CLAVE:}
+  archivos:
+    # Lectura pública de archivos históricos que siguen referenciados desde
+    # catalogo.productos.imagen_url. Las cargas nuevas usan app.media (WebDAV).
+    lectura-url: ${ARCHIVOS_LECTURA_URL:http://192.168.100.77/media/}

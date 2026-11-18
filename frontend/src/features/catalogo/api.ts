@@ -1,4 +1,6 @@
 'use client'
+import axios from 'axios'
+import { readSession } from '@/shared/api/session'
 import api from '@/shared/api/client'
 import type {
   Area, AreaPayload, Categoria, CategoriaPayload, Extra, ExtraPayload,
@@ -40,6 +42,26 @@ export async function crearProducto(body: ProductoPayload): Promise<Producto> {
 
 export async function actualizarProducto(id: number, body: ProductoPayload): Promise<Producto> {
   const { data } = await api.put(`/productos/${id}`, body)
+  return data
+}
+
+export async function subirImagenProducto(id: number, archivo: File): Promise<Producto> {
+  const formData = new FormData()
+  formData.append('archivo', archivo)
+
+  // Usamos axios directamente (sin la instancia `api` que fija
+  // Content-Type: application/json por defecto) para que el navegador
+  // establezca automáticamente multipart/form-data con el boundary correcto.
+  const session = readSession()
+  const { data } = await axios.post(
+    `/api/v1/productos/${id}/imagen`,
+    formData,
+    {
+      headers: {
+        ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
+      },
+    }
+  )
   return data
 }
 

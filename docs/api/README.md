@@ -35,6 +35,23 @@ Rate limit: `POST /login` → 5/min por IP (429 `urn:problem:restaurante:rate-li
 | salud | `GET /actuator/health` | — |
 | docs | `GET /v3/api-docs`, `GET /swagger-ui.html` | — |
 
+### Imágenes y videos del catálogo
+
+`POST /api/v1/productos/{id}/imagen` recibe `multipart/form-data` con el campo
+`archivo`. Requiere el permiso `catalogo:gestionar`; admite imágenes o videos de
+hasta 50 MB. El backend guarda el archivo en el servidor WebDAV configurado y
+persiste la URL pública en `producto.imagenUrl`. Los espacios y caracteres
+especiales del nombre del archivo se codifican en la URL generada.
+
+Las URLs históricas `GET/HEAD /api/v1/archivos/{id}/contenido` se mantienen para
+archivos vinculados antes del cambio de almacenamiento y redirigen a la base
+pública indicada por `ARCHIVOS_LECTURA_URL`.
+
+Configura `APP_MEDIA_UPLOAD_URL`, `APP_MEDIA_PUBLIC_URL`, `APP_MEDIA_USUARIO` y
+`APP_MEDIA_CLAVE` únicamente en el entorno del backend. El navegador sube el
+archivo a la API; las credenciales del servidor de archivos nunca se envían al
+cliente.
+
 ## Roles
 
 Los roles viven en categorías y lo que el panel puede hacer con cada uno son

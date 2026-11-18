@@ -17,7 +17,12 @@ import static org.mockito.Mockito.*;
 
 class ProductoHabilitacionTest {
     private final ProductoRepository repository = mock(ProductoRepository.class);
-    private final ProductoService service = new ProductoService(repository, mock(CategoriaRepository.class), mock(AreaRepository.class), mock(ExtraRepository.class));
+    private final ProductoService service = new ProductoService(
+            repository,
+            mock(CategoriaRepository.class),
+            mock(AreaRepository.class),
+            mock(ExtraRepository.class),
+            mock(AlmacenadorArchivos.class));
 
     private ProductoRequest solicitud(String nombre) {
         return new ProductoRequest(nombre, null, null, new java.math.BigDecimal("1.00"), null, null, java.util.Set.of(), java.util.List.of());

@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -93,6 +94,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/registro-repartidor",
                                 "/api/v1/auth/verificar-email", "/api/v1/auth/reenviar-verificacion",
                                 "/api/v1/auth/solicitar-recuperacion", "/api/v1/auth/restablecer-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/archivos/*/contenido").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/v1/archivos/*/contenido").permitAll()
                         .requestMatchers("/api/v1/menu", "/api/v1/menu/**").permitAll()
                         .requestMatchers("/ws").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

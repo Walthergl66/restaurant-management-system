@@ -6,6 +6,7 @@ import com.restaurante.catalogo.web.dto.HabilitacionCatalogoRequest;
 import com.restaurante.catalogo.web.dto.ProductoResponse;
 import com.restaurante.usuarios.PermisoCodigo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,8 +19,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -65,6 +68,15 @@ public class ProductoController {
     public ProductoResponse actualizar(@PathVariable Long id,
                                        @Valid @RequestBody ProductoRequest request) {
         return productoService.actualizar(id, request);
+    }
+
+    @PostMapping("/{id}/imagen")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.CATALOGO_GESTIONAR + "')")
+    @Operation(summary = "Sube la imagen o video de un producto al servidor de archivos")
+    public ProductoResponse subirImagen(@PathVariable Long id,
+                                        @Parameter(description = "Archivo de imagen o video (máx. 50 MB)")
+                                        @RequestParam("archivo") MultipartFile archivo) {
+        return productoService.subirImagen(id, archivo);
     }
 
     @PatchMapping("/{id}/habilitacion")
