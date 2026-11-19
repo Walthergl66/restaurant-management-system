@@ -19,6 +19,9 @@ Las migraciones Flyway que ya se aplicaron son inmutables: los cambios nuevos
 deben usar una versión posterior y no reutilizar números existentes. Si el
 checksum de una migración aplicada cambia, Flyway detiene el backend hasta
 restaurar la migración original y ordenar las nuevas versiones.
+No renumeres migraciones para insertar una funcionalidad entre versiones
+existentes: asígnale el siguiente número libre y conserva los nombres y el
+contenido de las migraciones ya publicadas.
 
 Para que el catálogo permita subir imágenes o videos, configura en
 `backend/.env` `APP_MEDIA_UPLOAD_URL`, `APP_MEDIA_PUBLIC_URL`,
