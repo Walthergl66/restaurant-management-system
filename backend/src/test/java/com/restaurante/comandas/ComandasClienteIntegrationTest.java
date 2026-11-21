@@ -216,6 +216,20 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
     // Utilidades de contexto de datos
     // ---------------------------------------------------------------
 
+    @Test
+    void laComandaDeUnPedidoDeLaAppNoTraeMesaYTieneCanalApp() throws Exception {
+        long area = crearArea("Canal app");
+        long producto = crearProductoConArea("Plato App", "6.00", area);
+        String codigo = "CLI-APP-" + System.nanoTime();
+        String idem = "idem-app-" + System.nanoTime();
+        crearPedidoCliente(codigo, idem, producto);
+        confirmarCliente(codigo, idem);
+
+        JsonNode comanda = buscar(codigo, null).get(0);
+        assertEquals("APP", comanda.path("canal").asText());
+        assertTrue(comanda.path("mesaNumero").isMissingNode(), "un pedido de la app no tiene mesa (el campo null se omite del JSON)");
+    }
+
     private void crearPedidoCliente(String codigo, String idem, long... productoIds) throws Exception {
         String items = Arrays.stream(productoIds)
                 .mapToObj(p -> "{\"productoId\":%d,\"cantidad\":2,\"extraIds\":[],\"ingredientesRemovidos\":[]}"

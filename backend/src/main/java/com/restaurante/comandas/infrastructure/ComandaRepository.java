@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,17 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
             + " where (:areaId is null or c.areaId = :areaId)"
             + " and (:estado is null or c.estado = :estado)")
     List<Comanda> buscarConLineas(Long areaId, ComandaEstado estado);
+
+    /**
+     * Comandas que la cocina aún necesita ver: todas las pendientes y en preparación, y las
+     * listas modificadas desde {@code desde} (para que la columna de listas no crezca sin límite).
+     */
+    @EntityGraph(attributePaths = "lineas")
+    @Query("select c from Comanda c"
+            + " where (:areaId is null or c.areaId = :areaId)"
+            + " and (c.estado <> com.restaurante.comandas.domain.ComandaEstado.LISTO or c.updatedAt >= :desde)"
+            + " order by c.id")
+    List<Comanda> buscarActivasConLineas(@Param("areaId") Long areaId, @Param("desde") Instant desde);
 
     @EntityGraph(attributePaths = "lineas")
     @Query("select c from Comanda c where c.id = :id")

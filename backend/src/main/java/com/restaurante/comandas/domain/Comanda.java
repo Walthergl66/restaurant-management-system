@@ -90,8 +90,14 @@ public class Comanda extends AuditableEntity {
         this.estado = ComandaEstado.EN_PREPARACION;
     }
 
+    /**
+     * Una orden debe pasar antes por preparación. La comanda de cancelación no se
+     * prepara: es un aviso para la cocina, así que "listo" significa "enterado" y
+     * puede darse directamente desde PENDIENTE.
+     */
     public void marcarListo() {
-        if (estado != ComandaEstado.EN_PREPARACION && estado != ComandaEstado.LISTO) {
+        boolean avisoEnterado = tipo == TipoComanda.CANCELACION && estado == ComandaEstado.PENDIENTE;
+        if (estado != ComandaEstado.EN_PREPARACION && estado != ComandaEstado.LISTO && !avisoEnterado) {
             throw new BusinessRuleException(
                     "Una comanda " + estado.name().toLowerCase() + " no puede marcarse lista");
         }

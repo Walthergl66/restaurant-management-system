@@ -7,6 +7,9 @@ import com.restaurante.comandas.domain.TipoComanda;
 import com.restaurante.comandas.infrastructure.ComandaRepository;
 import com.restaurante.comandas.web.dto.ComandaResponse;
 import com.restaurante.comandas.web.dto.ImpresionResponse;
+import com.restaurante.mesas.MesaResumen;
+import com.restaurante.mesas.Mesas;
+import com.restaurante.pedidos.PedidoResumen;
 import com.restaurante.pedidos.Pedidos;
 import com.restaurante.shared.domain.exception.NotFoundException;
 import com.restaurante.shared.outbox.EstadoOutbox;
@@ -16,7 +19,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Comandas por área: listado, estados de cocina (RF-11 a RF-14), reimpresión
@@ -28,43 +35,52 @@ public class ComandaService {
 
     private static final int TAMANO_LOTE_IMPRESION = 50;
 
+    /** Cuánto tiempo siguen visibles para la cocina las comandas ya listas (valor pendiente de validar con el negocio). */
+    static final Duration VENTANA_LISTOS = Duration.ofHours(2);
+
     private final ComandaRepository comandaRepository;
     private final OutboxRepository outboxRepository;
     private final Pedidos pedidos;
     private final Clientes clientes;
+    private final Mesas mesas;
 
     public ComandaService(ComandaRepository comandaRepository, OutboxRepository outboxRepository,
-                          Pedidos pedidos, Clientes clientes) {
+                          Pedidos pedidos, Clientes clientes, Mesas mesas) {
         this.comandaRepository = comandaRepository;
         this.outboxRepository = outboxRepository;
         this.pedidos = pedidos;
         this.clientes = clientes;
+        this.mesas = mesas;
     }
 
     @Transactional(readOnly = true)
     public List<ComandaResponse> listar(Long areaId, ComandaEstado estado) {
-        return comandaRepository.buscarConLineas(areaId, estado).stream()
-                .map(ComandaResponse::from)
-                .toList();
+        return aRespuestas(comandaRepository.buscarConLineas(areaId, estado));
+    }
+
+    /** Comandas que la cocina debe ver ahora: pendientes, en preparación y las listas recientes. */
+    @Transactional(readOnly = true)
+    public List<ComandaResponse> listarActivas(Long areaId) {
+        return aRespuestas(comandaRepository.buscarActivasConLineas(areaId, Instant.now().minus(VENTANA_LISTOS)));
     }
 
     @Transactional(readOnly = true)
     public ComandaResponse obtener(Long id) {
-        return ComandaResponse.from(cargar(id));
+        return aRespuesta(cargar(id), new HashMap<>());
     }
 
     public ComandaResponse marcarEnPreparacion(Long id) {
         Comanda comanda = cargarConAreasBloqueadas(id);
         comanda.marcarEnPreparacion();
         avanzarSiTodoElPedidoAvanza(comanda, false);
-        return ComandaResponse.from(comanda);
+        return aRespuesta(comanda, new HashMap<>());
     }
 
     public ComandaResponse marcarListo(Long id) {
         Comanda comanda = cargarConAreasBloqueadas(id);
         comanda.marcarListo();
         avanzarSiTodoElPedidoAvanza(comanda, true);
-        return ComandaResponse.from(comanda);
+        return aRespuesta(comanda, new HashMap<>());
     }
 
     public ComandaResponse reimprimir(Long id) {
@@ -77,7 +93,7 @@ public class ComandaService {
                 comanda.getAreaId(),
                 comanda.getAreaNombre(),
                 GeneradorComandas.EVENTO_IMPRESION));
-        return ComandaResponse.from(comanda);
+        return aRespuesta(comanda, new HashMap<>());
     }
 
     @Transactional(readOnly = true)
@@ -115,6 +131,30 @@ public class ComandaService {
     private EventoOutbox cargarOrdenDeImpresion(Long id) {
         return outboxRepository.findByTipoAndId(GeneradorComandas.TIPO_OUTBOX, id)
                 .orElseThrow(() -> new NotFoundException("Orden de impresión " + id + " no encontrada"));
+    }
+
+    private List<ComandaResponse> aRespuestas(List<Comanda> comandas) {
+        Map<String, Origen> origenes = new HashMap<>();
+        return comandas.stream().map(c -> aRespuesta(c, origenes)).toList();
+    }
+
+    private ComandaResponse aRespuesta(Comanda comanda, Map<String, Origen> origenes) {
+        Origen origen = origenes.computeIfAbsent(comanda.getPedidoCodigo(), this::origenDe);
+        return ComandaResponse.from(comanda, origen.mesaNumero(), origen.canal());
+    }
+
+    /** Mesa del pedido de salón; los pedidos de la app (retiro/domicilio) no tienen mesa. */
+    private Origen origenDe(String pedidoCodigo) {
+        return pedidos.pedidoConfirmado(pedidoCodigo)
+                .map(pedido -> new Origen(numeroDeMesa(pedido), ComandaResponse.CANAL_SALON))
+                .orElseGet(() -> new Origen(null, ComandaResponse.CANAL_APP));
+    }
+
+    private Integer numeroDeMesa(PedidoResumen pedido) {
+        return mesas.mesa(pedido.mesaId()).map(MesaResumen::numero).orElse(null);
+    }
+
+    private record Origen(Integer mesaNumero, String canal) {
     }
 
     private Comanda cargar(Long id) {
