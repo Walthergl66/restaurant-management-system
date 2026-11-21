@@ -28,5 +28,4 @@ DocumentaciÃ³n basada en la implementaciÃ³n del monorepo de gestiÃ³n de re
 
 ## Entregas sobre archivos multimedia
 
-- [Informe de implementación del administrador de archivos multimedia](entregas/Informe_Administrador_Archivos_Multimedia.docx)
 - [Guía de conexión del proyecto a la VM de archivos](operacion/Guia_Conexion_Proyecto_VM_Archivos.docx)
