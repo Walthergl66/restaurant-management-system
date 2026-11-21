@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 
-/** Grupo de la cocina (rol COCINA): hoy solo la pestaña Comandas; el mostrador se añade aparte. */
+/** Grupo de la cocina (rol COCINA): Comandas (preparar) y Mostrador (entregar pedidos de retiro). */
 export default function KitchenLayout() {
   return (
     <Tabs
@@ -19,6 +19,13 @@ export default function KitchenLayout() {
         options={{
           title: 'Comandas',
           tabBarIcon: ({ color, size }) => <Ionicons name="flame-outline" size={size} color={color as string} />,
+        }}
+      />
+      <Tabs.Screen
+        name="mostrador"
+        options={{
+          title: 'Mostrador',
+          tabBarIcon: ({ color, size }) => <Ionicons name="bag-handle-outline" size={size} color={color as string} />,
         }}
       />
     </Tabs>

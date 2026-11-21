@@ -23,8 +23,13 @@ const apiPedidosMesa: ApiPedidosMesa = {
 };
 
 export const meseroService = {
+  /** Todas las mesas, incluidas las deshabilitadas (p. ej. para mostrar el número de una mesa con pedido en curso). */
+  async listarMesas(): Promise<MesaMesero[]> {
+    return apiClient.get<MesaMesero[]>('/mesas');
+  },
+
   async listarMesasHabilitadas(): Promise<MesaMesero[]> {
-    const mesas = await apiClient.get<MesaMesero[]>('/mesas');
+    const mesas = await this.listarMesas();
     return mesas.filter(mesa => mesa.activo);
   },
 

@@ -27,7 +27,7 @@ El backend es un monolito modular Spring Modulith bajo `com.restaurante`.
 ## Aplicaciones cliente
 
 - **Web** (`frontend/src/app`, `frontend/src/features`): login, dashboard, mesas y zonas del restaurante, toma y detalle de pedidos, cocina/KDS, cuentas, caja, catálogo de productos, administración de usuarios, auditoría, anulaciones y reportes. El código visible de mesa (`M01`) se deriva de `numero`; en vistas de pedidos se obtiene el número a partir de `mesaId` mediante el catálogo de mesas. El rewrite de Next.js enruta `/api/*` al backend.
-- **Móvil** (`mobile/src/app`, `mobile/src/features`): registro/login, verificación y recuperación de cuenta; exploración de menú y producto, carrito, checkout, seguimiento e historial de pedidos, direcciones y métodos de pago; vistas de ayuda, términos y privacidad; atención de mesas y pedidos para meseros (con una pestaña de cocina) y pantalla de comandas para el rol cocina.
+- **Móvil** (`mobile/src/app`, `mobile/src/features`): registro/login, verificación y recuperación de cuenta; exploración de menú y producto, carrito, checkout, seguimiento e historial de pedidos, direcciones y métodos de pago; vistas de ayuda, términos y privacidad; atención de mesas y pedidos para meseros (con una pestaña de cocina) pantalla de comandas para el rol cocina y entrega de pedidos listos (mostrador) por mesero y cocina.
 - **Base de datos** (`backend/src/main/resources/db/migration`): migraciones Flyway; scripts de respaldo/restauración en `database/`.
 
 ## Responsabilidades transversales

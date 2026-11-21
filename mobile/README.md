@@ -15,8 +15,8 @@ feature con un barrel (`index.ts`) como única superficie pública, rutas
 src/
 ├── app/                        # Expo Router (cada archivo = ruta fina)
 │   ├── (tabs)/                 # Menú, Carrito, Pedidos, Perfil
-│   ├── (waiter)/               # Mesero: pestañas Mesas y Cocina; armado de pedido y producto
-│   ├── (kitchen)/              # Cocina (rol COCINA): pestaña Comandas
+│   ├── (waiter)/               # Mesero: pestañas Mesas, Cocina y Listos; armado de pedido y producto
+│   ├── (kitchen)/              # Cocina (rol COCINA): pestañas Comandas y Mostrador
 │   ├── checkout.tsx            # Flujo de pedido idempotente
 │   ├── login.tsx               # Auth
 │   └── product/[id].tsx        # Detalle (reexport del barrel del feature)
@@ -35,6 +35,7 @@ src/
 │   ├── carrito/                # index.ts · CartContext (estado local) · types
 │   ├── clientes/               # index.ts · api.ts · types
 │   ├── cocina/                 # index.ts · api.ts · agrupar · components/CocinaScreen
+│   ├── mostrador/              # index.ts · api.ts · unir · components/PedidosListosScreen
 │   └── mesero/                 # index.ts · api.ts · zonas · geometriaMesa · components/*
 └── theme/                      # colores y tipografía
 ```
@@ -183,7 +184,26 @@ comandas pendientes nuevas vibra brevemente.
   primero y en rojo.
 - Si una acción falla (por ejemplo, sin conexión) se avisa y la tarjeta no cambia: el backend es la fuente de verdad.
 - La pantalla es la misma para el rol COCINA (con perfil y cierre de sesión) y para la pestaña Cocina del
-  mesero. *Pendiente:* mostrador (entrega de pedidos listos) y contador de pendientes en el ícono de la pestaña.
+  mesero. *Pendiente:* contador de pendientes en el ícono de la pestaña.
+
+## Mostrador: entrega de pedidos listos
+
+Pantalla compartida donde se entrega lo que cocina ya dejó listo. Se llama **Listos** en la app del mesero y
+**Mostrador** en la de cocina, y se actualiza cada 15 s y con *pull to refresh*.
+
+| Quién | Qué ve |
+|---|---|
+| Mesero | Pedidos de **sus mesas** listos (botón *Entregar a la mesa*) y pedidos de la app para **retirar** listos (*Entregar al cliente*). |
+| Cocina | Solo los pedidos de la app para **retirar** (*Entregar al cliente*). |
+
+- Cada tarjeta muestra el código, "Mesa N" o "Retiro · nombre del cliente" y las líneas del pedido. Antes de
+  registrar la entrega se pide confirmación.
+- La entrega de retiro **no lleva PIN** (el cliente está presente). Los pedidos **a domicilio** no aparecen
+  aquí: los entrega el repartidor (*pendiente de decisión*).
+- Si una de las dos listas no se puede cargar (por ejemplo, un permiso que falta) se muestra la otra con un
+  aviso; si falla una entrega, la tarjeta no cambia.
+- Usa `GET /pedidos?estado=LISTO`, `POST /pedidos/{codigo}/entregar`,
+  `GET /clientes/operacion/pedidos?estado=LISTO&entrega=RETIRAR` y `POST /clientes/pedidos/{codigo}/entregar`.
 
 ## Endpoints que consume
 
@@ -202,6 +222,7 @@ Su tabla de mapeo y casos de prueba están documentados en
 | Mesero: mesas y zonas | `GET /mesas` | sí |
 | Mesero: enviar pedido | `POST /pedidos` → `POST /pedidos/{codigo}/items` → `POST /pedidos/{codigo}/confirmar` (si falla, `DELETE /pedidos/{codigo}`) | sí |
 | Cocina / pestaña Cocina | `GET /comandas?activas=true`, `GET /areas`, `POST /comandas/{id}/en-preparacion`, `POST /comandas/{id}/listo` | sí |
+| Mostrador / pestaña Listos | `GET /pedidos?estado=LISTO`, `POST /pedidos/{codigo}/entregar`, `GET /clientes/operacion/pedidos`, `POST /clientes/pedidos/{codigo}/entregar` | sí |
 
 Notas de contrato:
 - Dinero: el backend serializa `BigDecimal` como **número** JSON.
