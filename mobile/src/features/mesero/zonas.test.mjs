@@ -6,9 +6,9 @@ import ts from 'typescript';
 const { outputText } = ts.transpileModule(readFileSync(new URL('./zonas.ts', import.meta.url), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 });
-const { agruparMesasPorZona, idsMesasOcupadas } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
+const { agruparMesasPorZona } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
 
-const mesa = (id, numero, ubicacion) => ({ id, numero, capacidad: 4, ubicacion, activo: true });
+const mesa = (id, numero, ubicacion) => ({ id, numero, capacidad: 4, ubicacion, estado: 'LIBRE', activo: true });
 
 test('agrupa por ubicación, respeta el orden de aparición y ordena por número', () => {
   const zonas = agruparMesasPorZona([mesa(1, 3, 'Terraza'), mesa(2, 2, 'Salón'), mesa(3, 1, 'Terraza')]);
@@ -31,13 +31,4 @@ test('"salon" y "Salón " son la misma zona y se muestra la primera grafía', ()
 
 test('sin mesas no hay zonas', () => {
   assert.deepEqual(agruparMesasPorZona([]), []);
-});
-
-test('idsMesasOcupadas devuelve los mesaId de las cuentas abiertas', () => {
-  const ids = idsMesasOcupadas([
-    { id: 10, mesaId: 5, numeroMesa: 5, total: 12 },
-    { id: 11, mesaId: 7, numeroMesa: 7, total: 0 },
-  ]);
-  assert.deepEqual([...ids].sort(), [5, 7]);
-  assert.equal(idsMesasOcupadas([]).size, 0);
 });

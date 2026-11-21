@@ -1,4 +1,4 @@
-import type { CuentaAbierta, MesaMesero } from './types';
+import type { MesaMesero } from './types';
 
 export type ZonaMesas = { zona: string; mesas: MesaMesero[] };
 
@@ -20,9 +20,4 @@ export function agruparMesasPorZona(mesas: MesaMesero[]): ZonaMesas[] {
     zonas.set(clave, zona);
   }
   return [...zonas.values()].map(z => ({ ...z, mesas: [...z.mesas].sort((a, b) => a.numero - b.numero) }));
-}
-
-/** Ids de las mesas que tienen una cuenta abierta. */
-export function idsMesasOcupadas(cuentas: CuentaAbierta[]): Set<number> {
-  return new Set(cuentas.map(cuenta => cuenta.mesaId));
 }

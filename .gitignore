@@ -14,7 +14,8 @@
 docker/secrets/
 *.p12
 *.jks
-
+.claude/
+.docs/superpowers/plans
 # --- Logs ---
 *.log
 
