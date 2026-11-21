@@ -23,7 +23,7 @@ No requiere JMeter/k6 externo; el test `CargaConcurrenteTest` es determinístico
 - **Resultado:** `ok=1 conflict=8 other=1` con 10 hilos → dentro de tolerancia, `0` duplicadas `confirmaciones`.
 
 ## Defensas RNF-17 verificadas
-1. `Idempotency-Key` obligatoria (400 si falta).
+1. `Idempotency-Key` obligatoria (422 si falta; el encabezado es opcional a nivel HTTP y la regla de negocio lo rechaza).
 2. `UNIQUE(pedido_id,idempotency_key)` en `confirmaciones` y `UNIQUE(cliente_id,idempotency_key)` en `pedidos_clientes`.
 3. Outbox en misma transacción que `pedido.confirmar()` (`ApplicationEventPublisher` + `GeneradorComandas`).
 

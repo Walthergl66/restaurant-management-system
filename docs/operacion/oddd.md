@@ -4,7 +4,7 @@ En este repositorio se usa ODDD como documento de diseño/definición operativa;
 
 ## Componentes en ejecución
 
-Docker Compose levanta backend Spring y web Next.js. PostgreSQL es externo y se configura con `DB_*`. La aplicación móvil se distribuye/ejecuta aparte mediante Expo. Ver [guía de producción](../produccion.md).
+Docker Compose levanta backend Spring y web Next.js. PostgreSQL es externo y se configura con `DB_*`. La aplicación móvil se distribuye/ejecuta aparte mediante Expo. Ver [guía de producción](despliegue.md).
 
 ## Inicio
 

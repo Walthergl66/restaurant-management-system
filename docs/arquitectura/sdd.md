@@ -14,8 +14,8 @@ Web Next.js App Router organiza pantallas por features y comparte cliente HTTP/e
 
 ## Persistencia y contratos
 
-PostgreSQL organiza datos por schemas funcionales; Flyway mantiene migraciones. Contratos REST bajo `/api/v1`; detalles y roles en [API](../api.md). Integraciones de correo transaccional usan Brevo según configuración.
+PostgreSQL organiza datos por schemas funcionales; Flyway mantiene migraciones. Contratos REST bajo `/api/v1`; detalles y roles en [API](../api/README.md). Integraciones de correo transaccional usan Brevo según configuración.
 
 ## Decisiones y límites
 
-Compose incluye web y backend, no base de datos ni app móvil. No se identificó un documento formal de ADR completo; consultar `decision-escalado.md` para criterios de escalado. Los diagramas y límites de transacción por caso de uso siguen pendientes de validación con los módulos.
+Compose incluye web y backend, no base de datos ni app móvil. No se identificó un documento formal de ADR completo; consultar [escalado](decisiones/escalado.md) para criterios de escalado. Los diagramas y límites de transacción por caso de uso siguen pendientes de validación con los módulos.

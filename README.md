@@ -160,9 +160,11 @@ npx expo start
 ### 5. Base de Datos (PostgreSQL)
 
 - **Migraciones:** Se aplican automÃ¡ticamente al iniciar el backend mediante Flyway.
-- **Esquema:** 7 schemas por responsabilidad (`seguridad`, `catalogo`, `configuracion`,
-  `operaciones`, `comercial`, `tesoreria`, `auditoria`) y 35 tablas. El SQL consolidado
-  vive en `database/schema/restaurante_completo.sql`.
+- **Esquema:** 9 schemas por responsabilidad (`seguridad`, `catalogo`, `configuracion`,
+  `operaciones`, `comercial`, `tesoreria`, `auditoria`, `delivery`, `archivos`) y 49 tablas
+  (al 2026-11-21, migración V23). La fuente de verdad son las migraciones Flyway; el volcado
+  `database/schema/restaurante_completo.sql` es solo una referencia de lectura y se regenera
+  con cada migración (ver `database/README.md`).
 - **Respaldos:**
   ```bash
   ./database/backup.sh
