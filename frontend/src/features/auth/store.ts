@@ -1,7 +1,9 @@
 'use client'
 import axios from 'axios'
 import { create } from 'zustand'
+import toast from 'react-hot-toast'
 import { login as loginApi, me as meApi } from './api'
+import { MENSAJE_SOLO_MOVIL, puedeUsarWeb, SoloMovilError } from './acceso'
 import { queryClient } from '@/shared/api/queryClient'
 import { endSession, readSession, revokeSession, SessionUnavailableError, startSession } from '@/shared/api/session'
 import type { UserInfo } from './types'
@@ -46,6 +48,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   login: async (username, password) => {
     const previousId = readSession()?.id ?? null
     const data = await loginApi(username, password)
+    if (!puedeUsarWeb(data.usuario)) {
+      // La cuenta es válida pero pertenece a la app móvil: se revoca la sesión recién creada.
+      void revokeSession(data).catch(() => {})
+      throw new SoloMovilError()
+    }
     try {
       if ((readSession()?.id ?? null) !== previousId) throw new axios.CanceledError('La sesión cambió')
       const session = await startSession(data, previousId)
@@ -82,6 +89,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       try {
         const user = await meApi()
         if (readSession()?.id !== session.id) return
+        if (!puedeUsarWeb(user)) {
+          // Sesión abierta de una cuenta que ya no puede usar la web: se cierra y se avisa en el login.
+          const { accessToken, refreshToken } = session
+          endSession(session.id)
+          clearPrivateData()
+          set({ user: null, isAuthenticated: false, status: 'anonymous', sessionId: readSession()?.id ?? null, sessionError: null })
+          if (accessToken && refreshToken) void revokeSession({ accessToken, refreshToken }).catch(() => {})
+          toast.error(MENSAJE_SOLO_MOVIL)
+          return
+        }
         set({ user, isAuthenticated: true, status: 'authenticated', sessionError: null })
       } catch (error) {
         if (readSession()?.id !== session.id) return

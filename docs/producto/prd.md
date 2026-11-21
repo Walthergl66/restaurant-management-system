@@ -21,8 +21,8 @@ El alcance exacto de cada endpoint está en [API](../api/README.md) y las respon
 
 ## Interfaces
 
-- Web administrativa/operativa con vistas de login, dashboard, mesas, pedidos, cocina, caja, cuentas, productos, usuarios, anulaciones, auditoría y reportes.
-- Aplicación móvil Expo con flujos de cliente y mesero documentados en `mobile/README.md`.
+- Web de **administración y caja** (solo `ADMIN` y `CAJERO`) con vistas de login, dashboard, mesas y zonas, monitor de pedidos y de comandas, caja, cuentas, productos, usuarios, anulaciones, entregas, auditoría y reportes.
+- Aplicación móvil Expo con flujos de cliente, mesero, cocina y repartidor documentados en `mobile/README.md`. La matriz de quién hace qué está en [canales y roles](canales-y-roles.md).
 - API REST versionada bajo `/api/v1`; incluye comunicación en tiempo real descrita por la documentación API.
 
 ## Requisitos no funcionales observados

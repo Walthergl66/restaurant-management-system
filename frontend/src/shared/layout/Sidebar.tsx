@@ -11,7 +11,7 @@ import { hasPermiso } from '@/shared/lib/permissions'
 const NAV: { href: string; label: string; icon: typeof LayoutDashboard; group: 'Operación' | 'Administración' | 'Control'; permisos?: string[] }[] = [
   { href: '/dashboard', group: 'Operación',   label: 'Resumen',    icon: LayoutDashboard },
   { href: '/pedidos', group: 'Operación',     label: 'Pedidos',    icon: ShoppingBag,  permisos: ['pedidos:ver'] },
-  { href: '/cocina', group: 'Operación',      label: 'Cocina',     icon: ChefHat,      permisos: ['comandas:ver'] },
+  { href: '/comandas', group: 'Operación',    label: 'Comandas',   icon: ChefHat,      permisos: ['comandas:ver'] },
   { href: '/mesas', group: 'Operación',       label: 'Mesas',      icon: Table2,       permisos: ['mesas:gestionar'] },
   { href: '/productos', group: 'Administración',   label: 'Productos',  icon: Package,      permisos: ['catalogo:ver'] },
   { href: '/cuentas', group: 'Operación',     label: 'Cuentas',    icon: Receipt,      permisos: ['cuentas:ver'] },

@@ -3,8 +3,8 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { queryClient } from '@/shared/api/queryClient'
 import { errMsg } from '@/shared/lib/utils'
-import { listarCuentas, cerrarCuenta, crearAdicion, cobrarCuenta } from './api'
-import type { AdicionPayload, CobroPayload, CuentaResponse } from './types'
+import { listarCuentas, cerrarCuenta, cobrarCuenta } from './api'
+import type { CobroPayload, CuentaResponse } from './types'
 
 export function useCuentas() {
   return useQuery<CuentaResponse[]>({
@@ -20,19 +20,6 @@ export function useCerrarCuenta() {
     onSuccess: () => {
       toast.success('Cuenta cerrada')
       queryClient.invalidateQueries({ queryKey: ['cuentas'] })
-    },
-    onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
-  })
-}
-
-export function useCrearAdicion(opts: { onCreated?: () => void } = {}) {
-  return useMutation<{ pedidoCodigo: string }, unknown, { id: number; payload: AdicionPayload }>({
-    mutationFn: ({ id, payload }) => crearAdicion(id, payload),
-    onSuccess: (res) => {
-      toast.success(`Adición ${res.pedidoCodigo} creada — agrega ítems al pedido`)
-      queryClient.invalidateQueries({ queryKey: ['cuentas'] })
-      queryClient.invalidateQueries({ queryKey: ['pedidos'] })
-      opts.onCreated?.()
     },
     onError: (e: unknown) => toast.error(errMsg(e, 'Error')),
   })

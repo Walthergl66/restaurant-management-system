@@ -1,9 +1,8 @@
 'use client'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Check, X } from 'lucide-react'
-import { queryClient } from '@/shared/api/queryClient'
+import { ArrowLeft } from 'lucide-react'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
-import { usePedido, useConfirmarPedido, useAnularPedido } from '../hooks'
+import { usePedido } from '../hooks'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import axios from 'axios'
@@ -18,17 +17,6 @@ export default function PedidoDetalle() {
   const pedidoQuery = usePedido(codigo)
   const { data: mesas = [] } = useMesas()
   const { data: pedido } = pedidoQuery
-
-  const confirmar = useConfirmarPedido({
-    mensaje: 'Confirmado',
-    onConfirmed: () => queryClient.invalidateQueries({ queryKey: ['pedido', codigo] }),
-  })
-
-  const cancelar = useAnularPedido({
-    mensaje: 'Anulado',
-    invalidar: false,
-    onAnulado: () => router.push('/pedidos'),
-  })
 
   if (axios.isAxiosError(pedidoQuery.error) && pedidoQuery.error.response?.status === 404) {
     return <div className="card"><p>Pedido no encontrado</p><button className="btn-ghost" onClick={() => router.push('/pedidos')}>Volver a pedidos</button></div>
@@ -62,17 +50,6 @@ export default function PedidoDetalle() {
             {ESTADO_PEDIDO[pedido.estado]?.label ?? pedido.estado}
           </span>
         </div>
-
-        {pedido.estado === 'BORRADOR' && (
-          <div style={{ display:'flex', gap:8, marginTop:16 }}>
-            <button className="btn-yellow" onClick={() => confirmar.mutate(codigo)} disabled={confirmar.isPending}>
-              <Check size={14}/> Confirmar
-            </button>
-            <button className="btn-ghost" style={{ color:'var(--error)' }} onClick={() => cancelar.mutate(codigo)} disabled={cancelar.isPending}>
-              <X size={14}/> Anular
-            </button>
-          </div>
-        )}
       </div>
 
       {/* líneas */}

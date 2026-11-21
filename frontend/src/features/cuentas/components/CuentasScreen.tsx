@@ -6,7 +6,6 @@ import { mesaCode } from '@/shared/lib/mesaCode'
 import { useCuentas, useCerrarCuenta } from '../hooks'
 import type { CuentaResponse } from '../types'
 import CobrarModal from './CobrarModal'
-import AdicionModal from './AdicionModal'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -14,7 +13,6 @@ import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 export default function CuentasScreen() {
   const [cobrar, setCobrar] = useState<CuentaResponse | null>(null)
-  const [adicion, setAdicion] = useState<CuentaResponse | null>(null)
   const [cerrando, setCerrando] = useState<CuentaResponse | null>(null)
 
   const cuentasQuery = useCuentas()
@@ -64,9 +62,6 @@ export default function CuentasScreen() {
                     <p style={{ fontSize:11, color:'var(--muted)' }}>
                       {c.pedidos?.length ?? 0} pedido(s) desde {c.createdAt ? format(new Date(c.createdAt),'HH:mm',{locale:es}) : '—'}
                     </p>
-                    <button className="btn-ghost" style={{ justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setAdicion(c)}>
-                      + Adición
-                    </button>
                     <div style={{ display:'flex', gap:6 }}>
                       <button className="btn-fuchsia" style={{ flex:1, justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setCobrar(c)}>
                         <DollarSign size={12}/> Cobrar
@@ -108,7 +103,6 @@ export default function CuentasScreen() {
       </div>
 
       {cobrar && <CobrarModal cuenta={cobrar} onClose={() => setCobrar(null)} />}
-      {adicion && <AdicionModal cuenta={adicion} onClose={() => setAdicion(null)} />}
 
       {cerrando && (
         <ConfirmDialog

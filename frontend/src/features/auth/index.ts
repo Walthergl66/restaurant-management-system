@@ -1,5 +1,6 @@
 export { useAuthStore, hasPermiso } from './store'
 export { login, logout, me } from './api'
+export { puedeUsarWeb, MENSAJE_SOLO_MOVIL, SoloMovilError } from './acceso'
 export type { UsuarioInfo, AuthResponse, UserInfo } from './types'
 export { default as AuthGuard } from './components/AuthGuard'
 export { default as LoginForm } from './components/LoginForm'

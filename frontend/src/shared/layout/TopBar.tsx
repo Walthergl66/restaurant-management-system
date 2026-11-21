@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 const HEADER_SUBTITLES: Record<string, string> = {
   '/dashboard': 'Resumen operativo',
   '/pedidos': 'Pedidos',
-  '/cocina': 'Cocina',
+  '/comandas': 'Comandas',
   '/mesas': 'Mesas',
   '/cuentas': 'Cuentas',
   '/caja': 'Caja del turno',

@@ -27,8 +27,3 @@ export interface CobroPayload {
   pagos: PagoPayload[]
   documento: unknown | null
 }
-
-export interface AdicionPayload {
-  codigo: string
-  notas: string | null
-}

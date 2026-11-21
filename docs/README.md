@@ -5,6 +5,7 @@ DocumentaciÃ³n basada en la implementaciÃ³n del monorepo de gestiÃ³n de re
 ## Documentos del sistema
 
 - [PRD: producto y capacidades](producto/prd.md)
+- [Canales y roles: quién hace qué y en qué interfaz](producto/canales-y-roles.md)
 - [ODDD: operaciÃ³n y despliegue](operacion/oddd.md)
 - [SDD: diseÃ±o del sistema](arquitectura/sdd.md)
 - [Arquitectura tÃ©cnica](arquitectura/arquitectura.md)

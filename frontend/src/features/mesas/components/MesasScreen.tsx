@@ -10,6 +10,7 @@ import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { hasPermiso, useAuthStore } from '@/features/auth'
 import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 import { mesaCode } from '@/shared/lib/mesaCode'
+import { ESTADO_MESA } from '@/shared/lib/utils'
 
 export default function MesasScreen() {
   const [showForm, setShowForm] = useState(false)
@@ -109,6 +110,11 @@ export default function MesasScreen() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--muted)' }}>
                   <Users size={14} /><span style={{ fontSize: 12 }}>Capacidad: {mesa.capacidad} personas</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>Servicio:</span>
+                  <span className={`badge ${ESTADO_MESA[mesa.estado]?.badge ?? ''}`}>{ESTADO_MESA[mesa.estado]?.label ?? mesa.estado}</span>
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
