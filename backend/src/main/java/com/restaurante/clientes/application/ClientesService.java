@@ -11,6 +11,7 @@ import com.restaurante.clientes.MetodoPagoClienteSPI;
 import com.restaurante.clientes.PedidoClienteConfirmado;
 import com.restaurante.clientes.PedidoClienteEventos;
 import com.restaurante.clientes.PedidoClienteSPI;
+import com.restaurante.clientes.PedidoMostradorSPI;
 import com.restaurante.clientes.domain.Cliente;
 import com.restaurante.clientes.domain.DireccionCliente;
 import com.restaurante.clientes.domain.EstadoPedidoCliente;
@@ -471,6 +472,41 @@ public class ClientesService implements Clientes {
             return Optional.empty();
         }
         return pedidoRepository.findById(pedidoClienteId).map(this::toDomicilioSPI);
+    }
+
+    @Override
+    public PedidoClienteSPI entregarEnMostrador(String codigo) {
+        PedidoCliente pedido = pedidoRepository.findByCodigoWithLineas(codigo)
+                .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));
+        boolean yaEntregado = pedido.getEstado() == EstadoPedidoCliente.ENTREGADO;
+        pedido.entregarEnMostrador();
+        pedidoRepository.save(pedido);
+        if (!yaEntregado) {
+            notificarEstado(pedido);
+        }
+        return toSPI(pedido);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoMostradorSPI> pedidosParaMostrador(String estado, String entrega) {
+        EstadoPedidoCliente estadoPedido;
+        try {
+            estadoPedido = EstadoPedidoCliente.valueOf(estado == null ? "" : estado.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessRuleException("Estado no soportado: " + estado);
+        }
+        String metodoEntrega = validarMetodoEntrega(entrega);
+        return pedidoRepository.findByMetodoEntregaAndEstadoOrderByIdAsc(metodoEntrega, estadoPedido).stream()
+                .map(pedido -> new PedidoMostradorSPI(
+                        pedido.getCodigo(),
+                        pedido.getEstado().name(),
+                        pedido.getMetodoEntrega(),
+                        clienteRepository.findById(pedido.getClienteId()).map(Cliente::getNombre).orElse(null),
+                        pedido.getLineas().stream()
+                                .map(l -> new PedidoMostradorSPI.LineaMostrador(l.getNombre(), l.getCantidad()))
+                                .toList()))
+                .toList();
     }
 
     @Override

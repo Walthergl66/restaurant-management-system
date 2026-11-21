@@ -52,8 +52,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByEstado(EstadoPedido estado);
 
-    List<Pedido> findByMesaIdAndEstado(Long mesaId, EstadoPedido estado);
-
     @EntityGraph(attributePaths = {"lineas", "lineas.extras", "lineas.ingredientesRemovidos"})
     Page<Pedido> findByEstadoNot(EstadoPedido estado, Pageable pageable);
 

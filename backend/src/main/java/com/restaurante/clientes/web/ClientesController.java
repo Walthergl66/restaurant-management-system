@@ -5,6 +5,7 @@ import com.restaurante.clientes.Clientes;
 import com.restaurante.clientes.DireccionClienteSPI;
 import com.restaurante.clientes.MetodoPagoClienteSPI;
 import com.restaurante.clientes.PedidoClienteSPI;
+import com.restaurante.clientes.PedidoMostradorSPI;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -77,6 +78,22 @@ public class ClientesController {
     @Operation(summary = "Tablet marca LISTO")
     public PedidoClienteSPI listo(@PathVariable String codigo) {
         return clientes.marcarListo(codigo);
+    }
+
+    /** Mostrador: mesero o cocina entregan al cliente su pedido de RETIRAR (sin PIN: el cliente está presente). */
+    @PostMapping("/pedidos/{codigo}/entregar")
+    @PreAuthorize("hasAuthority('pedidos:retiro-mostrador')")
+    @Operation(summary = "Entrega en el mostrador un pedido de retiro que está listo (idempotente)")
+    public PedidoClienteSPI entregarEnMostrador(@PathVariable String codigo) {
+        return clientes.entregarEnMostrador(codigo);
+    }
+
+    /** Mostrador: pedidos de la app por estado y forma de entrega (p. ej. LISTO + RETIRAR). */
+    @GetMapping("/operacion/pedidos")
+    @PreAuthorize("hasAuthority('pedidos:retiro-mostrador')")
+    @Operation(summary = "Pedidos de la app para el mostrador, filtrados por estado y entrega")
+    public List<PedidoMostradorSPI> pedidosParaMostrador(@RequestParam String estado, @RequestParam String entrega) {
+        return clientes.pedidosParaMostrador(estado, entrega);
     }
 
     /** RF-43: el cliente se suscribe al tópico y recibe en vivo cada cambio de
