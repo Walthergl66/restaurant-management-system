@@ -1,5 +1,26 @@
 import { apiClient } from '@/shared/api/apiClient';
+import { enviarPedidoMesa } from './enviarPedido';
+import type { ApiPedidosMesa } from './enviarPedido';
 import type { MesaMesero, LineaPedidoMesero } from './types';
+
+/** Contrato HTTP del pedido de mesa (PedidoController); la confirmación usa el código como Idempotency-Key. */
+const apiPedidosMesa: ApiPedidosMesa = {
+  async crear(codigo, mesaId, notas) {
+    await apiClient.post('/pedidos', { codigo, mesaId, notas: notas || null });
+  },
+  async agregarLinea(codigo, linea) {
+    await apiClient.post(`/pedidos/${codigo}/items`, linea);
+  },
+  async confirmar(codigo) {
+    await apiClient.request(`/pedidos/${codigo}/confirmar`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': codigo },
+    });
+  },
+  async cancelarBorrador(codigo) {
+    await apiClient.delete(`/pedidos/${codigo}`);
+  },
+};
 
 export const meseroService = {
   async listarMesasHabilitadas(): Promise<MesaMesero[]> {
@@ -7,14 +28,8 @@ export const meseroService = {
     return mesas.filter(mesa => mesa.activo);
   },
 
-  async crearPedido(mesaId: number, codigo: string, lineas: LineaPedidoMesero[], notas?: string) {
-    await apiClient.post('/pedidos', { codigo, mesaId, notas: notas || null });
-    for (const linea of lineas) {
-      await apiClient.post(`/pedidos/${codigo}/items`, linea);
-    }
-    return apiClient.request(`/pedidos/${codigo}/confirmar`, {
-      method: 'POST',
-      headers: { 'Idempotency-Key': codigo },
-    });
+  /** Envía el pedido a cocina; si falla a mitad no deja un borrador abierto en la cuenta. */
+  async enviarPedido(mesaId: number, codigo: string, lineas: LineaPedidoMesero[], notas?: string): Promise<void> {
+    await enviarPedidoMesa(apiPedidosMesa, mesaId, codigo, lineas, notas);
   },
 };

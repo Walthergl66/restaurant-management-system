@@ -45,7 +45,7 @@ export default function WaiterScreen() {
     setSending(true);
     const codigo = generarCodigoPedido();
     try {
-      await meseroService.crearPedido(mesaId, codigo, items.map(aLineaPedido), notas);
+      await meseroService.enviarPedido(mesaId, codigo, items.map(aLineaPedido), notas);
       clearCart();
       setNotas('');
       Alert.alert('Pedido enviado', `El pedido ${codigo} fue confirmado y enviado a cocina.`);
