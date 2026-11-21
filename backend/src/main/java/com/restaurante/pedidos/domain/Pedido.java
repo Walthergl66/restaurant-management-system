@@ -134,7 +134,11 @@ public class Pedido extends AuditableEntity {
         this.estado = EstadoPedido.LISTO;
     }
 
+    /** Idempotente: entregar un pedido ya entregado no cambia nada (reintentos del mesero). */
     public void entregar() {
+        if (estado == EstadoPedido.ENTREGADO) {
+            return;
+        }
         if (estado != EstadoPedido.LISTO) {
             throw new BusinessRuleException("Solo un pedido listo puede entregarse (estado actual: " + estado + ")");
         }

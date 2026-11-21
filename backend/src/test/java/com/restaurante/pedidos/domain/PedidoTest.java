@@ -94,4 +94,19 @@ class PedidoTest {
         pedido.agregarConfirmacion("key-ABC");
         assertTrue(pedido.tieneConfirmacionConClave("key-ABC"));
     }
+
+    @Test
+    void entregarEsIdempotenteYSoloSeAdmiteDesdeListo() {
+        Pedido pedido = new Pedido("C-007", 1L, null);
+        pedido.agregarLinea(10L, "Producto", Money.of("5.00"), 1, Set.of(), Set.of(), null);
+        pedido.confirmar();
+        pedido.marcarEnPreparacion();
+        assertThrows(BusinessRuleException.class, pedido::entregar, "aún en preparación");
+        pedido.marcarListo();
+
+        pedido.entregar();
+        pedido.entregar();
+
+        assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
+    }
 }

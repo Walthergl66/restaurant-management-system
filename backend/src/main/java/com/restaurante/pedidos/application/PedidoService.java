@@ -82,8 +82,18 @@ public class PedidoService implements Pedidos {
 
     @Transactional(readOnly = true)
     public List<PedidoResponse> listar(Long mesaId) {
+        return listar(mesaId, null);
+    }
+
+    /** Lista pedidos; con {@code estado} solo los de ese estado, sin él todos menos los anulados. */
+    @Transactional(readOnly = true)
+    public List<PedidoResponse> listar(Long mesaId, EstadoPedido estado) {
         List<Pedido> pedidos;
-        if (mesaId == null) {
+        if (estado != null) {
+            pedidos = mesaId == null
+                    ? pedidoRepository.findByEstado(estado)
+                    : pedidoRepository.findByMesaIdAndEstado(mesaId, estado);
+        } else if (mesaId == null) {
             pedidos = pedidoRepository.findByEstadoNot(EstadoPedido.ANULADO);
         } else {
             pedidos = pedidoRepository.findByMesaIdAndEstadoNot(mesaId, EstadoPedido.ANULADO);
@@ -313,6 +323,13 @@ public class PedidoService implements Pedidos {
     public void marcarListo(String pedidoCodigo) {
         Pedido pedido = cargarConLineas(pedidoCodigo);
         pedido.marcarListo();
+    }
+
+    /** Entrega en salón: el mesero marca servido un pedido que cocina dejó LISTO. Idempotente. */
+    public PedidoResponse entregar(String codigo) {
+        Pedido pedido = cargarConLineas(codigo);
+        pedido.entregar();
+        return PedidoResponse.from(pedido);
     }
 
     /** Cancela un borrador sin modificar la habilitación administrativa de la mesa. */

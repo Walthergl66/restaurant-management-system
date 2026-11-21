@@ -29,10 +29,11 @@ class TaxonomiaRolesIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(jsonPath("$.categorias[1].codigo").value("CLIENTE"))
                 .andExpect(jsonPath("$.categorias[2].codigo").value("DELIVERY"))
                 .andExpect(jsonPath("$.categorias[3].codigo").value("EMPLEADO"))
-                .andExpect(jsonPath("$.categorias[3].roles.length()").value(2))
+                .andExpect(jsonPath("$.categorias[3].roles.length()").value(3))
                 .andExpect(jsonPath("$.categorias[3].roles[0].codigo").value("CAJERO"))
-                .andExpect(jsonPath("$.categorias[3].roles[1].codigo").value("MESERO"))
-                .andExpect(jsonPath("$.roles.length()").value(5));
+                .andExpect(jsonPath("$.categorias[3].roles[1].codigo").value("COCINA"))
+                .andExpect(jsonPath("$.categorias[3].roles[2].codigo").value("MESERO"))
+                .andExpect(jsonPath("$.roles.length()").value(6));
     }
 
     @Test
@@ -57,7 +58,9 @@ class TaxonomiaRolesIntegrationTest extends AbstractIntegracionApi {
                 .andExpect(jsonPath("$.categorias[3].roles[0].asignablePorAdmin").value(true))
                 .andExpect(jsonPath("$.categorias[3].roles[0].configurable").value(true))
                 .andExpect(jsonPath("$.categorias[3].roles[1].asignablePorAdmin").value(true))
-                .andExpect(jsonPath("$.categorias[3].roles[1].configurable").value(true));
+                .andExpect(jsonPath("$.categorias[3].roles[1].configurable").value(true))
+                .andExpect(jsonPath("$.categorias[3].roles[2].asignablePorAdmin").value(true))
+                .andExpect(jsonPath("$.categorias[3].roles[2].configurable").value(true));
     }
 
     @Test
