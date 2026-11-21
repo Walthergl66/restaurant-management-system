@@ -24,7 +24,7 @@ Rate limit: `POST /login` → 5/min por IP (429 `urn:problem:restaurante:rate-li
 |---|---|---|
 | usuarios | `/api/v1/usuarios`, `/api/v1/auth` | `usuarios:ver/crear/editar/eliminar`, `roles:asignar` |
 | catalogo | `/api/v1/categorias`, `/api/v1/areas`, `/api/v1/extras`, `/api/v1/productos` | `catalogo:ver/gestionar` |
-| mesas | `/api/v1/mesas` | `mesas:ver/gestionar` |
+| mesas | `/api/v1/mesas`, `/api/v1/mesas/zonas` | `mesas:ver/gestionar` |
 | pedidos | `/api/v1/pedidos` | `pedidos:ver/crear/editar/confirmar`, `pedidos:estado-preparacion/listo`, `pedidos:entregar`, `pedidos:retiro-mostrador` |
 | comandas | `/api/v1/comandas`, `/api/v1/comandas/impresion/pendientes` | `comandas:ver/reenviar` |
 | clientes | `/api/v1/clientes` (carrito, pedidos, historial, direcciones) | `clientes:menu-ver`, `clientes:carrito-gestionar`, `clientes:pedido-crear/confirmar`, `clientes:historial-ver`, `clientes:cuenta-nueva` |
@@ -34,6 +34,39 @@ Rate limit: `POST /login` → 5/min por IP (429 `urn:problem:restaurante:rate-li
 | menú público | `GET /api/v1/menu` (sin auth, QR) | — |
 | salud | `GET /actuator/health` | — |
 | docs | `GET /v3/api-docs`, `GET /swagger-ui.html` | — |
+
+### Mesas y zonas
+
+Las mesas se ubican en **zonas** del restaurante (Salón, Terraza, Patio…) que define el
+administrador. "Zona" no es lo mismo que "área": las áreas del catálogo (`/api/v1/areas`)
+son áreas de **preparación** (Cocina, Barra) y dividen las comandas.
+
+| Operación | Endpoint | Permiso |
+|---|---|---|
+| Listar zonas en su orden, con el número de mesas de cada una | `GET /api/v1/mesas/zonas` | `mesas:ver` |
+| Crear una zona (queda al final del orden) | `POST /api/v1/mesas/zonas` `{nombre}` → 201 | `mesas:gestionar` |
+| Renombrar | `PUT /api/v1/mesas/zonas/{id}` `{nombre}` | `mesas:gestionar` |
+| Guardar el orden de todas las zonas | `PUT /api/v1/mesas/zonas/orden` `{ids:[…]}` | `mesas:gestionar` |
+| Eliminar | `DELETE /api/v1/mesas/zonas/{id}` → 204 | `mesas:gestionar` |
+
+Reglas:
+
+- El nombre es obligatorio, de hasta 60 caracteres, y único sin distinguir mayúsculas, espacios ni
+  tildes ("Terraza", "terraza " y "TERRAZA" son la misma): un duplicado responde **409**. La primera
+  letra se guarda en mayúscula.
+- `PUT …/orden` debe recibir **todas** las zonas, cada una una sola vez; si la lista está incompleta
+  o repetida responde **422** y no cambia nada.
+- Una zona **solo se elimina si no tiene mesas**, y siempre debe quedar al menos una: en otro caso,
+  **422**.
+
+Mesas (`/api/v1/mesas`):
+
+- `MesaRequest` incluye `zonaId` (opcional). Al crear sin `zonaId` la mesa va a la **primera zona**;
+  al actualizar sin `zonaId` conserva la que tiene.
+- `MesaResponse` incluye `zonaId`, `zonaOrden` y `ubicacion`, que ahora es el **nombre de la zona**
+  (se conserva por compatibilidad). El campo de texto libre `ubicacion` ya no se puede enviar.
+- La migración `V21__zonas_de_mesas.sql` convirtió las ubicaciones existentes en zonas y eliminó la
+  columna `ubicacion`; conviene respaldar la base antes de aplicarla (`database/backup.sh`).
 
 ### Imágenes y videos del catálogo
 

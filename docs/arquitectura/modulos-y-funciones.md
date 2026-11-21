@@ -12,7 +12,7 @@ El backend es un monolito modular Spring Modulith bajo `com.restaurante`.
 | `clientes` | Perfil del cliente, menú, carrito, pedidos e historial, direcciones y métodos de pago mediante contratos SPI/API cliente. |
 | `catalogo` | Categorías, áreas de preparación, productos, extras y menú público consultable, incluso para pedidos desde QR. |
 | `configuracion` | Parámetros operativos e impresoras disponibles para la operación. |
-| `mesas` | Consulta, creación/edición y habilitación de mesas para el servicio de salón. |
+| `mesas` | Consulta, creación/edición y habilitación de mesas para el servicio de salón, y gestión de las **zonas** del restaurante (Salón, Terraza…): el administrador las crea, ordena y elimina, y cada mesa se ubica en una. |
 | `pedidos` | Crear pedidos, agregar/editar líneas, ingredientes removidos y extras; confirmar, cancelar y avanzar estados de preparación, disponibilidad y entrega/retiro. |
 | `comandas` | Crear comandas por preparación, listar/gestionar estados, recuperar trabajos pendientes de impresión, reenviar impresión y reportar errores. La integración de impresión usa el patrón outbox descrito en documentación técnica. |
 | `cuentas` | Consultar cuentas, añadir consumos, calcular importes con reglas monetarias centralizadas y cerrar cuentas. |
@@ -26,7 +26,7 @@ El backend es un monolito modular Spring Modulith bajo `com.restaurante`.
 
 ## Aplicaciones cliente
 
-- **Web** (`frontend/src/app`, `frontend/src/features`): login, dashboard, mapa/operación de mesas, toma y detalle de pedidos, cocina/KDS, cuentas, caja, catálogo de productos, administración de usuarios, auditoría, anulaciones y reportes. El rewrite de Next.js enruta `/api/*` al backend.
+- **Web** (`frontend/src/app`, `frontend/src/features`): login, dashboard, mesas y zonas del restaurante, toma y detalle de pedidos, cocina/KDS, cuentas, caja, catálogo de productos, administración de usuarios, auditoría, anulaciones y reportes. El rewrite de Next.js enruta `/api/*` al backend.
 - **Móvil** (`mobile/src/app`, `mobile/src/features`): registro/login, verificación y recuperación de cuenta; exploración de menú y producto, carrito, checkout, seguimiento e historial de pedidos, direcciones y métodos de pago; vistas de ayuda, términos y privacidad; y atención de mesas/pedidos para meseros.
 - **Base de datos** (`backend/src/main/resources/db/migration`): migraciones Flyway; scripts de respaldo/restauración en `database/`.
 

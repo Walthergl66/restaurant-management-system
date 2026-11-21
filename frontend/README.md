@@ -35,7 +35,7 @@ frontend/
 │   │   │   ├── cocina/           # Pantalla de comandas en preparación (KDS)
 │   │   │   ├── cuentas/          # Consulta y cierre de cuentas
 │   │   │   ├── dashboard/        # Resumen general del turno
-│   │   │   ├── mesas/            # Mapa y estados de mesas
+│   │   │   ├── mesas/            # Mesas y zonas del restaurante (alta, edición, orden)
 │   │   │   ├── pedidos/          # Toma de pedidos presenciales
 │   │   │   ├── productos/        # Catálogo de productos y categorías
 │   │   │   ├── reportes/         # Reportes financieros y ventas
@@ -74,6 +74,19 @@ frontend/
 
 \* `shared/layout/Sidebar` y `TopBar` leen la sesión desde `@/features/auth` (única
 excepción documentada de la dirección `shared → feature`).
+
+### Mesas y zonas
+
+La pantalla **Mesas** (permiso `mesas:gestionar`) administra el salón en dos niveles:
+
+- **Zonas del restaurante** (Salón, Terraza, Patio…): un panel permite crear, renombrar, **subir o
+  bajar** (el orden es el que ve el mesero en la app) y eliminar zonas. Una zona con mesas, o la
+  única que queda, no se puede eliminar y el botón explica el motivo.
+- **Mesas:** el modal de mesa elige la zona de una lista, con la opción "+ Nueva zona…". La lista se
+  muestra **agrupada por zona**, en el orden definido.
+
+La lógica pura (mover una zona, agrupar mesas) está en `features/mesas/zonas.ts` y se prueba con
+`node --test src/features/mesas/zonas.test.mjs`. Los endpoints están en la [API](../docs/api/README.md).
 
 ### Dashboard operativo
 

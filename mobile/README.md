@@ -15,24 +15,25 @@ feature con un barrel (`index.ts`) como única superficie pública, rutas
 src/
 ├── app/                        # Expo Router (cada archivo = ruta fina)
 │   ├── (tabs)/                 # Menú, Carrito, Pedidos, Perfil
-│   ├── (waiter)/               # Mesero: atención de mesas, producto
+│   ├── (waiter)/               # Mesero: mesas por zona, armado de pedido, producto
 │   ├── checkout.tsx            # Flujo de pedido idempotente
 │   ├── login.tsx               # Auth
 │   └── product/[id].tsx        # Detalle (reexport del barrel del feature)
-├── components/                 # UI compartida (Header, Cards, ui/*)
+├── components/                 # UI compartida (Header, Cards, ChipTabs, ui/* incl. QuantityStepper)
 ├── config/
 │   └── environment.ts          # API_BASE_URL (ver "Conexión")
 ├── shared/                     # Infraestructura transversal, sin negocio
+│   ├── hooks/useSondeo.ts      # Sondeo periódico mientras la pantalla está enfocada
 │   ├── api/apiClient.ts        # Único boundary HTTP + inyección JWT
 │   ├── api/apiError.ts         # ApiError ← ProblemDetail (RFC 7807)
 │   └── storage/authStorage.ts  # Sesión en AsyncStorage
 ├── features/                   # Módulos por capacidad (cada uno con barrel)
-│   ├── auth/                   # index.ts · api.ts · AuthContext · types
+│   ├── auth/                   # index.ts · api.ts · AuthContext · types · PerfilSheet
 │   ├── menu/                   # index.ts · api.ts · components/ProductoScreen
 │   ├── pedidos/                # index.ts · api.ts · idempotencia · estadoSocket
 │   ├── carrito/                # index.ts · CartContext (estado local) · types
 │   ├── clientes/               # index.ts · api.ts · types
-│   └── mesero/                 # index.ts · api.ts · components/AtencionMesasScreen
+│   └── mesero/                 # index.ts · api.ts · zonas · geometriaMesa · components/*
 └── theme/                      # colores y tipografía
 ```
 
@@ -129,6 +130,28 @@ en `app.json`. El token Mapbox puede definirse como `EXPO_PUBLIC_MAPBOX_TOKEN`
 en el mismo archivo; es configuración pública incluida en el cliente. No pongas
 secretos del backend en el entorno móvil.
 
+
+## Pantalla del mesero
+
+El mesero (permiso `pedidos:crear`) entra directamente a su grupo de rutas `(waiter)`:
+
+1. **Seleccionar mesa.** Las mesas se agrupan en pestañas por **zona**, en el orden que define el
+   administrador en la web (las zonas sin mesas habilitadas no se muestran). Cada mesa se dibuja con
+   sus sillas según su capacidad y una mesa **ocupada** (`mesa.estado = OCUPADA`) lleva un check. *Pendiente:* el backend
+   todavía no cambia el estado de la mesa al abrir o cerrar su cuenta, por lo que hoy ninguna mesa
+   aparece ocupada. Se actualiza cada 30 s y con *pull to refresh*. Una mesa ocupada sigue
+   siendo seleccionable: el pedido se suma a su cuenta. El ícono de perfil abre el panel con el
+   nombre, el correo y el rol, y el botón **Cerrar sesión**.
+2. **Pedido · Mesa N.** Pestañas de categoría, lista de productos con stepper −/+ (agrega sin
+   personalización) y chevron para elegir extras e ingredientes. Una barra inferior muestra
+   "N productos seleccionados · Ver pedido".
+3. **Resumen.** Hoja inferior con las líneas (editar, duplicar, eliminar), notas, total y
+   **Confirmar y enviar a cocina**. Si falla algún paso del envío, el borrador se cancela para no
+   dejar un pedido abierto que bloquee el cobro de la mesa. Al salir con productos sin enviar se pide
+   confirmación.
+
+La lógica pura se prueba con `node --test` (por ejemplo `src/features/mesero/zonas.test.mjs`,
+`geometriaMesa.test.mjs` y `enviarPedido.test.mjs`).
 
 ## Endpoints que consume
 
