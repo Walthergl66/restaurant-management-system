@@ -105,6 +105,16 @@ public class MesaService implements Mesas {
         }
     }
 
+    @Override
+    public void marcarOcupada(Long mesaId) {
+        cargar(mesaId).ocupar();
+    }
+
+    @Override
+    public void liberar(Long mesaId) {
+        cargar(mesaId).liberar();
+    }
+
     private Mesa cargar(Long id) {
         return mesaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mesa no encontrada"));

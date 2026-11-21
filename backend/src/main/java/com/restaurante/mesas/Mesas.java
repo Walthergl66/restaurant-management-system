@@ -13,4 +13,10 @@ public interface Mesas {
 
     /** Comprueba que la mesa existe y está habilitada para recibir pedidos nuevos. */
     void validarHabilitadaParaNuevoPedido(Long mesaId);
+
+    /** Cuentas: la mesa pasa a OCUPADA cuando se abre su cuenta. Idempotente; falla si la mesa no existe. */
+    void marcarOcupada(Long mesaId);
+
+    /** Cuentas: la mesa pasa a LIBRE cuando se cierra su cuenta. Idempotente; falla si la mesa no existe. */
+    void liberar(Long mesaId);
 }

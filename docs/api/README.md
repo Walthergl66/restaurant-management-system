@@ -73,6 +73,12 @@ Mesas (`/api/v1/mesas`):
   al actualizar sin `zonaId` conserva la que tiene.
 - `MesaResponse` incluye `zonaId`, `zonaOrden` y `ubicacion`, que ahora es el **nombre de la zona**
   (se conserva por compatibilidad). El campo de texto libre `ubicacion` ya no se puede enviar.
+- `MesaResponse.estado` lo mantiene el backend según la cuenta: pasa a **`OCUPADA`** cuando se abre la
+  cuenta de la mesa (primer pedido) y vuelve a **`LIBRE`** cuando la cuenta se cierra, sea por cobro,
+  por cierre manual o al cancelar el último borrador. Deshabilitar o habilitar la mesa no cambia su
+  estado. `RESERVADA` e `INACTIVA` existen en el enum pero ningún flujo las usa todavía (pendiente de
+  decisión). La migración `V23__mesas_ocupadas_backfill.sql` marca como ocupadas las mesas que ya
+  tenían una cuenta abierta.
 - La migración `V21__zonas_de_mesas.sql` convirtió las ubicaciones existentes en zonas y eliminó la
   columna `ubicacion`; conviene respaldar la base antes de aplicarla (`database/backup.sh`).
 

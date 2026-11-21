@@ -90,6 +90,21 @@ public class Mesa extends AuditableEntity {
         this.zona = zona;
     }
 
+    /**
+     * La ocupa una cuenta abierta. Idempotente. El estado lo mueve la cuenta, no el administrador:
+     * habilitar o deshabilitar la mesa no lo cambia.
+     */
+    public void ocupar() {
+        this.estado = EstadoMesa.OCUPADA;
+    }
+
+    /** La libera el cierre de su cuenta. Idempotente; solo afecta a una mesa ocupada. */
+    public void liberar() {
+        if (estado == EstadoMesa.OCUPADA) {
+            this.estado = EstadoMesa.LIBRE;
+        }
+    }
+
     public void deshabilitar() {
         this.activo = false;
     }

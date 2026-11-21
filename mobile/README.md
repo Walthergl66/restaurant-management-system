@@ -137,9 +137,8 @@ El mesero (permiso `pedidos:crear`) entra directamente a su grupo de rutas `(wai
 
 1. **Seleccionar mesa.** Las mesas se agrupan en pestañas por **zona**, en el orden que define el
    administrador en la web (las zonas sin mesas habilitadas no se muestran). Cada mesa se dibuja con
-   sus sillas según su capacidad y una mesa **ocupada** (`mesa.estado = OCUPADA`) lleva un check. *Pendiente:* el backend
-   todavía no cambia el estado de la mesa al abrir o cerrar su cuenta, por lo que hoy ninguna mesa
-   aparece ocupada. Se actualiza cada 30 s y con *pull to refresh*. Una mesa ocupada sigue
+   sus sillas según su capacidad y una mesa **ocupada** (`mesa.estado = OCUPADA`, mientras tenga una cuenta abierta) lleva un
+   check. Se actualiza cada 30 s y con *pull to refresh*. Una mesa ocupada sigue
    siendo seleccionable: el pedido se suma a su cuenta. El ícono de perfil abre el panel con el
    nombre, el correo y el rol, y el botón **Cerrar sesión**.
 2. **Pedido · Mesa N.** Pestañas de categoría, lista de productos con stepper −/+ (agrega sin
