@@ -20,7 +20,7 @@ src/
 │   ├── checkout.tsx            # Flujo de pedido idempotente
 │   ├── login.tsx               # Auth
 │   └── product/[id].tsx        # Detalle (reexport del barrel del feature)
-├── components/                 # UI compartida (Header, Cards, ChipTabs, ui/* incl. QuantityStepper)
+├── components/                 # UI compartida (Header, Cards, ChipTabs, ui/* incl. QuantityStepper y `dialogo.ts`)
 ├── config/
 │   └── environment.ts          # API_BASE_URL (ver "Conexión")
 ├── shared/                     # Infraestructura transversal, sin negocio
@@ -204,6 +204,14 @@ Pantalla compartida donde se entrega lo que cocina ya dejó listo. Se llama **Li
   aviso; si falla una entrega, la tarjeta no cambia.
 - Usa `GET /pedidos?estado=LISTO`, `POST /pedidos/{codigo}/entregar`,
   `GET /clientes/operacion/pedidos?estado=LISTO&entrega=RETIRAR` y `POST /clientes/pedidos/{codigo}/entregar`.
+
+## Probar en el navegador
+
+`npx expo start --web` sirve para revisar pantallas rápido, pero no reproduce todo el comportamiento del teléfono:
+
+- `Alert.alert` de React Native **no hace nada en la web**. Los avisos y confirmaciones usan `mostrarDialogo` (`src/components/ui/dialogo.ts`), que en el navegador recurre a `window.confirm` y `window.alert`. No uses `Alert.alert` directamente.
+- Los grupos de rutas (`(tabs)`, `(waiter)`, `(kitchen)`, `(delivery)`) comparten la ruta `/`, así que la web puede montar un instante la pantalla de otro grupo antes de redirigir. Cada grupo con llamadas a la API (por ejemplo `(delivery)`) valida el permiso antes de montar sus pantallas.
+- Las cargas de imágenes de producto se hacen desde la web de administración y requieren que el servidor de archivos configurado en `backend/.env` (`APP_MEDIA_*`) sea alcanzable desde la red del backend.
 
 ## Endpoints que consume
 

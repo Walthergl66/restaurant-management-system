@@ -1,5 +1,6 @@
 import React from 'react';
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { mostrarDialogo } from '@/components/ui/dialogo';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -20,7 +21,7 @@ export function PerfilSheet({ visible, onClose }: PerfilSheetProps) {
   const { usuario, logout } = useAuth();
 
   const confirmarSalida = () =>
-    Alert.alert('Cerrar sesión', '¿Quieres cerrar tu sesión?', [
+    mostrarDialogo('Cerrar sesión', '¿Quieres cerrar tu sesión?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Cerrar sesión',

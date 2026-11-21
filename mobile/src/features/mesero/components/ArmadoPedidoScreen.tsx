@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, BackHandler, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, BackHandler, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { mostrarDialogo } from '@/components/ui/dialogo';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -62,7 +63,7 @@ export default function ArmadoPedidoScreen() {
       router.back();
       return;
     }
-    Alert.alert('Salir del pedido', 'Tienes productos sin enviar. Si sales se descartan.', [
+    mostrarDialogo('Salir del pedido', 'Tienes productos sin enviar. Si sales se descartan.', [
       { text: 'Seguir pidiendo', style: 'cancel' },
       {
         text: 'Descartar y salir',
@@ -110,11 +111,11 @@ export default function ArmadoPedidoScreen() {
       clearCart();
       setNotas('');
       setResumenVisible(false);
-      Alert.alert('Pedido enviado', `El pedido ${codigo} fue confirmado y enviado a cocina.`, [
+      mostrarDialogo('Pedido enviado', `El pedido ${codigo} fue confirmado y enviado a cocina.`, [
         { text: 'Aceptar', onPress: () => router.replace('/(waiter)') },
       ]);
     } catch (e) {
-      Alert.alert('No se pudo enviar el pedido', e instanceof Error ? e.message : 'Inténtalo nuevamente');
+      mostrarDialogo('No se pudo enviar el pedido', e instanceof Error ? e.message : 'Inténtalo nuevamente');
     } finally {
       setEnviando(false);
     }

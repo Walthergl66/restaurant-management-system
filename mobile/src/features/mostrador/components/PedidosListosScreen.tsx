@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { mostrarDialogo } from '@/components/ui/dialogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -45,7 +46,7 @@ export default function PedidosListosScreen({ incluirSalon }: PedidosListosScree
 
   const confirmarEntrega = (pedido: PedidoMostrador) => {
     const destino = pedido.origen === 'SALON' ? 'a la mesa' : 'al cliente';
-    Alert.alert('Confirmar entrega', `¿Entregaste el pedido ${pedido.codigo} ${destino}?`, [
+    mostrarDialogo('Confirmar entrega', `¿Entregaste el pedido ${pedido.codigo} ${destino}?`, [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Sí, entregado', onPress: () => void entregar(pedido) },
     ]);
@@ -58,7 +59,7 @@ export default function PedidosListosScreen({ incluirSalon }: PedidosListosScree
       await cargar();
     } catch (e) {
       // Si falla, la tarjeta no cambia: el backend es la fuente de verdad.
-      Alert.alert('No se pudo registrar la entrega', e instanceof Error ? e.message : 'Inténtalo nuevamente');
+      mostrarDialogo('No se pudo registrar la entrega', e instanceof Error ? e.message : 'Inténtalo nuevamente');
     } finally {
       setEnCurso(actual => {
         const siguiente = new Set(actual);

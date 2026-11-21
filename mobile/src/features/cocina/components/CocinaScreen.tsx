@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { mostrarDialogo } from '@/components/ui/dialogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ChipTabs } from '@/components/ChipTabs';
@@ -84,7 +85,7 @@ export default function CocinaScreen({ conPerfil = false }: CocinaScreenProps) {
       await cargar();
     } catch (e) {
       // La verdad es el backend: si falla, la lista no se altera y se avisa.
-      Alert.alert('No se pudo actualizar la comanda', e instanceof Error ? e.message : 'Inténtalo nuevamente');
+      mostrarDialogo('No se pudo actualizar la comanda', e instanceof Error ? e.message : 'Inténtalo nuevamente');
     } finally {
       setEnCurso(actual => {
         const siguiente = new Set(actual);
