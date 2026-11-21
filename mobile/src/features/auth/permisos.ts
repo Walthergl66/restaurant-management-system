@@ -18,3 +18,11 @@ export function puedeAtenderMesas(usuario: UsuarioInfo | null): boolean {
 export function puedeRepartir(usuario: UsuarioInfo | null): boolean {
   return !!usuario && !!usuario.permisos?.includes('delivery:mis-entregas');
 }
+
+/**
+ * Política de acceso a la pantalla de cocina (marcar comandas en preparación/listas).
+ * La cocina no es un rol propio: se identifica por el permiso `pedidos:estado-preparacion`.
+ */
+export function puedeOperarCocina(usuario: UsuarioInfo | null): boolean {
+  return !!usuario && !!usuario.permisos?.includes('pedidos:estado-preparacion');
+}
