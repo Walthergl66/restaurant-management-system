@@ -3,6 +3,7 @@ package com.restaurante.mesas.application;
 import com.restaurante.mesas.Mesas;
 import com.restaurante.mesas.MesaResumen;
 import com.restaurante.mesas.domain.Mesa;
+import com.restaurante.mesas.domain.Zona;
 import com.restaurante.mesas.infrastructure.MesaRepository;
 import com.restaurante.mesas.web.dto.HabilitacionMesaRequest;
 import com.restaurante.mesas.web.dto.MesaRequest;
@@ -25,17 +26,20 @@ import java.util.Optional;
 public class MesaService implements Mesas {
 
     private final MesaRepository mesaRepository;
+    private final ZonaService zonaService;
 
-    public MesaService(MesaRepository mesaRepository) {
+    public MesaService(MesaRepository mesaRepository, ZonaService zonaService) {
         this.mesaRepository = mesaRepository;
+        this.zonaService = zonaService;
     }
 
     public MesaResponse crear(MesaRequest request) {
         if (mesaRepository.existsByNumero(request.numero())) {
             throw new ConflictException("Ya existe una mesa con el número " + request.numero());
         }
-        Mesa mesa = new Mesa(request.numero(), request.capacidad());
-        mesa.cambiarUbicacion(request.ubicacion());
+        // Sin zona indicada (clientes antiguos) la mesa va a la primera zona.
+        Zona zona = request.zonaId() == null ? zonaService.primera() : zonaService.cargar(request.zonaId());
+        Mesa mesa = new Mesa(request.numero(), request.capacidad(), zona);
         return MesaResponse.from(mesaRepository.save(mesa));
     }
 
@@ -61,7 +65,10 @@ public class MesaService implements Mesas {
         }
         mesa.cambiarNumero(request.numero());
         mesa.cambiarCapacidad(request.capacidad());
-        mesa.cambiarUbicacion(request.ubicacion());
+        // Sin zona indicada la mesa conserva la que tiene.
+        if (request.zonaId() != null) {
+            mesa.cambiarZona(zonaService.cargar(request.zonaId()));
+        }
         return MesaResponse.from(mesa);
     }
 

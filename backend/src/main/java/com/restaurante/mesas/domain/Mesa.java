@@ -6,10 +6,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-/** Mesa registrada en el catálogo del salón. */
+/** Mesa registrada en el catálogo del salón, ubicada en una zona del restaurante. */
 @Entity
 @Table(name = "mesas", schema = "catalogo")
 public class Mesa extends AuditableEntity {
@@ -20,8 +23,10 @@ public class Mesa extends AuditableEntity {
     @Column(nullable = false)
     private int capacidad;
 
-    @Column(nullable = false, length = 100)
-    private String ubicacion = "SALON";
+    /** Hay pocas zonas por restaurante: se carga junto con la mesa para no depender de una sesión abierta. */
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "zona_id", nullable = false)
+    private Zona zona;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -38,9 +43,10 @@ public class Mesa extends AuditableEntity {
     protected Mesa() {
     }
 
-    public Mesa(int numero, int capacidad) {
+    public Mesa(int numero, int capacidad, Zona zona) {
         cambiarNumero(numero);
         cambiarCapacidad(capacidad);
+        cambiarZona(zona);
     }
 
     public int getNumero() {
@@ -51,8 +57,8 @@ public class Mesa extends AuditableEntity {
         return capacidad;
     }
 
-    public String getUbicacion() {
-        return ubicacion;
+    public Zona getZona() {
+        return zona;
     }
 
     public EstadoMesa getEstado() {
@@ -77,8 +83,11 @@ public class Mesa extends AuditableEntity {
         this.capacidad = capacidad;
     }
 
-    public void cambiarUbicacion(String ubicacion) {
-        this.ubicacion = ubicacion == null || ubicacion.isBlank() ? "SALON" : ubicacion.trim();
+    public void cambiarZona(Zona zona) {
+        if (zona == null) {
+            throw new BusinessRuleException("La mesa debe estar en una zona");
+        }
+        this.zona = zona;
     }
 
     public void deshabilitar() {
