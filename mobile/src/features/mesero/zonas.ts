@@ -9,15 +9,38 @@ function claveZona(ubicacion: string | null | undefined): string {
   return (ubicacion ?? '').trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('es');
 }
 
-/** Agrupa las mesas por zona (orden de primera aparición) y ordena cada zona por número de mesa. */
+function nombreDe(mesa: MesaMesero): string {
+  return (mesa.ubicacion ?? '').trim() || ZONA_POR_DEFECTO;
+}
+
+/**
+ * Agrupa las mesas por zona. Las zonas las define el administrador: se agrupan por `zonaId` y se
+ * ordenan por `zonaOrden` (empate por nombre). Las mesas que llegan sin `zonaId` (un backend
+ * anterior a las zonas) se agrupan por el nombre normalizado y van al final. Dentro de cada zona,
+ * por número de mesa.
+ */
 export function agruparMesasPorZona(mesas: MesaMesero[]): ZonaMesas[] {
-  const zonas = new Map<string, ZonaMesas>();
+  const porId = new Map<number, { orden: number; grupo: ZonaMesas }>();
+  const porNombre = new Map<string, ZonaMesas>();
+
   for (const mesa of mesas) {
-    const nombre = (mesa.ubicacion ?? '').trim() || ZONA_POR_DEFECTO;
-    const clave = claveZona(nombre);
-    const zona = zonas.get(clave) ?? { zona: nombre, mesas: [] };
-    zona.mesas.push(mesa);
-    zonas.set(clave, zona);
+    if (mesa.zonaId != null) {
+      const entrada = porId.get(mesa.zonaId)
+        ?? { orden: mesa.zonaOrden ?? Number.MAX_SAFE_INTEGER, grupo: { zona: nombreDe(mesa), mesas: [] } };
+      entrada.grupo.mesas.push(mesa);
+      porId.set(mesa.zonaId, entrada);
+    } else {
+      const nombre = nombreDe(mesa);
+      const grupo = porNombre.get(claveZona(nombre)) ?? { zona: nombre, mesas: [] };
+      grupo.mesas.push(mesa);
+      porNombre.set(claveZona(nombre), grupo);
+    }
   }
-  return [...zonas.values()].map(z => ({ ...z, mesas: [...z.mesas].sort((a, b) => a.numero - b.numero) }));
+
+  const delAdministrador = [...porId.values()]
+    .sort((a, b) => a.orden - b.orden || a.grupo.zona.localeCompare(b.grupo.zona, 'es'))
+    .map(entrada => entrada.grupo);
+
+  return [...delAdministrador, ...porNombre.values()]
+    .map(grupo => ({ ...grupo, mesas: [...grupo.mesas].sort((a, b) => a.numero - b.numero) }));
 }
