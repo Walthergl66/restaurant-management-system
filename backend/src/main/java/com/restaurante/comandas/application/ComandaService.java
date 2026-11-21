@@ -140,21 +140,25 @@ public class ComandaService {
 
     private ComandaResponse aRespuesta(Comanda comanda, Map<String, Origen> origenes) {
         Origen origen = origenes.computeIfAbsent(comanda.getPedidoCodigo(), this::origenDe);
-        return ComandaResponse.from(comanda, origen.mesaNumero(), origen.canal());
+        return ComandaResponse.from(comanda, origen.mesaNumero(), origen.canal(), origen.entrega());
     }
 
-    /** Mesa del pedido de salón; los pedidos de la app (retiro/domicilio) no tienen mesa. */
+    /**
+     * Mesa del pedido de salón. Los pedidos de la app no tienen mesa: se indica si son para
+     * retirar o a domicilio.
+     */
     private Origen origenDe(String pedidoCodigo) {
         return pedidos.pedidoConfirmado(pedidoCodigo)
-                .map(pedido -> new Origen(numeroDeMesa(pedido), ComandaResponse.CANAL_SALON))
-                .orElseGet(() -> new Origen(null, ComandaResponse.CANAL_APP));
+                .map(pedido -> new Origen(numeroDeMesa(pedido), ComandaResponse.CANAL_SALON, null))
+                .orElseGet(() -> new Origen(null, ComandaResponse.CANAL_APP,
+                        clientes.metodoEntregaDe(pedidoCodigo).orElse(null)));
     }
 
     private Integer numeroDeMesa(PedidoResumen pedido) {
         return mesas.mesa(pedido.mesaId()).map(MesaResumen::numero).orElse(null);
     }
 
-    private record Origen(Integer mesaNumero, String canal) {
+    private record Origen(Integer mesaNumero, String canal, String entrega) {
     }
 
     private Comanda cargar(Long id) {

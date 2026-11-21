@@ -106,4 +106,8 @@ public interface Clientes {
      *  repartidor confirma su llegada. No modifica el estado de preparación del
      *  pedido; solo dispara la notificación en la misma transacción. */
     void notificarEventoEntrega(Long pedidoClienteId);
+
+    /** Comandas: forma de entrega ("RETIRAR" o "DOMICILIO") del pedido de la app con ese código;
+     *  vacío si el código no es un pedido de la app (p. ej. es un pedido de salón). */
+    java.util.Optional<String> metodoEntregaDe(String pedidoCodigo);
 }

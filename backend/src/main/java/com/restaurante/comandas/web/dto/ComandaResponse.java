@@ -15,6 +15,8 @@ public record ComandaResponse(
         String estado,
         Integer mesaNumero,
         String canal,
+        /** "RETIRAR" o "DOMICILIO" en los pedidos de la app; ausente en los de salón. */
+        String entrega,
         List<ComandaLineaResponse> lineas) {
 
     /** Pedido tomado en el salón (tiene mesa). */
@@ -44,7 +46,7 @@ public record ComandaResponse(
     }
 
     /** @param mesaNumero número de la mesa del pedido de salón; {@code null} en pedidos de la app. */
-    public static ComandaResponse from(Comanda comanda, Integer mesaNumero, String canal) {
+    public static ComandaResponse from(Comanda comanda, Integer mesaNumero, String canal, String entrega) {
         return new ComandaResponse(
                 comanda.getId(),
                 comanda.getPedidoCodigo(),
@@ -55,6 +57,7 @@ public record ComandaResponse(
                 comanda.getEstado().name(),
                 mesaNumero,
                 canal,
+                entrega,
                 comanda.getLineas().stream().map(ComandaLineaResponse::from).toList());
     }
 }

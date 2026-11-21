@@ -228,6 +228,47 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
         JsonNode comanda = buscar(codigo, null).get(0);
         assertEquals("APP", comanda.path("canal").asText());
         assertTrue(comanda.path("mesaNumero").isMissingNode(), "un pedido de la app no tiene mesa (el campo null se omite del JSON)");
+        assertEquals("RETIRAR", comanda.path("entrega").asText(), "el pedido de la app de este helper es para retirar");
+    }
+
+    @Test
+    void laComandaDeUnPedidoADomicilioIndicaDomicilio() throws Exception {
+        long area = crearArea("Domicilio comanda");
+        long producto = crearProductoConArea("Plato Domicilio", "7.00", area);
+        long direccionId = crearDireccion();
+        String codigo = "CLI-DOM-" + System.nanoTime();
+        String idem = "idem-dom-" + System.nanoTime();
+        mockMvc.perform(post("/api/v1/clientes/pedidos")
+                        .header("Authorization", "Bearer " + clienteToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "codigo":"%s",
+                                  "metodoPago":"EFECTIVO",
+                                  "metodoEntrega":"DOMICILIO",
+                                  "direccionId":%d,
+                                  "idempotencyKey":"%s",
+                                  "items":[{"productoId":%d,"cantidad":1,"extraIds":[],"ingredientesRemovidos":[]}]
+                                }
+                                """.formatted(codigo, direccionId, idem, producto)))
+                .andExpect(status().isOk());
+        confirmarCliente(codigo, idem);
+
+        JsonNode comanda = buscar(codigo, null).get(0);
+        assertEquals("APP", comanda.path("canal").asText());
+        assertEquals("DOMICILIO", comanda.path("entrega").asText());
+    }
+
+    private long crearDireccion() throws Exception {
+        String cuerpo = mockMvc.perform(post("/api/v1/clientes/direcciones")
+                        .header("Authorization", "Bearer " + clienteToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"etiqueta":"Casa-%d","direccion":"Calle 123","telefono":"0999999999","observaciones":"azul"}
+                                """.formatted(System.nanoTime())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(cuerpo).path("id").asLong();
     }
 
     private void crearPedidoCliente(String codigo, String idem, long... productoIds) throws Exception {

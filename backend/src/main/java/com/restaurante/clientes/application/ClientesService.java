@@ -475,6 +475,12 @@ public class ClientesService implements Clientes {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<String> metodoEntregaDe(String pedidoCodigo) {
+        return pedidoRepository.findByCodigo(pedidoCodigo).map(PedidoCliente::getMetodoEntrega);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Long pedidoClienteIdPropio(Long clienteId, String codigo) {
         PedidoCliente pedido = pedidoRepository.findByCodigo(codigo)
                 .orElseThrow(() -> new NotFoundException("Pedido no encontrado: " + codigo));

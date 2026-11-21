@@ -252,6 +252,7 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         JsonNode comanda = buscar(codigo, null).get(0);
         assertEquals(numeroMesa, comanda.path("mesaNumero").asInt());
         assertEquals("SALON", comanda.path("canal").asText());
+        assertTrue(comanda.path("entrega").isMissingNode(), "un pedido de salón no tiene forma de entrega");
     }
 
     /** "Listo" en una comanda de cancelación significa "enterado": no exige pasar por preparación. */
