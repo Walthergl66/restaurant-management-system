@@ -10,6 +10,8 @@ import { useAuthStore, hasPermiso } from '@/features/auth'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
+import { useMesas } from '@/features/mesas'
+import { etiquetaMesa } from '@/shared/lib/mesaCode'
 
 const ESTADOS: (EstadoPedido | 'TODOS')[] = ['TODOS','BORRADOR','CONFIRMADO','EN_PREPARACION','LISTO','ENTREGADO','ANULADO']
 
@@ -22,6 +24,7 @@ export default function PedidosScreen() {
   const puedeCrear = hasPermiso(user, 'pedidos:crear')
 
   const pedidosQuery = usePedidos()
+  const { data: mesas = [] } = useMesas()
   const { data: pedidos = [], isLoading, refetch } = pedidosQuery
 
   if (hasQueryIssue([pedidosQuery])) return <div className="page-stack"><h1>Pedidos</h1><QueryBoundary queries={[pedidosQuery]} label="los pedidos" /></div>
@@ -30,7 +33,7 @@ export default function PedidosScreen() {
     const okEstado = filtro === 'TODOS' || p.estado === filtro
     const okSearch = !search
       || p.codigo.toLowerCase().includes(search.toLowerCase())
-      || (p.mesaId != null && `mesa ${p.mesaId}`.includes(search.toLowerCase()))
+      || (p.mesaId != null && etiquetaMesa(p.mesaId, mesas).toLowerCase().includes(search.toLowerCase()))
     return okEstado && okSearch
   })
 
@@ -94,7 +97,7 @@ export default function PedidosScreen() {
                   {filtered.map(p => (
                     <tr key={p.codigo} style={{ cursor:'pointer' }} onClick={() => router.push(`/pedidos/${p.codigo}`)}>
                       <td style={{ fontWeight:700, color:'var(--fuchsia)' }}>#{p.codigo}</td>
-                      <td style={{ color:'var(--muted)' }}>{p.mesaId != null ? `Mesa ${p.mesaId}` : '—'}</td>
+                      <td style={{ color:'var(--muted)' }}>{p.mesaId != null ? etiquetaMesa(p.mesaId, mesas) : '—'}</td>
                       <td style={{ color:'var(--muted)' }}>{p.lineas?.length ?? 0}</td>
                       <td style={{ fontWeight:700, color:'var(--yellow)' }}>{fmt(p.total)}</td>
                       <td><span className={`badge ${ESTADO_PEDIDO[p.estado]?.badge ?? ''}`}>{ESTADO_PEDIDO[p.estado]?.label ?? p.estado}</span></td>

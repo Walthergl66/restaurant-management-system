@@ -84,9 +84,22 @@ La pantalla **Mesas** (permiso `mesas:gestionar`) administra el salón en dos ni
   única que queda, no se puede eliminar y el botón explica el motivo.
 - **Mesas:** el modal de mesa elige la zona de una lista, con la opción "+ Nueva zona…". La lista se
   muestra **agrupada por zona**, en el orden definido.
+- **Código visible:** el número `1` se presenta como `M01`; `12` como `M12`. La tarjeta y el
+  formulario muestran una vista previa del código, sin cambiar el `id` persistente ni el campo
+  `numero` de la API. Pedidos, cuentas y dashboards usan el mismo código. En pedidos, la web
+  resuelve `mesaId` contra el catálogo; si todavía no puede resolverlo, indica `Mesa (ID n)`.
+- **Alta y edición:** al crear se propone el primer número libre entre 1 y 99. La búsqueda incluye
+  mesas deshabilitadas, porque su número sigue reservado. El formulario señala duplicados antes
+  de guardar; si la mesa está deshabilitada, indica que debe habilitarse en la lista. Acepta
+  enteros de 1 a 99 y capacidad de 1 a 50 personas. Las mesas anteriores con números mayores
+  que 99 siguen siendo editables si conservan su número; para renumerarlas se elige 1 a 99.
+- **Persistencia:** deshabilitar una mesa no la borra ni libera su número o ID. Un duplicado que
+  llegue a la API, por ejemplo por una edición concurrente, recibe un conflicto `409`.
 
-La lógica pura (mover una zona, agrupar mesas) está en `features/mesas/zonas.ts` y se prueba con
-`node --test src/features/mesas/zonas.test.mjs`. Los endpoints están en la [API](../docs/api/README.md).
+La lógica pura de zonas está en `features/mesas/zonas.ts`; el formato y la sugerencia de códigos
+están en `shared/lib/mesaCode.ts`. Se prueban con
+`node --test src/features/mesas/zonas.test.mjs src/shared/lib/mesaCode.test.mjs`.
+Los endpoints están en la [API](../docs/api/README.md).
 
 ### Dashboard operativo
 

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { useCrearAdicion } from '../hooks'
 import { nuevoCodigoAdicion } from '../lib/codigo'
+import { mesaCode } from '@/shared/lib/mesaCode'
 import type { CuentaResponse } from '../types'
 
 export default function AdicionModal({ cuenta, onClose }: { cuenta: CuentaResponse; onClose: () => void }) {
@@ -14,7 +15,7 @@ export default function AdicionModal({ cuenta, onClose }: { cuenta: CuentaRespon
     <div className="overlay">
       <div style={{ width:'100%', maxWidth:360, background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:24 }}>
         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:16 }}>
-          <h2 style={{ fontWeight:700, fontSize:16 }}>Adición — Mesa {cuenta.numeroMesa}</h2>
+          <h2 style={{ fontWeight:700, fontSize:16 }}>Adición — Mesa {mesaCode(cuenta.numeroMesa)}</h2>
           <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--muted)' }}><X size={18}/></button>
         </div>
         <p style={{ fontSize:12, color:'var(--muted)', marginBottom:14 }}>

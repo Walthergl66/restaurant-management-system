@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Minus, Plus, Search, X } from 'lucide-react'
 import { fmt } from '@/shared/lib/utils'
+import { mesaCode } from '@/shared/lib/mesaCode'
 import { useCrearPedido, useMesasLibres, useProductosActivos } from '../hooks'
 import type { CartItem } from '../types'
 import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
@@ -83,7 +84,7 @@ export default function NuevoPedidoModal({ onClose }: { onClose: () => void }) {
                 </option>
                 {mesasLibres.map(m => (
                   <option key={m.id} value={m.id}>
-                    Mesa {m.numero} · {m.capacidad} pers.{m.ubicacion ? ` · ${m.ubicacion}` : ''}
+                    Mesa {mesaCode(m.numero)} · {m.capacidad} pers.{m.ubicacion ? ` · ${m.ubicacion}` : ''}
                   </option>
                 ))}
               </select>

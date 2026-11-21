@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Table2, ShoppingBag, Receipt, ArrowRight, Plus } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { fmt, ESTADO_PEDIDO, ESTADO_MESA } from '@/shared/lib/utils'
+import { etiquetaMesa, mesaCode } from '@/shared/lib/mesaCode'
 import { useMesas } from '@/features/mesas'
 import { usePedidos, NuevoPedidoModal } from '@/features/pedidos'
 import { useCuentas } from '@/features/cuentas'
@@ -79,7 +80,7 @@ export default function SalonDashboard() {
                       <div>
                         <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--fuchsia)' }}>#{p.codigo}</p>
                         <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
-                          {p.mesaId != null ? `Mesa ${p.mesaId}` : 'Sin mesa'} · {p.lineas?.slice(0,2).map(l=>l.nombreProducto).join(' + ')}
+                          {p.mesaId != null ? etiquetaMesa(p.mesaId, mesas) : 'Sin mesa'} · {p.lineas?.slice(0,2).map(l=>l.nombreProducto).join(' + ')}
                         </p>
                         <p style={{ fontSize: 13, fontWeight: 700, marginTop: 1 }}>{fmt(p.total)}</p>
                       </div>
@@ -107,7 +108,7 @@ export default function SalonDashboard() {
               <p style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Mesas ocupadas</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {mesasOcupadas.map(m => (
-                  <span key={m.id} className={`badge ${ESTADO_MESA[m.estado]?.badge ?? ''}`}>Mesa {m.numero}</span>
+                  <span key={m.id} className={`badge ${ESTADO_MESA[m.estado]?.badge ?? ''}`}>Mesa {mesaCode(m.numero)}</span>
                 ))}
               </div>
             </div>

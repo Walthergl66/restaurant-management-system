@@ -9,6 +9,7 @@ import ZonasPanel from './ZonasPanel'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { hasPermiso, useAuthStore } from '@/features/auth'
 import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
+import { mesaCode } from '@/shared/lib/mesaCode'
 
 export default function MesasScreen() {
   const [showForm, setShowForm] = useState(false)
@@ -54,7 +55,7 @@ export default function MesasScreen() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 800 }}>Mesas</h1>
-          <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Catálogo de mesas disponibles para nuevos pedidos</p>
+          <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>Identifica cada mesa por código, capacidad y zona.</p>
         </div>
         <button className="btn-fuchsia" onClick={() => abrirFormulario(null)}><Plus size={15} /> Nueva mesa</button>
       </div>
@@ -98,7 +99,8 @@ export default function MesasScreen() {
               <article key={mesa.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 14, opacity: mesa.activo ? 1 : 0.7 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                   <div>
-                    <p style={{ fontSize: 20, fontWeight: 900 }}>Mesa {mesa.numero}</p>
+                    <p style={{ color:'var(--muted)', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:.8 }}>Mesa</p>
+                    <p style={{ fontSize: 26, fontWeight: 900, lineHeight:1.1, marginTop:3 }}>{mesaCode(mesa.numero)}</p>
                   </div>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 20, padding: '4px 8px', fontSize: 11, fontWeight: 700, color: mesa.activo ? 'var(--success)' : 'var(--muted)', background: mesa.activo ? 'rgba(34,197,94,.12)' : 'var(--surface-2)' }}>
                     <CheckCircle2 size={11} /> {mesa.activo ? 'Habilitada' : 'Deshabilitada'}
@@ -121,12 +123,12 @@ export default function MesasScreen() {
         </section>
       ))}
 
-      {showForm && <MesaModal editing={editing} onClose={() => setShowForm(false)} />}
+      {showForm && <MesaModal editing={editing} mesas={mesas} onClose={() => setShowForm(false)} />}
 
       {alternar && (
         <ConfirmDialog
-          title={`${alternar.activo ? 'Deshabilitar' : 'Habilitar'} mesa ${alternar.numero}`}
-          message={`¿Deseas ${alternar.activo ? 'deshabilitar' : 'habilitar'} la mesa ${alternar.numero}?`}
+          title={`${alternar.activo ? 'Deshabilitar' : 'Habilitar'} mesa ${mesaCode(alternar.numero)}`}
+          message={`¿Deseas ${alternar.activo ? 'deshabilitar' : 'habilitar'} la mesa ${mesaCode(alternar.numero)}?`}
           confirmText={alternar.activo ? 'Deshabilitar' : 'Habilitar'}
           variant={alternar.activo ? 'danger' : 'primary'}
           pending={cambiarHabilitacion.isPending}

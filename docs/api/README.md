@@ -61,6 +61,14 @@ Reglas:
 
 Mesas (`/api/v1/mesas`):
 
+- El código visual `M01` se deriva de `numero: 1`; `id` identifica el registro y no es el
+  número visible. El código no se envía ni se guarda como campo adicional. El formulario web
+  acepta nuevos números de 1 a 99; la API sigue aceptando cualquier entero positivo. Definir
+  si el límite debe aplicarse también a la API queda pendiente de decisión de producto.
+- `numero` es único entre todas las zonas, incluso para mesas deshabilitadas. Crear o cambiar
+  a un número existente responde **409**. `DELETE /api/v1/mesas/{id}` deshabilita la mesa:
+  conserva `id` y `numero`, que se pueden volver a usar habilitando el mismo registro.
+- La web conserva la edición de mesas anteriores con `numero > 99` si no se renumeran.
 - `MesaRequest` incluye `zonaId` (opcional). Al crear sin `zonaId` la mesa va a la **primera zona**;
   al actualizar sin `zonaId` conserva la que tiene.
 - `MesaResponse` incluye `zonaId`, `zonaOrden` y `ubicacion`, que ahora es el **nombre de la zona**

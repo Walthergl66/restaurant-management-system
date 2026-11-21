@@ -8,12 +8,15 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import axios from 'axios'
 import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
+import { useMesas } from '@/features/mesas'
+import { etiquetaMesa } from '@/shared/lib/mesaCode'
 
 export default function PedidoDetalle() {
   const { codigo } = useParams<{ codigo: string }>()
   const router = useRouter()
 
   const pedidoQuery = usePedido(codigo)
+  const { data: mesas = [] } = useMesas()
   const { data: pedido } = pedidoQuery
 
   const confirmar = useConfirmarPedido({
@@ -46,7 +49,7 @@ export default function PedidoDetalle() {
             <p style={{ fontSize:11, color:'var(--muted)', textTransform:'uppercase', letterSpacing:1 }}>Código</p>
             <h1 style={{ fontSize:26, fontWeight:900, color:'var(--fuchsia)', marginTop:2 }}>#{pedido.codigo}</h1>
             <p style={{ fontSize:13, color:'var(--muted)', marginTop:4 }}>
-              Mesa: <span style={{ color:'var(--text)', fontWeight:600 }}>{pedido.mesaId != null ? `Mesa ${pedido.mesaId}` : 'Sin mesa'}</span>
+              Mesa: <span style={{ color:'var(--text)', fontWeight:600 }}>{pedido.mesaId != null ? etiquetaMesa(pedido.mesaId, mesas) : 'Sin mesa'}</span>
               {pedido.notas && <> · <span style={{ color:'var(--text)', fontWeight:600 }}>{pedido.notas}</span></>}
             </p>
             {pedido.createdAt && (
