@@ -6,11 +6,13 @@ export type GrupoInicio = '/(delivery)' | '/(kitchen)' | '/(waiter)' | '/(tabs)'
 
 /**
  * Pantalla de inicio que corresponde al usuario, resuelta por permiso (no por nombre de rol).
- * Prioridad: repartidor > cocina > mesero > cliente. El backend valida cada operación igualmente.
+ * Prioridad: repartidor > mesero > cocina > cliente. El mesero también puede operar cocina (desde una
+ * pestaña de su propia app), así que tener permisos de cocina no lo saca de su pantalla. El backend
+ * valida cada operación igualmente.
  */
 export function grupoInicio(usuario: UsuarioInfo | null): GrupoInicio {
   if (puedeRepartir(usuario)) return '/(delivery)';
-  if (puedeOperarCocina(usuario)) return '/(kitchen)';
   if (puedeAtenderMesas(usuario)) return '/(waiter)';
+  if (puedeOperarCocina(usuario)) return '/(kitchen)';
   return '/(tabs)';
 }

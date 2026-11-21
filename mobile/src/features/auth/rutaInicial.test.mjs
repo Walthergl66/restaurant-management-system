@@ -18,8 +18,12 @@ test('repartidor va a delivery', () => {
   assert.equal(grupoInicio(usuario('delivery:mis-entregas')), '/(delivery)');
 });
 
-test('cocinero va a cocina aunque conserve permisos de mesero', () => {
-  assert.equal(grupoInicio(usuario('pedidos:estado-preparacion', 'pedidos:crear')), '/(kitchen)');
+test('quien solo opera cocina va a la pantalla de cocina', () => {
+  assert.equal(grupoInicio(usuario('pedidos:estado-preparacion', 'comandas:ver')), '/(kitchen)');
+});
+
+test('el mesero va a su pantalla aunque tenga permisos de cocina', () => {
+  assert.equal(grupoInicio(usuario('pedidos:estado-preparacion', 'pedidos:crear')), '/(waiter)');
 });
 
 test('mesero va a la pantalla de mesero', () => {
