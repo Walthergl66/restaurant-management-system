@@ -25,9 +25,9 @@ Rate limit: `POST /login` → 5/min por IP (429 `urn:problem:restaurante:rate-li
 | usuarios | `/api/v1/usuarios`, `/api/v1/auth` | `usuarios:ver/crear/editar/eliminar`, `roles:asignar` |
 | catalogo | `/api/v1/categorias`, `/api/v1/areas`, `/api/v1/extras`, `/api/v1/productos` | `catalogo:ver/gestionar` |
 | mesas | `/api/v1/mesas`, `/api/v1/mesas/zonas` | `mesas:ver/gestionar` |
-| pedidos | `/api/v1/pedidos` | `pedidos:ver/crear/editar/confirmar`, `pedidos:estado-preparacion/listo`, `pedidos:entregar`, `pedidos:retiro-mostrador` |
-| comandas | `/api/v1/comandas`, `/api/v1/comandas/impresion/pendientes` | `comandas:ver/reenviar` |
-| clientes | `/api/v1/clientes` (carrito, pedidos, historial, direcciones) | `clientes:menu-ver`, `clientes:carrito-gestionar`, `clientes:pedido-crear/confirmar`, `clientes:historial-ver`, `clientes:cuenta-nueva` |
+| pedidos | `/api/v1/pedidos` | `pedidos:ver/crear/editar/confirmar`, `pedidos:entregar` (`pedidos:estado-preparacion` y `pedidos:estado-listo` se usan en comandas; `pedidos:retiro-mostrador` en el retiro de la app) |
+| comandas | `/api/v1/comandas`, `/api/v1/comandas/impresion/pendientes` | `comandas:ver/reenviar`, `pedidos:estado-preparacion`, `pedidos:estado-listo` |
+| clientes | `/api/v1/clientes` (carrito, pedidos, historial, direcciones; `/operacion/pedidos` y `/pedidos/{codigo}/entregar` para el mostrador) | `pedidos:retiro-mostrador` (mostrador), `clientes:menu-ver`, `clientes:carrito-gestionar`, `clientes:pedido-crear/confirmar`, `clientes:historial-ver`, `clientes:cuenta-nueva` |
 | cuentas | `/api/v1/cuentas` | `cuentas:ver/gestionar` |
 | pagos/facturación/caja | `/api/v1/cuentas/{id}/cobros`, `/api/v1/cajas` | `pagos:cobrar`, `facturacion:emitir`, `caja:apertura/movimientos/cierre` |
 | finanzas/reportes/auditoria | `/api/v1/finanzas`, `/api/v1/reportes`, `/api/v1/auditoria` | `finanzas:ver`, `reportes:ver`, `auditoria:ver` |
@@ -82,6 +82,44 @@ Mesas (`/api/v1/mesas`):
 - La migración `V21__zonas_de_mesas.sql` convirtió las ubicaciones existentes en zonas y eliminó la
   columna `ubicacion`; conviene respaldar la base antes de aplicarla (`database/backup.sh`).
 
+### Pedidos de salón: filtro y entrega
+
+- `GET /api/v1/pedidos?mesaId=&estado=` (`pedidos:ver`): con `estado` devuelve solo los pedidos de ese
+  estado (p. ej. `LISTO`); sin `estado` devuelve todos menos los anulados.
+- `POST /api/v1/pedidos/{codigo}/entregar` (`pedidos:entregar`): el mesero marca **servido** un pedido que
+  cocina dejó `LISTO`. Pasa a `ENTREGADO`; repetir la llamada responde 200 sin cambios; si el pedido no
+  está `LISTO` responde **422**.
+
+### Comandas para la cocina
+
+- `GET /api/v1/comandas?areaId=&estado=&activas=` (`comandas:ver`). Con `activas=true` devuelve lo que la
+  cocina necesita ver: todas las `PENDIENTE` y `EN_PREPARACION`, más las `LISTO` modificadas en las últimas
+  **2 horas** (ventana fijada en el código; *pendiente de validar con el negocio*). Con `activas=true` el
+  parámetro `estado` no se usa. Sin él, el listado no tiene límite.
+- Cada comanda incluye, además de sus líneas: `mesaNumero` (solo en pedidos de salón), `canal`
+  (`SALON` o `APP`) y `entrega` (`RETIRAR` o `DOMICILIO`, solo en pedidos de la app). Los campos nulos se
+  omiten del JSON.
+- `POST /api/v1/comandas/{id}/en-preparacion` (`pedidos:estado-preparacion`) y
+  `POST /api/v1/comandas/{id}/listo` (`pedidos:estado-listo`). Una comanda de **orden** debe pasar por
+  preparación antes de `LISTO`; una de **cancelación** (generada al aprobar una anulación) se da por
+  enterada pasando directamente de `PENDIENTE` a `LISTO`. El pedido avanza cuando todas sus áreas llegan
+  al estado. Ambas llamadas son idempotentes.
+
+### Pedidos de la app en el mostrador (retiro)
+
+Mesero o cocina entregan al cliente su pedido de retiro, **sin PIN** (el cliente está presente):
+
+- `POST /api/v1/clientes/pedidos/{codigo}/entregar` (`pedidos:retiro-mostrador`): un pedido de `RETIRAR` que
+  está `LISTO` pasa a `ENTREGADO` y se avisa al cliente por su canal en vivo. Idempotente. Un pedido a
+  **domicilio** responde **422** ("El domicilio lo entrega el repartidor"), igual que uno que aún no
+  está listo.
+- `GET /api/v1/clientes/operacion/pedidos?estado=LISTO&entrega=RETIRAR` (`pedidos:retiro-mostrador`; ambos
+  parámetros son obligatorios): lista, del más antiguo al más reciente, `{codigo, estado, entrega,
+  clienteNombre, lineas:[{nombreProducto, cantidad}]}`. No incluye datos de pago ni de entrega. Un estado
+  o una forma de entrega no válidos responden **422**.
+- Pendiente de decisión: la entrega de los pedidos **a domicilio** (la hace el repartidor) y el cobro de
+  los pedidos de la app.
+
 ### Imágenes y videos del catálogo
 
 `POST /api/v1/productos/{id}/imagen` recibe `multipart/form-data` con el campo
@@ -108,7 +146,7 @@ Los roles viven en categorías y lo que el panel puede hacer con cada uno son
 | Categoría | Subroles | Asignable | Configurable | Origen |
 |---|---|---|---|---|
 | `ADMIN` | — | no | no | `ADMIN` |
-| `EMPLEADO` | `MESERO`, `CAJERO` | sí | sí | `ADMIN` |
+| `EMPLEADO` | `MESERO`, `CAJERO`, `COCINA` | sí | sí | `ADMIN` |
 | `CLIENTE` | — | no | no | `AUTO_REGISTRO` |
 | `DELIVERY` | — | no | no | `AUTO_REGISTRO` |
 
@@ -116,10 +154,18 @@ Los roles viven en categorías y lo que el panel puede hacer con cada uno son
   Cada rol trae `categoria`, `asignablePorAdmin`, `configurable`, `origen` y sus `permisos` por defecto.
 - `GET /api/v1/usuarios/permisos` → catálogo de funcionalidades para el checklist del panel.
 - El administrador asigna funcionalidades por usuario solo en los roles **configurables**
-  (`MESERO`, `CAJERO`); si el usuario no tiene permisos explícitos, rigen los de su rol.
+  (`MESERO`, `CAJERO`, `COCINA`); si el usuario no tiene permisos explícitos, rigen los de su rol.
 - Crear o cambiar a un rol **no asignable** se rechaza con **422**
   (`urn:problem:restaurante:regla-de-negocio`); un rol no configurable con permisos
   explícitos, también.
+- **Permisos de operación por defecto** (migración `V22`):
+  - `COCINA`: `catalogo:ver`, `comandas:ver`, `comandas:reenviar`, `pedidos:estado-preparacion`,
+    `pedidos:estado-listo` y `pedidos:retiro-mostrador`. No cobra, no ve caja ni reportes y no crea pedidos.
+  - `MESERO`: además de los que ya tenía, `pedidos:estado-preparacion`, `pedidos:entregar`,
+    `pedidos:retiro-mostrador` y `comandas:reenviar`: puede hacer las mismas acciones que la cocina.
+  - Los usuarios con permisos **explícitos** (p. ej. cocineros que la migración `V10` dejó como `MESERO`) no
+    reciben estos permisos solos: el administrador debe marcárselos o reasignarlos a `COCINA`. Los permisos
+    de un rol llegan a una sesión abierta cuando renueva su token o vuelve a iniciar sesión.
 - `ADMIN` es una cuenta única (la que se siembra); `CLIENTE` y `DELIVERY` nacen por
   auto-registro desde la app.
 

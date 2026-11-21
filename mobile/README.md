@@ -15,7 +15,8 @@ feature con un barrel (`index.ts`) como única superficie pública, rutas
 src/
 ├── app/                        # Expo Router (cada archivo = ruta fina)
 │   ├── (tabs)/                 # Menú, Carrito, Pedidos, Perfil
-│   ├── (waiter)/               # Mesero: mesas por zona, armado de pedido, producto
+│   ├── (waiter)/               # Mesero: pestañas Mesas y Cocina; armado de pedido y producto
+│   ├── (kitchen)/              # Cocina (rol COCINA): pestaña Comandas
 │   ├── checkout.tsx            # Flujo de pedido idempotente
 │   ├── login.tsx               # Auth
 │   └── product/[id].tsx        # Detalle (reexport del barrel del feature)
@@ -33,6 +34,7 @@ src/
 │   ├── pedidos/                # index.ts · api.ts · idempotencia · estadoSocket
 │   ├── carrito/                # index.ts · CartContext (estado local) · types
 │   ├── clientes/               # index.ts · api.ts · types
+│   ├── cocina/                 # index.ts · api.ts · agrupar · components/CocinaScreen
 │   └── mesero/                 # index.ts · api.ts · zonas · geometriaMesa · components/*
 └── theme/                      # colores y tipografía
 ```
@@ -152,6 +154,37 @@ El mesero (permiso `pedidos:crear`) entra directamente a su grupo de rutas `(wai
 La lógica pura se prueba con `node --test` (por ejemplo `src/features/mesero/zonas.test.mjs`,
 `geometriaMesa.test.mjs` y `enviarPedido.test.mjs`).
 
+## Pantalla de inicio según el usuario
+
+Al iniciar sesión, el grupo de rutas se decide **por permiso** (no por nombre de rol), con esta prioridad:
+
+| Prioridad | Permiso | Grupo |
+|---|---|---|
+| 1 | `delivery:mis-entregas` | `(delivery)` — repartidor |
+| 2 | `pedidos:crear` | `(waiter)` — mesero |
+| 3 | `pedidos:estado-preparacion` | `(kitchen)` — cocina |
+| 4 | cualquier otro | `(tabs)` — cliente |
+
+El mesero también tiene permisos de cocina, por eso el orden: va a su pantalla y desde ella accede a la
+pestaña Cocina. Quien tenga rol `COCINA` (sin `pedidos:crear`) entra directo a la pantalla de cocina. Quien
+esté en el grupo de otro tipo de usuario es redirigido al suyo.
+
+## Pantalla de cocina
+
+Muestra las comandas de `GET /comandas?activas=true` y se actualiza cada 8 s y con *pull to refresh*; al llegar
+comandas pendientes nuevas vibra brevemente.
+
+- **Filtro por área** de preparación (Todas, Cocina, Barra…) y pestañas **Pendientes / Preparando / Listos**
+  con su contador.
+- Cada tarjeta indica el número de comanda, el origen (**Mesa N**, **Retiro**, **Domicilio** o *Pedido app*), el
+  área, el código del pedido y las líneas con extras, ingredientes removidos y observaciones.
+- Acciones: **Preparar**, **Listo** (desde Pendiente encadena preparación y listo) y **Enterado** para las
+  comandas de **cancelación** (aviso de que una anulación aprobada cambia lo que se preparaba), que se muestran
+  primero y en rojo.
+- Si una acción falla (por ejemplo, sin conexión) se avisa y la tarjeta no cambia: el backend es la fuente de verdad.
+- La pantalla es la misma para el rol COCINA (con perfil y cierre de sesión) y para la pestaña Cocina del
+  mesero. *Pendiente:* mostrador (entrega de pedidos listos) y contador de pendientes en el ícono de la pestaña.
+
 ## Endpoints que consume
 
 Las respuestas SPI y DTO web de pedidos pueden convertirse al modelo de
@@ -166,6 +199,9 @@ Su tabla de mapeo y casos de prueba están documentados en
 | Login / refresh / logout / me | `/api/v1/auth/*` | login: no; resto: sí |
 | Historial / carrito / dirección | `/api/v1/clientes/*` | sí |
 | Checkout | `POST /clientes/pedidos` → `POST /clientes/pedidos/{codigo}/confirmar` | sí |
+| Mesero: mesas y zonas | `GET /mesas` | sí |
+| Mesero: enviar pedido | `POST /pedidos` → `POST /pedidos/{codigo}/items` → `POST /pedidos/{codigo}/confirmar` (si falla, `DELETE /pedidos/{codigo}`) | sí |
+| Cocina / pestaña Cocina | `GET /comandas?activas=true`, `GET /areas`, `POST /comandas/{id}/en-preparacion`, `POST /comandas/{id}/listo` | sí |
 
 Notas de contrato:
 - Dinero: el backend serializa `BigDecimal` como **número** JSON.
