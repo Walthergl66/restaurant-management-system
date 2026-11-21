@@ -13,3 +13,11 @@ export interface LineaPedidoMesero {
   ingredientesRemovidos?: string[];
   observaciones?: string;
 }
+
+/** Resumen de una cuenta abierta (GET /cuentas?estado=ABIERTA): una mesa con cuenta abierta está ocupada. */
+export interface CuentaAbierta {
+  id: number;
+  mesaId: number;
+  numeroMesa: number;
+  total: number;
+}
