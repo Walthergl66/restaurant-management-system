@@ -5,6 +5,7 @@ export default function WaiterLayout() {
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="mesa/[id]" />
       <Stack.Screen name="product/[id]" />
     </Stack>
   );

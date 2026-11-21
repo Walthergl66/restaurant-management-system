@@ -1,1 +1,1 @@
-export { AtencionMesasScreen as default } from '@/features/mesero';
+export { SeleccionMesaScreen as default } from '@/features/mesero';

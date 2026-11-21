@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 import type { CartItem } from '@/features/carrito';
 import { useCart } from '@/features/carrito';
+import { QuantityStepper } from '@/components/ui/QuantityStepper';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -66,25 +67,12 @@ export function CartItemRow({ item }: CartItemRowProps) {
         {!!item.ingredientesRemovidos.length && <Text style={styles.extras}>Sin: {item.ingredientesRemovidos.join(', ')}</Text>}
 
         <View style={styles.footer}>
-          <View style={styles.quantityControls}>
-            <TouchableOpacity
-              onPress={() =>
-                updateQuantity(item.producto.id, item.extras, item.cantidad - 1, item.ingredientesRemovidos)
-              }
-              style={styles.qtyButton}
-            >
-              <Ionicons name="remove" size={16} color={colors.textOnSurface} />
-            </TouchableOpacity>
-            <Text style={styles.quantity}>{item.cantidad}</Text>
-            <TouchableOpacity
-              onPress={() =>
-                updateQuantity(item.producto.id, item.extras, item.cantidad + 1, item.ingredientesRemovidos)
-              }
-              style={styles.qtyButton}
-            >
-              <Ionicons name="add" size={16} color={colors.textOnSurface} />
-            </TouchableOpacity>
-          </View>
+          <QuantityStepper
+            valor={item.cantidad}
+            onCambiar={cantidad =>
+              updateQuantity(item.producto.id, item.extras, cantidad, item.ingredientesRemovidos)
+            }
+          />
           <Text style={styles.totalPrice}>${totalPrice.toFixed(2)}</Text>
         </View>
       </View>
@@ -151,26 +139,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 8,
-  },
-  quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
-    borderRadius: 10,
-    paddingHorizontal: 4,
-  },
-  qtyButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quantity: {
-    color: colors.textOnSurface,
-    fontSize: 15,
-    fontWeight: '700',
-    minWidth: 28,
-    textAlign: 'center',
   },
   totalPrice: {
     color: colors.neonOrange,
