@@ -236,7 +236,7 @@ class PedidosIntegrationTest extends AbstractIntegracionApi {
                         .header("Authorization", "Bearer " + administradorToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.activo").value(true))
-                .andExpect(jsonPath("$.estado").value("LIBRE"));
+                .andExpect(jsonPath("$.estado").value("OCUPADA")); // los pedidos abren la cuenta de la mesa
     }
 
     @Test

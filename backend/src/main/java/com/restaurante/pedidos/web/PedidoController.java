@@ -1,6 +1,7 @@
 package com.restaurante.pedidos.web;
 
 import com.restaurante.pedidos.application.PedidoService;
+import com.restaurante.pedidos.domain.EstadoPedido;
 import com.restaurante.pedidos.web.dto.ActualizarLineaRequest;
 import com.restaurante.pedidos.web.dto.AgregarLineaRequest;
 import com.restaurante.pedidos.web.dto.CrearPedidoRequest;
@@ -53,9 +54,10 @@ public class PedidoController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('" + PermisoCodigo.PEDIDOS_VER + "')")
-    @Operation(summary = "Lista pedidos (por mesa opcionalmente)")
-    public List<PedidoResponse> listar(@RequestParam(required = false) Long mesaId) {
-        return pedidoService.listar(mesaId);
+    @Operation(summary = "Lista pedidos (por mesa y/o estado, opcionalmente)")
+    public List<PedidoResponse> listar(@RequestParam(required = false) Long mesaId,
+                                       @RequestParam(required = false) EstadoPedido estado) {
+        return pedidoService.listar(mesaId, estado);
     }
 
     @GetMapping("/page")
@@ -105,6 +107,13 @@ public class PedidoController {
     public PedidoResponse confirmar(@PathVariable String codigo,
                                     @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return pedidoService.confirmar(codigo, idempotencyKey);
+    }
+
+    @PostMapping("/{codigo}/entregar")
+    @PreAuthorize("hasAuthority('" + PermisoCodigo.PEDIDOS_ENTREGAR + "')")
+    @Operation(summary = "Marca entregado (servido) un pedido listo; idempotente")
+    public PedidoResponse entregar(@PathVariable String codigo) {
+        return pedidoService.entregar(codigo);
     }
 
     @DeleteMapping("/{codigo}")

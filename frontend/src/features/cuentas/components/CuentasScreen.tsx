@@ -2,10 +2,10 @@
 import { useState } from 'react'
 import { DollarSign } from 'lucide-react'
 import { fmt } from '@/shared/lib/utils'
+import { mesaCode } from '@/shared/lib/mesaCode'
 import { useCuentas, useCerrarCuenta } from '../hooks'
 import type { CuentaResponse } from '../types'
 import CobrarModal from './CobrarModal'
-import AdicionModal from './AdicionModal'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -13,7 +13,6 @@ import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
 
 export default function CuentasScreen() {
   const [cobrar, setCobrar] = useState<CuentaResponse | null>(null)
-  const [adicion, setAdicion] = useState<CuentaResponse | null>(null)
   const [cerrando, setCerrando] = useState<CuentaResponse | null>(null)
 
   const cuentasQuery = useCuentas()
@@ -56,16 +55,13 @@ export default function CuentasScreen() {
                 {abiertas.map(c => (
                   <div key={c.id} style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:14, padding:16, display:'flex', flexDirection:'column', gap:8 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <span style={{ fontWeight:700, fontSize:14 }}>Mesa {c.numeroMesa}</span>
+                      <span style={{ fontWeight:700, fontSize:14 }}>Mesa {mesaCode(c.numeroMesa)}</span>
                       <span className="badge badge-abierta">Abierta</span>
                     </div>
                     <p style={{ fontSize:24, fontWeight:900, color:'var(--yellow)' }}>{fmt(c.total)}</p>
                     <p style={{ fontSize:11, color:'var(--muted)' }}>
                       {c.pedidos?.length ?? 0} pedido(s) desde {c.createdAt ? format(new Date(c.createdAt),'HH:mm',{locale:es}) : '—'}
                     </p>
-                    <button className="btn-ghost" style={{ justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setAdicion(c)}>
-                      + Adición
-                    </button>
                     <div style={{ display:'flex', gap:6 }}>
                       <button className="btn-fuchsia" style={{ flex:1, justifyContent:'center', fontSize:11, padding:'7px 8px' }} onClick={() => setCobrar(c)}>
                         <DollarSign size={12}/> Cobrar
@@ -95,7 +91,7 @@ export default function CuentasScreen() {
                 {cerradas.map(c => (
                   <tr key={c.id}>
                     <td style={{ color:'var(--muted)' }}>#{c.id}</td>
-                    <td style={{ fontWeight:600 }}>Mesa {c.numeroMesa}</td>
+                    <td style={{ fontWeight:600 }}>Mesa {mesaCode(c.numeroMesa)}</td>
                     <td style={{ color:'var(--yellow)', fontWeight:700 }}>{fmt(c.total)}</td>
                     <td style={{ fontSize:12, color:'var(--muted)' }}>{c.updatedAt ? format(new Date(c.updatedAt),'dd/MM/yy HH:mm',{locale:es}) : '—'}</td>
                   </tr>
@@ -107,12 +103,11 @@ export default function CuentasScreen() {
       </div>
 
       {cobrar && <CobrarModal cuenta={cobrar} onClose={() => setCobrar(null)} />}
-      {adicion && <AdicionModal cuenta={adicion} onClose={() => setAdicion(null)} />}
 
       {cerrando && (
         <ConfirmDialog
           title="Cerrar cuenta"
-          message={`¿Cerrar la cuenta de la mesa ${cerrando.numeroMesa}? La mesa quedará libre y la cuenta pasará al historial.`}
+          message={`¿Cerrar la cuenta de la mesa ${mesaCode(cerrando.numeroMesa)}? La mesa quedará libre y la cuenta pasará al historial.`}
           confirmText="Cerrar cuenta"
           pending={cerrar.isPending}
           onConfirm={() => cerrar.mutate(cerrando.id, { onSuccess: () => setCerrando(null) })}

@@ -1,15 +1,15 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, RefreshCw } from 'lucide-react'
+import { Search, RefreshCw } from 'lucide-react'
 import { fmt, ESTADO_PEDIDO } from '@/shared/lib/utils'
 import { usePedidos } from '../hooks'
 import type { EstadoPedido } from '../types'
-import NuevoPedidoModal from './NuevoPedidoModal'
-import { useAuthStore, hasPermiso } from '@/features/auth'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import QueryBoundary, { hasQueryIssue } from '@/shared/ui/QueryBoundary'
+import { useMesas } from '@/features/mesas'
+import { etiquetaMesa } from '@/shared/lib/mesaCode'
 
 const ESTADOS: (EstadoPedido | 'TODOS')[] = ['TODOS','BORRADOR','CONFIRMADO','EN_PREPARACION','LISTO','ENTREGADO','ANULADO']
 
@@ -17,11 +17,9 @@ export default function PedidosScreen() {
   const router = useRouter()
   const [search, setSearch]   = useState('')
   const [filtro, setFiltro]   = useState<EstadoPedido | 'TODOS'>('TODOS')
-  const [nuevo, setNuevo]     = useState(false)
-  const user = useAuthStore(state => state.user)
-  const puedeCrear = hasPermiso(user, 'pedidos:crear')
 
   const pedidosQuery = usePedidos()
+  const { data: mesas = [] } = useMesas()
   const { data: pedidos = [], isLoading, refetch } = pedidosQuery
 
   if (hasQueryIssue([pedidosQuery])) return <div className="page-stack"><h1>Pedidos</h1><QueryBoundary queries={[pedidosQuery]} label="los pedidos" /></div>
@@ -30,7 +28,7 @@ export default function PedidosScreen() {
     const okEstado = filtro === 'TODOS' || p.estado === filtro
     const okSearch = !search
       || p.codigo.toLowerCase().includes(search.toLowerCase())
-      || (p.mesaId != null && `mesa ${p.mesaId}`.includes(search.toLowerCase()))
+      || (p.mesaId != null && etiquetaMesa(p.mesaId, mesas).toLowerCase().includes(search.toLowerCase()))
     return okEstado && okSearch
   })
 
@@ -40,9 +38,6 @@ export default function PedidosScreen() {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
         <h1 style={{ fontSize:20, fontWeight:800 }}>Pedidos</h1>
         <div style={{ display:'flex', gap:8 }}>
-          {puedeCrear && (
-            <button className="btn-fuchsia" onClick={() => setNuevo(true)}><Plus size={15}/> Nuevo pedido</button>
-          )}
           <button className="btn-ghost" onClick={() => refetch()} aria-label="Actualizar pedidos"><RefreshCw size={15}/></button>
         </div>
       </div>
@@ -94,7 +89,7 @@ export default function PedidosScreen() {
                   {filtered.map(p => (
                     <tr key={p.codigo} style={{ cursor:'pointer' }} onClick={() => router.push(`/pedidos/${p.codigo}`)}>
                       <td style={{ fontWeight:700, color:'var(--fuchsia)' }}>#{p.codigo}</td>
-                      <td style={{ color:'var(--muted)' }}>{p.mesaId != null ? `Mesa ${p.mesaId}` : '—'}</td>
+                      <td style={{ color:'var(--muted)' }}>{p.mesaId != null ? etiquetaMesa(p.mesaId, mesas) : '—'}</td>
                       <td style={{ color:'var(--muted)' }}>{p.lineas?.length ?? 0}</td>
                       <td style={{ fontWeight:700, color:'var(--yellow)' }}>{fmt(p.total)}</td>
                       <td><span className={`badge ${ESTADO_PEDIDO[p.estado]?.badge ?? ''}`}>{ESTADO_PEDIDO[p.estado]?.label ?? p.estado}</span></td>
@@ -107,7 +102,6 @@ export default function PedidosScreen() {
         }
       </div>
 
-      {nuevo && <NuevoPedidoModal onClose={() => setNuevo(false)} />}
     </div>
   )
 }

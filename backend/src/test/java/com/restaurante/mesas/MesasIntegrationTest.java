@@ -17,17 +17,22 @@ class MesasIntegrationTest extends AbstractIntegracionApi {
     @Test
     void creaUnaMesaHabilitada() throws Exception {
         String token = tokenAdmin();
+        String nombreZona = "Terraza " + (System.nanoTime() % 1_000_000);
+        long zonaId = objectMapper.readTree(mockMvc.perform(post("/api/v1/mesas/zonas")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"%s\"}".formatted(nombreZona)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString()).path("id").asLong();
         mockMvc.perform(post("/api/v1/mesas")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"numero":7,"capacidad":4,"ubicacion":"Terraza"}
-                                """))
+                        .content("{\"numero\":7,\"capacidad\":4,\"zonaId\":%d}".formatted(zonaId)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.numero").value(7))
                 .andExpect(jsonPath("$.estado").value("LIBRE"))
                 .andExpect(jsonPath("$.activo").value(true))
-                .andExpect(jsonPath("$.ubicacion").value("Terraza"));
+                .andExpect(jsonPath("$.ubicacion").value(nombreZona));
     }
 
     @Test

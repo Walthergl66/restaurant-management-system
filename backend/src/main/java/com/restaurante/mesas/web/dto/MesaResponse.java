@@ -10,7 +10,10 @@ public record MesaResponse(
         Long id,
         int numero,
         int capacidad,
+        /** Nombre de la zona (se conserva por compatibilidad con los clientes). */
         String ubicacion,
+        Long zonaId,
+        int zonaOrden,
         EstadoMesa estado,
         boolean activo) {
 
@@ -19,7 +22,9 @@ public record MesaResponse(
                 mesa.getId(),
                 mesa.getNumero(),
                 mesa.getCapacidad(),
-                mesa.getUbicacion(),
+                mesa.getZona().getNombre(),
+                mesa.getZona().getId(),
+                mesa.getZona().getOrden(),
                 mesa.getEstado(),
                 mesa.isActivo());
     }

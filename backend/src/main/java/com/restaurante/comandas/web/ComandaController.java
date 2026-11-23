@@ -36,10 +36,11 @@ public class ComandaController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('" + PermisoCodigo.COMANDAS_VER + "')")
-    @Operation(summary = "Lista comandas, opcionalmente por área y estado")
+    @Operation(summary = "Lista comandas, opcionalmente por área y estado; con activas=true solo las que la cocina debe ver")
     public List<ComandaResponse> listar(@RequestParam(required = false) Long areaId,
-                                        @RequestParam(required = false) ComandaEstado estado) {
-        return comandaService.listar(areaId, estado);
+                                        @RequestParam(required = false) ComandaEstado estado,
+                                        @RequestParam(defaultValue = "false") boolean activas) {
+        return activas ? comandaService.listarActivas(areaId) : comandaService.listar(areaId, estado);
     }
 
     @GetMapping("/{id}")

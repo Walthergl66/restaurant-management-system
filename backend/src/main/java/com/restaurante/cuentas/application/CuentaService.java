@@ -71,14 +71,23 @@ public class CuentaService implements Cuentas {
         }
     }
 
+    /** Abre la cuenta de la mesa o reutiliza la abierta; una cuenta nueva deja la mesa OCUPADA. */
     private Cuenta abrirParaMesa(Long mesaId) {
         return cuentaRepository.findByMesaIdAndEstado(mesaId, EstadoCuenta.ABIERTA)
-                .orElseGet(() -> cuentaRepository.save(new Cuenta(mesaId)));
+                .orElseGet(() -> {
+                    Cuenta nueva = cuentaRepository.save(new Cuenta(mesaId));
+                    mesas.marcarOcupada(mesaId);
+                    return nueva;
+                });
     }
 
+    /** Cierra la cuenta abierta de la mesa (si la hay) y la libera. */
     private void cerrarAbiertaDeMesa(Long mesaId) {
         cuentaRepository.findByMesaIdAndEstado(mesaId, EstadoCuenta.ABIERTA)
-                .ifPresent(Cuenta::cerrar);
+                .ifPresent(cuenta -> {
+                    cuenta.cerrar();
+                    mesas.liberar(mesaId);
+                });
     }
 
     @Transactional(readOnly = true)
@@ -133,6 +142,7 @@ public class CuentaService implements Cuentas {
                     "No se puede cerrar la cuenta con pedidos en borrador sin confirmar");
         }
         cuenta.cerrar();
+        mesas.liberar(cuenta.getMesaId());
         return cuenta;
     }
 

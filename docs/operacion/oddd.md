@@ -4,7 +4,7 @@ En este repositorio se usa ODDD como documento de diseño/definición operativa;
 
 ## Componentes en ejecución
 
-Docker Compose levanta backend Spring y web Next.js. PostgreSQL es externo y se configura con `DB_*`. La aplicación móvil se distribuye/ejecuta aparte mediante Expo. Ver [guía de producción](../produccion.md).
+Docker Compose levanta backend Spring y web Next.js. PostgreSQL es externo y se configura con `DB_*`. La aplicación móvil se distribuye/ejecuta aparte mediante Expo. Ver [guía de producción](despliegue.md).
 
 ## Inicio
 
@@ -30,6 +30,21 @@ credenciales no se configuran en el frontend ni en la app móvil. Configura
 `ARCHIVOS_LECTURA_URL` para conservar la lectura de archivos vinculados en el
 almacenamiento SFTP anterior. El destino WebDAV debe ser alcanzable desde el
 contenedor backend; la URL pública también debe ser alcanzable por el navegador.
+
+### Migraciones recientes
+
+Flyway las aplica solas al arrancar el backend. Antes de aplicarlas en una base con datos, haz un
+respaldo (`database/backup.sh`) y, si puedes, pruébalas primero en una copia
+(`database/restore.sh <dump> restaurante_prueba` y arranca el backend con `DB_NAME=restaurante_prueba`).
+
+| Versión | Qué hace |
+|---|---|
+| `V21__zonas_de_mesas.sql` | Crea `catalogo.zonas`, convierte cada `mesas.ubicacion` en una zona y **elimina esa columna**. |
+| `V22__rol_cocina_y_permisos_operacion.sql` | Crea el rol `COCINA` y concede permisos de operación a `COCINA` y `MESERO`. |
+| `V23__mesas_ocupadas_backfill.sql` | Marca `OCUPADA` las mesas que ya tenían una cuenta abierta. |
+
+Una migración ya aplicada no se edita: si hay que corregirla, se restaura la base desde el respaldo o se
+crea una versión nueva.
 
 ## Observabilidad y tareas
 

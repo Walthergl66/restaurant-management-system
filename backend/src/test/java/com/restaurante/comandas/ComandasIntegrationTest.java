@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
@@ -45,6 +46,9 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
 
     @Autowired
     private TransactionTemplate transacciones;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @BeforeEach
     void preparar() {
@@ -202,6 +206,90 @@ class ComandasIntegrationTest extends AbstractIntegracionApi {
         JsonNode comanda = buscar(codigo, null).path(0);
         assertEquals(2, comanda.path("lineas").size(),
                 "Son dos platos distintos y deben viajar en dos líneas: " + comanda);
+    }
+
+    /**
+     * La pantalla de cocina pide solo lo activo: pendientes, en preparación y las listas
+     * recientes. Una lista de hace más de la ventana (2 h) no debe volver a salir.
+     */
+    @Test
+    void activasDevuelvePendientesPreparandoYListasRecientesPeroNoLasViejas() throws Exception {
+        long area = crearArea("Activas " + System.nanoTime() % 100000);
+        long producto = crearProductoConArea("Plato Activo", "9.00", area);
+        long pendiente = comandaNueva(producto);
+        long preparando = comandaNueva(producto);
+        long listaReciente = comandaNueva(producto);
+        long listaVieja = comandaNueva(producto);
+
+        marcar(preparando, "en-preparacion");
+        marcar(listaReciente, "en-preparacion");
+        marcar(listaReciente, "listo");
+        marcar(listaVieja, "en-preparacion");
+        marcar(listaVieja, "listo");
+        jdbc.update("UPDATE operaciones.comandas SET updated_at = now() - interval '3 hours' WHERE id = ?", listaVieja);
+
+        JsonNode activas = listarActivas(area);
+        List<Long> ids = new java.util.ArrayList<>();
+        activas.forEach(c -> ids.add(c.path("id").asLong()));
+        assertEquals(List.of(pendiente, preparando, listaReciente), ids,
+                "pendiente, preparando y lista reciente, en orden; la lista vieja no aparece");
+    }
+
+    @Test
+    void laComandaDeSalonTraeElNumeroDeMesaYElCanalSalon() throws Exception {
+        long area = crearArea("Mesa en comanda " + System.nanoTime() % 100000);
+        long producto = crearProductoConArea("Plato Mesa", "7.00", area);
+        long mesaId = crearMesa();
+        String codigo = "MESA-CMD-" + System.nanoTime();
+        crearBorrador(mesaId, codigo);
+        postItem(codigo, producto, 1, null, null, null);
+        confirmar(codigo, "key-mesa-" + System.nanoTime());
+
+        int numeroMesa = objectMapper.readTree(mockMvc.perform(get("/api/v1/mesas/" + mesaId)
+                        .header("Authorization", "Bearer " + administradorToken))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("numero").asInt();
+
+        JsonNode comanda = buscar(codigo, null).get(0);
+        assertEquals(numeroMesa, comanda.path("mesaNumero").asInt());
+        assertEquals("SALON", comanda.path("canal").asText());
+        assertTrue(comanda.path("entrega").isMissingNode(), "un pedido de salón no tiene forma de entrega");
+    }
+
+    /** "Listo" en una comanda de cancelación significa "enterado": no exige pasar por preparación. */
+    @Test
+    void laCancelacionSePuedeDarPorEnteradaSinPasarPorPreparacion() throws Exception {
+        long area = crearArea("Enterado " + System.nanoTime() % 100000);
+        long producto = crearProductoConArea("Plato Enterado", "10.00", area);
+        long mesaId = crearMesa();
+        String codigo = "ENT-" + System.nanoTime();
+        crearBorrador(mesaId, codigo);
+        long lineaId = itemId(postItemConRespuesta(codigo, producto, 2));
+        confirmar(codigo, "key-ent-" + System.nanoTime());
+        solicitarAnulacion(codigo, lineaId, 1, "cambio de opinión");
+        aprobarAnulacionDesdeMesa(codigo, lineaId);
+
+        long cancelacion = comandaDe(codigo, "CANCELACION");
+        assertEquals("PENDIENTE", estadoComanda(cancelacion));
+        marcar(cancelacion, "listo");
+        assertEquals("LISTO", estadoComanda(cancelacion));
+    }
+
+    /** Crea un pedido de salón con una línea del producto y devuelve el id de su comanda (PENDIENTE). */
+    private long comandaNueva(long productoId) throws Exception {
+        long mesaId = crearMesa();
+        String codigo = "ACT-" + System.nanoTime();
+        crearBorrador(mesaId, codigo);
+        postItem(codigo, productoId, 1, null, null, null);
+        confirmar(codigo, "key-" + codigo);
+        return comandaDe(codigo, "ORDEN");
+    }
+
+    private JsonNode listarActivas(long areaId) throws Exception {
+        String cuerpo = mockMvc.perform(get("/api/v1/comandas?activas=true&areaId=" + areaId)
+                        .header("Authorization", "Bearer " + cocineroToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(cuerpo);
     }
 
     private void postItemConExtras(String codigo, long productoId, int cantidad, List<Long> extraIds) throws Exception {

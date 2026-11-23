@@ -106,4 +106,16 @@ public interface Clientes {
      *  repartidor confirma su llegada. No modifica el estado de preparación del
      *  pedido; solo dispara la notificación en la misma transacción. */
     void notificarEventoEntrega(Long pedidoClienteId);
+
+    /** Comandas: forma de entrega ("RETIRAR" o "DOMICILIO") del pedido de la app con ese código;
+     *  vacío si el código no es un pedido de la app (p. ej. es un pedido de salón). */
+    java.util.Optional<String> metodoEntregaDe(String pedidoCodigo);
+
+    /** Mostrador: marca entregado un pedido de RETIRAR que está LISTO (mesero o cocina). Idempotente;
+     *  un domicilio se rechaza (lo entrega el repartidor). Avisa del cambio al cliente. */
+    PedidoClienteSPI entregarEnMostrador(String codigo);
+
+    /** Mostrador: pedidos de la app en ese estado y forma de entrega ("RETIRAR" o "DOMICILIO"),
+     *  del más antiguo al más reciente. */
+    List<PedidoMostradorSPI> pedidosParaMostrador(String estado, String entrega);
 }

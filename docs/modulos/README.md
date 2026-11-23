@@ -9,6 +9,6 @@ El sistema cubre operación de salón, pedidos y preparación, cobros, caja, adm
 - **Operación de restaurante:** mesas, pedidos, comandas por área de preparación, cuentas y adiciones.
 - **Cierre comercial:** cobros, métodos de pago, comprobantes, anulaciones, caja y reportes.
 - **Control:** auditoría de eventos.
-- **Canales cliente:** web administrativa/operativa y flujos móviles de cliente y mesero.
+- **Canales:** web de administración y caja, y aplicación móvil para cliente, mesero, cocina y repartidor ([quién hace qué](../producto/canales-y-roles.md)).
 
-Los detalles de endpoints y permisos se consultan en [API](../api.md); pantallas y operación por canal están descritas en README de cada componente.
+Los detalles de endpoints y permisos se consultan en [API](../api/README.md); pantallas y operación por canal están descritas en README de cada componente.

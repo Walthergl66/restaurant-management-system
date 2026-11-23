@@ -174,6 +174,20 @@ public class PedidoCliente extends BaseEntity {
         this.estado = EstadoPedidoCliente.ENTREGADO;
     }
 
+    /**
+     * Entrega en el mostrador (mesero o cocina): solo para pedidos de RETIRAR, de LISTO a ENTREGADO.
+     * Idempotente sobre ENTREGADO. El domicilio no pasa por aquí: lo entrega el repartidor.
+     */
+    public void entregarEnMostrador() {
+        if (!"RETIRAR".equals(metodoEntrega)) {
+            throw new BusinessRuleException("El domicilio lo entrega el repartidor");
+        }
+        if (estado == EstadoPedidoCliente.ENTREGADO) {
+            return;
+        }
+        entregar();
+    }
+
     public void anular() {
         if (estado != EstadoPedidoCliente.BORRADOR) {
             throw new BusinessRuleException("Solo BORRADOR se puede anular");

@@ -62,4 +62,20 @@ class ComandaTest {
         assertEquals("Lomo", c.getLineas().get(0).getNombreProducto());
         assertTrue(c.getLineas().get(0).getCantidad() == 2);
     }
+
+    @Test
+    void laCancelacionPuedeDarseDeEnteradoDirectamenteDesdePendiente() {
+        Comanda c = new Comanda("PED-1", 26, 3L, "Cocina", TipoComanda.CANCELACION, 7L);
+        c.marcarListo();
+        assertEquals(ComandaEstado.LISTO, c.getEstado());
+        c.marcarListo();
+        assertEquals(ComandaEstado.LISTO, c.getEstado());
+    }
+
+    @Test
+    void laOrdenSigueExigiendoPrepararAntesDeMarcarListo() {
+        Comanda c = new Comanda("PED-1", 27, 3L, "Cocina", TipoComanda.ORDEN, null);
+        assertThrows(BusinessRuleException.class, c::marcarListo);
+        assertEquals(ComandaEstado.PENDIENTE, c.getEstado());
+    }
 }

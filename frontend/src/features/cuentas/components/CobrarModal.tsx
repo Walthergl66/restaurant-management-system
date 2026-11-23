@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { fmt, METODOS_PAGO } from '@/shared/lib/utils'
+import { mesaCode } from '@/shared/lib/mesaCode'
 import { useCobrar } from '../hooks'
 import type { CuentaResponse } from '../types'
 
@@ -15,7 +16,7 @@ export default function CobrarModal({ cuenta, onClose }: { cuenta: CuentaRespons
     <div className="overlay">
       <div style={{ width:'100%', maxWidth:360, background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:24 }}>
         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:16 }}>
-          <h2 style={{ fontWeight:700, fontSize:16 }}>Cobrar — Mesa {cuenta.numeroMesa}</h2>
+          <h2 style={{ fontWeight:700, fontSize:16 }}>Cobrar — Mesa {mesaCode(cuenta.numeroMesa)}</h2>
           <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--muted)' }}><X size={18}/></button>
         </div>
         <p style={{ fontSize:32, fontWeight:900, color:'var(--yellow)', marginBottom:20 }}>{fmt(cuenta.total)}</p>

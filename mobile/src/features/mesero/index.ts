@@ -1,3 +1,7 @@
 export { meseroService } from './api'
-export { default as AtencionMesasScreen } from './components/AtencionMesasScreen'
+export { agruparMesasPorZona } from './zonas'
+export { default as SeleccionMesaScreen } from './components/SeleccionMesaScreen'
+export { default as ArmadoPedidoScreen } from './components/ArmadoPedidoScreen'
+export type { ZonaMesas } from './zonas'
+export type { ApiPedidosMesa } from './enviarPedido'
 export type { LineaPedidoMesero, MesaMesero } from './types'

@@ -1,6 +1,6 @@
 # Frontend — Sistema de Gestión de Restaurante
 
-Aplicación web desarrollada en **Next.js 16** con **React 19**, **TypeScript** y **Tailwind CSS**, diseñada para la operativa del restaurante: salones, mesas, pedidos en tiempo real, cocina (KDS), caja, cuentas, anulaciones, reportes y administración.
+Aplicación web desarrollada en **Next.js 16** con **React 19**, **TypeScript** y **Tailwind CSS**, diseñada para la **administración y la caja** del restaurante: mesas y zonas, monitoreo de pedidos y comandas, caja, cuentas, anulaciones, reportes, usuarios y catálogo. El mesero, la cocina y el repartidor trabajan desde la [aplicación móvil](../mobile/README.md); la web no tiene pantallas para tomar pedidos ni para preparar comandas.
 
 El frontend se ejecuta directamente en el entorno de desarrollo del cliente con Node.js y se comunica con la API REST del backend en `http://localhost:8080`.
 
@@ -32,11 +32,11 @@ frontend/
 │   │   │   ├── anulaciones/      # Aprobación y consulta de anulaciones
 │   │   │   ├── auditoria/        # Registro de eventos auditables
 │   │   │   ├── caja/             # Apertura, movimientos y cierre de caja
-│   │   │   ├── cocina/           # Pantalla de comandas en preparación (KDS)
+│   │   │   ├── comandas/         # Monitor de comandas (solo lectura; reimprimir)
 │   │   │   ├── cuentas/          # Consulta y cierre de cuentas
 │   │   │   ├── dashboard/        # Resumen general del turno
-│   │   │   ├── mesas/            # Mapa y estados de mesas
-│   │   │   ├── pedidos/          # Toma de pedidos presenciales
+│   │   │   ├── mesas/            # Mesas y zonas del restaurante (alta, edición, orden)
+│   │   │   ├── pedidos/          # Monitor de pedidos (solo lectura)
 │   │   │   ├── productos/        # Catálogo de productos y categorías
 │   │   │   ├── reportes/         # Reportes financieros y ventas
 │   │   │   └── usuarios/         # Gestión de usuarios y roles
@@ -74,6 +74,32 @@ frontend/
 
 \* `shared/layout/Sidebar` y `TopBar` leen la sesión desde `@/features/auth` (única
 excepción documentada de la dirección `shared → feature`).
+
+### Mesas y zonas
+
+La pantalla **Mesas** (permiso `mesas:gestionar`) administra el salón en dos niveles:
+
+- **Zonas del restaurante** (Salón, Terraza, Patio…): un panel permite crear, renombrar, **subir o
+  bajar** (el orden es el que ve el mesero en la app) y eliminar zonas. Una zona con mesas, o la
+  única que queda, no se puede eliminar y el botón explica el motivo.
+- **Mesas:** el modal de mesa elige la zona de una lista, con la opción "+ Nueva zona…". La lista se
+  muestra **agrupada por zona**, en el orden definido.
+- **Código visible:** el número `1` se presenta como `M01`; `12` como `M12`. La tarjeta y el
+  formulario muestran una vista previa del código, sin cambiar el `id` persistente ni el campo
+  `numero` de la API. Pedidos, cuentas y dashboards usan el mismo código. En pedidos, la web
+  resuelve `mesaId` contra el catálogo; si todavía no puede resolverlo, indica `Mesa (ID n)`.
+- **Alta y edición:** al crear se propone el primer número libre entre 1 y 99. La búsqueda incluye
+  mesas deshabilitadas, porque su número sigue reservado. El formulario señala duplicados antes
+  de guardar; si la mesa está deshabilitada, indica que debe habilitarse en la lista. Acepta
+  enteros de 1 a 99 y capacidad de 1 a 50 personas. Las mesas anteriores con números mayores
+  que 99 siguen siendo editables si conservan su número; para renumerarlas se elige 1 a 99.
+- **Persistencia:** deshabilitar una mesa no la borra ni libera su número o ID. Un duplicado que
+  llegue a la API, por ejemplo por una edición concurrente, recibe un conflicto `409`.
+
+La lógica pura de zonas está en `features/mesas/zonas.ts`; el formato y la sugerencia de códigos
+están en `shared/lib/mesaCode.ts`. Se prueban con
+`node --test src/features/mesas/zonas.test.mjs src/shared/lib/mesaCode.test.mjs`.
+Los endpoints están en la [API](../docs/api/README.md).
 
 ### Dashboard operativo
 
@@ -125,7 +151,7 @@ magenta. Las superficies de trabajo, tarjetas, formularios y tablas usan una pal
 crema con texto oscuro; los títulos principales llevan tipografía manuscrita y
 subrayado ámbar. Los estados mantienen colores semánticos con tonos legibles sobre
 crema, y los avisos y estados vacíos siguen el mismo tratamiento de superficie.
-La cocina conserva su distinción entre pendientes, en preparación y listos mediante
+El monitor de comandas conserva su distinción entre pendientes, en preparación y listos mediante
 acentos por estado dentro de paneles crema. El login mantiene su composición propia.
 
 ### Adaptación responsive de operaciones
@@ -134,8 +160,8 @@ El espacio autenticado ajusta su shell por ancho de pantalla: por encima de 900 
 la barra lateral se expande al pasar el cursor o el foco y se repliega al salir; entre
 681 y 900 px se compacta a iconos, y hasta 680 px se convierte en un panel
 desplegable desde el encabezado. El contenido usa márgenes fluidos.
-Las columnas de cocina, salón y reportes se apilan en vistas estrechas; los KPI de
-mesas y cocina se reorganizan, y los formularios del modal de nuevo pedido apilan
+Las columnas de comandas y reportes se apilan en vistas estrechas; los KPI de
+mesas y comandas se reorganizan, y los formularios de los modales apilan
 sus campos en móvil. Las tablas conservan sus columnas y permiten desplazamiento
 horizontal dentro de su contenedor cuando el ancho disponible no basta.
 
@@ -149,6 +175,24 @@ márgenes. El acceso incluye control para mostrar u ocultar la contraseña, recu
 que indica contactar a un administrador y mensajes en línea para campos incompletos
 o errores de autenticación. Los campos y botones muestran foco de teclado; los controles
 de contraseña y recuperación tienen áreas táctiles amplias.
+
+**Quién puede entrar.** Solo los roles `ADMIN` y `CAJERO` pueden usar la web. Una cuenta de mesero, cocina,
+repartidor o cliente que inicia sesión recibe el aviso "Esta cuenta usa la aplicación móvil. Ingresa desde la
+app." y su sesión se revoca; si ya tenía una sesión abierta, se cierra al cargar la web y se avisa en el
+login. Es un candado de la interfaz (`features/auth/acceso.ts`): la API sigue validando los permisos de cada
+operación, y un cambio de rol no impide que el token existente llame a la API directamente *(pendiente de
+decisión: bloqueo por canal en el backend)*.
+
+### Pedidos y comandas en la web
+
+- **Pedidos:** monitor de solo lectura (lista, filtros por estado y detalle con el código de mesa). Los pedidos
+  se toman desde la app del mesero.
+- **Comandas** (`/comandas`): monitor con las pendientes, en preparación y listas recientes (`GET /comandas?activas=true`),
+  con el origen de cada una (mesa, retiro o domicilio) y las cancelaciones marcadas. La preparación se gestiona
+  desde la app móvil; con el permiso `comandas:reenviar` se puede **reimprimir** una comanda.
+- **Cuentas:** se consultan y se cobran; las adiciones a una cuenta las hace el mesero desde su app.
+- **Mesas:** además de las zonas, cada mesa muestra su estado de servicio (Libre u Ocupada).
+- **Resumen** (`/dashboard`): panel de ventas para quien tiene el permiso `reportes:ver`.
 
 ---
 

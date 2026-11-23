@@ -1,6 +1,10 @@
 export { AuthProvider, useAuth } from './AuthContext'
 export { authService } from './api'
-export { puedeAtenderMesas, puedeRepartir } from './permisos'
+export { puedeAtenderMesas, puedeOperarCocina, puedeRepartir } from './permisos'
+export { grupoInicio } from './rutaInicial'
+export { etiquetaRol, iniciales } from './perfil'
+export { PerfilSheet } from './components/PerfilSheet'
+export type { GrupoInicio } from './rutaInicial'
 export { PasswordStrength } from './PasswordStrength'
 export {
   esCedulaValida,

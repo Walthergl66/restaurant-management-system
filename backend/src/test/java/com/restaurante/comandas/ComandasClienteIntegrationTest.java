@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -215,6 +216,188 @@ class ComandasClienteIntegrationTest extends AbstractIntegracionApi {
     // ---------------------------------------------------------------
     // Utilidades de contexto de datos
     // ---------------------------------------------------------------
+
+    @Test
+    void laComandaDeUnPedidoDeLaAppNoTraeMesaYTieneCanalApp() throws Exception {
+        long area = crearArea("Canal app");
+        long producto = crearProductoConArea("Plato App", "6.00", area);
+        String codigo = "CLI-APP-" + System.nanoTime();
+        String idem = "idem-app-" + System.nanoTime();
+        crearPedidoCliente(codigo, idem, producto);
+        confirmarCliente(codigo, idem);
+
+        JsonNode comanda = buscar(codigo, null).get(0);
+        assertEquals("APP", comanda.path("canal").asText());
+        assertTrue(comanda.path("mesaNumero").isMissingNode(), "un pedido de la app no tiene mesa (el campo null se omite del JSON)");
+        assertEquals("RETIRAR", comanda.path("entrega").asText(), "el pedido de la app de este helper es para retirar");
+    }
+
+    @Test
+    void laComandaDeUnPedidoADomicilioIndicaDomicilio() throws Exception {
+        long area = crearArea("Domicilio comanda");
+        long producto = crearProductoConArea("Plato Domicilio", "7.00", area);
+        String codigo = "CLI-DOM-" + System.nanoTime();
+        crearYConfirmarDomicilio(codigo, producto);
+
+        JsonNode comanda = buscar(codigo, null).get(0);
+        assertEquals("APP", comanda.path("canal").asText());
+        assertEquals("DOMICILIO", comanda.path("entrega").asText());
+    }
+
+    // ---------------------------------------------------------------
+    // Entrega en el mostrador (retiro): mesero o cocina, sin PIN
+    // ---------------------------------------------------------------
+
+    @Test
+    void elMeseroEntregaUnRetiroListoYElCocineroTambienSinCambiarNada() throws Exception {
+        String codigo = retiroListo();
+        assertEquals("LISTO", estadoEnHistorial(codigo));
+        String mesero = tokenMesero();
+
+        mockMvc.perform(post("/api/v1/clientes/pedidos/" + codigo + "/entregar").header("Authorization", "Bearer " + mesero))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("ENTREGADO"));
+        assertEquals("ENTREGADO", estadoEnHistorial(codigo));
+
+        String cocina = tokenCocinaRol("cocina_mostrador_" + System.nanoTime() % 1_000_000_000L);
+        mockMvc.perform(post("/api/v1/clientes/pedidos/" + codigo + "/entregar").header("Authorization", "Bearer " + cocina))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("ENTREGADO"));
+    }
+
+    @Test
+    void unRetiroQueAunNoEstaListoNoSeEntrega() throws Exception {
+        long area = crearArea("Retiro no listo");
+        long producto = crearProductoConArea("Plato Retiro", "5.00", area);
+        String codigo = "CLI-RET-" + System.nanoTime();
+        String idem = "idem-ret-" + System.nanoTime();
+        crearPedidoCliente(codigo, idem, producto);
+        confirmarCliente(codigo, idem);
+
+        mockMvc.perform(post("/api/v1/clientes/pedidos/" + codigo + "/entregar").header("Authorization", "Bearer " + tokenMesero()))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void unDomicilioNoSeEntregaEnElMostrador() throws Exception {
+        long area = crearArea("Domicilio mostrador");
+        long producto = crearProductoConArea("Plato Dom Mostrador", "5.00", area);
+        String codigo = "CLI-DOMM-" + System.nanoTime();
+        crearYConfirmarDomicilio(codigo, producto);
+        long comandaId = buscar(codigo, null).path(0).path("id").asLong();
+        marcar(comandaId, "en-preparacion");
+        marcar(comandaId, "listo");
+
+        mockMvc.perform(post("/api/v1/clientes/pedidos/" + codigo + "/entregar").header("Authorization", "Bearer " + tokenMesero()))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.detail").value("El domicilio lo entrega el repartidor"));
+        assertEquals("LISTO", estadoEnHistorial(codigo));
+    }
+
+    @Test
+    void sinElPermisoDeMostradorSeRespondeProhibido() throws Exception {
+        mockMvc.perform(post("/api/v1/clientes/pedidos/CUALQUIERA/entregar").header("Authorization", "Bearer " + clienteToken))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/clientes/operacion/pedidos?estado=LISTO&entrega=RETIRAR").header("Authorization", "Bearer " + clienteToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void laListaDelMostradorFiltraPorEstadoYFormaDeEntrega() throws Exception {
+        String retiroListo = retiroListo();
+        long area = crearArea("Lista mostrador");
+        long producto = crearProductoConArea("Plato Lista", "4.00", area);
+        String retiroConfirmado = "CLI-RETC-" + System.nanoTime();
+        String idem = "idem-retc-" + System.nanoTime();
+        crearPedidoCliente(retiroConfirmado, idem, producto);
+        confirmarCliente(retiroConfirmado, idem);
+        String domicilioListo = "CLI-DOML-" + System.nanoTime();
+        crearYConfirmarDomicilio(domicilioListo, producto);
+        long comandaDom = buscar(domicilioListo, null).path(0).path("id").asLong();
+        marcar(comandaDom, "en-preparacion");
+        marcar(comandaDom, "listo");
+
+        String cuerpo = mockMvc.perform(get("/api/v1/clientes/operacion/pedidos?estado=LISTO&entrega=RETIRAR")
+                        .header("Authorization", "Bearer " + tokenMesero()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode lista = objectMapper.readTree(cuerpo);
+        boolean encontrado = false;
+        for (JsonNode pedido : lista) {
+            assertEquals("LISTO", pedido.path("estado").asText());
+            assertEquals("RETIRAR", pedido.path("entrega").asText());
+            if (retiroListo.equals(pedido.path("codigo").asText())) {
+                encontrado = true;
+                assertTrue(pedido.path("lineas").size() >= 1);
+                assertTrue(pedido.path("lineas").get(0).path("cantidad").asInt() >= 1);
+            }
+        }
+        assertTrue(encontrado, "el retiro listo aparece en la lista");
+        assertTrue(!cuerpo.contains(retiroConfirmado), "un retiro aún confirmado no aparece");
+        assertTrue(!cuerpo.contains(domicilioListo), "un domicilio no aparece en la lista de retiros");
+
+        mockMvc.perform(get("/api/v1/clientes/operacion/pedidos?estado=NOEXISTE&entrega=RETIRAR")
+                        .header("Authorization", "Bearer " + tokenMesero()))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    /** Un pedido de retiro de la app que cocina ya dejó LISTO. */
+    private String retiroListo() throws Exception {
+        long area = crearArea("Retiro listo");
+        long producto = crearProductoConArea("Plato Retiro Listo", "6.00", area);
+        String codigo = "CLI-RETL-" + System.nanoTime();
+        String idem = "idem-retl-" + System.nanoTime();
+        crearPedidoCliente(codigo, idem, producto);
+        confirmarCliente(codigo, idem);
+        long comandaId = buscar(codigo, null).path(0).path("id").asLong();
+        marcar(comandaId, "en-preparacion");
+        marcar(comandaId, "listo");
+        return codigo;
+    }
+
+    private void crearYConfirmarDomicilio(String codigo, long productoId) throws Exception {
+        long direccionId = crearDireccion();
+        String idem = "idem-dom-" + System.nanoTime();
+        mockMvc.perform(post("/api/v1/clientes/pedidos")
+                        .header("Authorization", "Bearer " + clienteToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "codigo":"%s",
+                                  "metodoPago":"EFECTIVO",
+                                  "metodoEntrega":"DOMICILIO",
+                                  "direccionId":%d,
+                                  "idempotencyKey":"%s",
+                                  "items":[{"productoId":%d,"cantidad":1,"extraIds":[],"ingredientesRemovidos":[]}]
+                                }
+                                """.formatted(codigo, direccionId, idem, productoId)))
+                .andExpect(status().isOk());
+        confirmarCliente(codigo, idem);
+    }
+
+    private String tokenCocinaRol(String username) throws Exception {
+        mockMvc.perform(post("/api/v1/usuarios")
+                        .header("Authorization", "Bearer " + administradorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"%s","nombre":"Cocina Rol","password":"clave456","rolCodigo":"COCINA"}
+                                """.formatted(username)))
+                .andExpect(status().isCreated());
+        return loginToken(username, "clave456");
+    }
+
+    private long crearDireccion() throws Exception {
+        String cuerpo = mockMvc.perform(post("/api/v1/clientes/direcciones")
+                        .header("Authorization", "Bearer " + clienteToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"etiqueta":"Casa-%d","direccion":"Calle 123","telefono":"0999999999","observaciones":"azul"}
+                                """.formatted(System.nanoTime())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(cuerpo).path("id").asLong();
+    }
 
     private void crearPedidoCliente(String codigo, String idem, long... productoIds) throws Exception {
         String items = Arrays.stream(productoIds)
